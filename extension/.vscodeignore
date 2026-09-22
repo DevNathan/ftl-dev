@@ -1,0 +1,12 @@
+# Exclude from the published VSIX (runtime assets only)
+.vscode/**
+src/**
+**/*.ts
+tsconfig.json
+.gitignore
+node_modules/**
+**/*.map
+**/*.test.js
+**/freemarkerRef.test.js
+*.vsix
+**/.DS_Store

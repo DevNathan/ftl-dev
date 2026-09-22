@@ -1,0 +1,40 @@
+{
+  "name": "HTML (test stub)",
+  "scopeName": "text.html.basic",
+  "patterns": [
+    {
+      "name": "meta.tag.structure.any.html",
+      "begin": "(</?)([a-zA-Z][\\w:-]*)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.html" },
+        "2": { "name": "entity.name.tag.html" }
+      },
+      "end": "(/?)>",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.end.html" },
+        "0": { "name": "punctuation.definition.tag.end.html" }
+      },
+      "patterns": [
+        {
+          "name": "entity.other.attribute-name.html",
+          "match": "\\b[a-zA-Z_:][\\w:.-]*"
+        },
+        {
+          "name": "string.quoted.double.html",
+          "begin": "\"",
+          "end": "\""
+        },
+        {
+          "name": "string.quoted.single.html",
+          "begin": "'",
+          "end": "'"
+        }
+      ]
+    },
+    {
+      "name": "comment.block.html",
+      "begin": "<!--",
+      "end": "-->"
+    }
+  ]
+}
