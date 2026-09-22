@@ -1,0 +1,15 @@
+{
+  "iconDefinitions": {
+    "_ftl_file": {
+      "iconPath": "./freemarker.svg"
+    }
+  },
+  "fileExtensions": {
+    "ftl": "_ftl_file",
+    "ftlh": "_ftl_file",
+    "ftlx": "_ftl_file"
+  },
+  "languageIds": {
+    "freemarker": "_ftl_file"
+  }
+}

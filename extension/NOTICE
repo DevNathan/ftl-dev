@@ -1,0 +1,29 @@
+ftl-dev
+Copyright 2026 ftl-dev contributors
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full text.
+
+---------------------------------------------------------------------------
+Attribution (required)
+
+When you use, redistribute, modify, or fork this software, you must retain
+this NOTICE and include a visible link to the project homepage:
+
+  https://github.com/DevNathan/ftl-dev
+
+(Update the URL above if the canonical repository moves. After Open VSX
+publication, the listing page may also be used as a secondary link:
+  https://open-vsx.org/extension/nathan/ftl-dev )
+
+---------------------------------------------------------------------------
+Third-party notices
+
+- FreeMarker is a trademark of the Apache Software Foundation. This project
+  is not affiliated with the ASF. Built-in/directive documentation text in
+  extension/src/reference/freemarkerRef.ts is paraphrased from the Apache
+  FreeMarker Manual (https://freemarker.apache.org/docs/) under Apache-2.0.
+
+- Marketplace / Open VSX listing icon: `icons/freemarker-icon.png` (128×128 PNG
+  rendered from freemarker.svg; VSCE rejects SVG for the package `icon` field).
+  Language file icons in the editor continue to use freemarker.svg.

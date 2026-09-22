@@ -1,0 +1,153 @@
+{
+  "comments": {
+    "blockComment": [
+      "<#--",
+      "-->"
+    ]
+  },
+  "brackets": [
+    [
+      "{",
+      "}"
+    ],
+    [
+      "[",
+      "]"
+    ],
+    [
+      "(",
+      ")"
+    ]
+  ],
+  "colorizedBracketPairs": [
+    [
+      "{",
+      "}"
+    ],
+    [
+      "[",
+      "]"
+    ],
+    [
+      "(",
+      ")"
+    ]
+  ],
+  "autoClosingPairs": [
+    {
+      "open": "{",
+      "close": "}"
+    },
+    {
+      "open": "[",
+      "close": "]"
+    },
+    {
+      "open": "(",
+      "close": ")"
+    },
+    {
+      "open": "\"",
+      "close": "\""
+    },
+    {
+      "open": "'",
+      "close": "'"
+    },
+    {
+      "open": "${",
+      "close": "}"
+    }
+  ],
+  "surroundingPairs": [
+    [
+      "{",
+      "}"
+    ],
+    [
+      "[",
+      "]"
+    ],
+    [
+      "(",
+      ")"
+    ],
+    [
+      "\"",
+      "\""
+    ],
+    [
+      "'",
+      "'"
+    ]
+  ],
+  "folding": {
+    "markers": {
+      "start": "^\\s*[\\[<][#@](?!/)\\w+",
+      "end": "^\\s*[\\[<]/[#@]\\w+"
+    }
+  },
+  "indentationRules": {
+    "increaseIndentPattern": "^\\s*(?:[\\[<]#(?:if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items|else|elseif|recover|case|default)\\b[^\\]>]*[\\]>]\\s*|[\\[<]#(?:assign|local|global)\\s+(?:[a-zA-Z_][\\w]*|\"[^\"]+\")(?:\\s+in\\s+[^\\]>]+)?\\s*[\\]>]\\s*|[\\[<]@[a-zA-Z_][\\w.]*(?:\\s[^\\]>]*)?(?<!/)[\\]>]\\s*)$",
+    "decreaseIndentPattern": "^\\s*(?:[\\[<]#(?:else|elseif|recover|case|default)\\b|[\\[<]/#(?:if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items|assign|local|global)\\b|[\\[<]/@[a-zA-Z_][\\w.]*\\b)"
+  },
+  "onEnterRules": [
+    {
+      "beforeText": "^\\s*[\\[<]#(if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items)\\b[^\\]>]*[\\]>]\\s*$",
+      "afterText": "^\\s*[\\[<]/[#@]\\w+",
+      "action": {
+        "indent": "indentOutdent"
+      }
+    },
+    {
+      "beforeText": "^\\s*[\\[<]#(assign|local|global)\\s+(?:[a-zA-Z_][\\w]*|\"[^\"]+\")(?:\\s+in\\s+[^\\]>]+)?\\s*[\\]>]\\s*$",
+      "afterText": "^\\s*[\\[<]/#(assign|local|global)\\b",
+      "action": {
+        "indent": "indentOutdent"
+      }
+    },
+    {
+      "beforeText": "^\\s*[\\[<]@[a-zA-Z_][\\w.]*(?:\\s[^\\]>]*)?(?<!/)[\\]>]\\s*$",
+      "afterText": "^\\s*[\\[<]/@\\w+",
+      "action": {
+        "indent": "indentOutdent"
+      }
+    },
+    {
+      "beforeText": "^\\s*[\\[<]#(else|elseif|recover|case|default)\\b[^\\]>]*[\\]>]\\s*$",
+      "action": {
+        "indent": "indent"
+      }
+    },
+    {
+      "beforeText": "^\\s*[\\[<]#(if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items)\\b[^\\]>]*[\\]>]\\s*$",
+      "action": {
+        "indent": "indent"
+      }
+    },
+    {
+      "beforeText": "^\\s*[\\[<]#(assign|local|global)\\s+(?:[a-zA-Z_][\\w]*|\"[^\"]+\")(?:\\s+in\\s+[^\\]>]+)?\\s*[\\]>]\\s*$",
+      "action": {
+        "indent": "indent"
+      }
+    },
+    {
+      "beforeText": "^\\s*[\\[<]@[a-zA-Z_][\\w.]*(?:\\s[^\\]>]*)?(?<!/)[\\]>]\\s*$",
+      "action": {
+        "indent": "indent"
+      }
+    },
+    {
+      "beforeText": "^\\s*[\\[<]/#(if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items|assign|local|global)\\b",
+      "action": {
+        "indent": "outdent"
+      }
+    },
+    {
+      "beforeText": "^\\s*[\\[<]/@[a-zA-Z_][\\w.]*\\b",
+      "action": {
+        "indent": "outdent"
+      }
+    }
+  ]
+}
