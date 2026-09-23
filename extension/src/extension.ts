@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { registerAutoClose } from "./autoClose";
+import { registerComparisonDisplay } from "./comparisonDisplayProvider";
 import { FtlCompletionProvider } from "./completionProvider";
 import { registerDiagnostics } from "./diagnosticsProvider";
 import { FtlHoverProvider } from "./hoverProvider";
@@ -47,6 +48,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   registerAutoClose(context);
   registerDiagnostics(context);
+  registerComparisonDisplay(context);
 
   const legend = new vscode.SemanticTokensLegend([...FTL_SEMANTIC_TOKEN_TYPES]);
 

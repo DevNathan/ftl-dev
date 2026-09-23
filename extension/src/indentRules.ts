@@ -2,10 +2,13 @@
  * FreeMarker indent policy (shared with language-configuration.json).
  *
  * - Block openers indent the following body.
- * - Mid-block branches (#else / #elseif / #recover / #case / #default) outdent
- *   to the opener column, then indent their own body.
+ * - Mid-block branches (#else / #elseif / #recover / #case / #default / #sep)
+ *   outdent to the opener column, then indent their own body.
  * - Closing tags outdent to the opener column.
  * - Short #assign / #include / #return / … do not change indent.
+ *
+ * Angle-bracket tags may contain `>` in expressions (`<#if x > 5>`), so open-tag
+ * matchers use greedy `.*>` / `.*\\]` rather than `[^>]*`.
  */
 
 /** Directives that always open an indented body. */
@@ -13,7 +16,7 @@ export const BLOCK_OPEN =
   "if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items";
 
 /** Mid-block lines: same column as opener, body still indented after them. */
-export const MID_BLOCK = "else|elseif|recover|case|default";
+export const MID_BLOCK = "else|elseif|recover|case|default|sep";
 
 /** Capture-form assign family (no `=` / `++` / `+=` … in the open tag). */
 export const CAPTURE_ASSIGN = "assign|local|global";
@@ -24,19 +27,29 @@ export const CAPTURE_ASSIGN = "assign|local|global";
  */
 export const INCREASE_INDENT_PATTERN =
   "^\\s*(?:" +
-  // #if / #list / … / #else / #elseif / …
-  `[\\[<]#(?:${BLOCK_OPEN}|${MID_BLOCK})\\b[^\\]>]*[\\]>]\\s*` +
+  // #if / #list / … / #else / #elseif / … (angle: last `>` on the line)
+  `<#(?:${BLOCK_OPEN}|${MID_BLOCK})\\b.*>\\s*` +
   "|" +
-  // capture <#assign name> / <#assign name in ns>
-  `[\\[<]#(?:${CAPTURE_ASSIGN})\\s+(?:[a-zA-Z_][\\w]*|"[^"]+")(?:\\s+in\\s+[^\\]>]+)?\\s*[\\]>]\\s*` +
+  // square-bracket form
+  `\\[#(?:${BLOCK_OPEN}|${MID_BLOCK})\\b.*\\]\\s*` +
   "|" +
-  // user macro <@name …> not self-closing
-  `[\\[<]@[a-zA-Z_][\\w.]*(?:\\s[^\\]>]*)?(?<!/)[\\]>]\\s*` +
+  // capture <#assign> / <#assign name> / <#assign name in ns>
+  `<#(?:${CAPTURE_ASSIGN})(?:\\s+(?:[a-zA-Z_][\\w]*|"[^"]+")(?:\\s+in\\s+[^>]*)?)?>\\s*` +
+  "|" +
+  `\\[#(?:${CAPTURE_ASSIGN})(?:\\s+(?:[a-zA-Z_][\\w]*|"[^"]+")(?:\\s+in\\s+[^\\]]*)?)?\\]\\s*` +
+  "|" +
+  // user macro <@name …> not self-closing (`/>` / `/]`)
+  `<@[a-zA-Z_][\\w.]*(?!.*\\/\\s*>)(?:\\s[^>]*)?>\\s*` +
+  "|" +
+  `\\[@[a-zA-Z_][\\w.]*(?!.*\\/\\s*\\])(?:\\s[^\\]]*)?\\]\\s*` +
   ")$";
 
 /**
  * Line should itself be outdented (close tag or mid-block branch).
  * Keep in sync with language-configuration.json indentationRules.decreaseIndentPattern
+ *
+ * Intentionally does **not** require a closing `>` / `]` so outdent can start as soon
+ * as the directive name is recognizable while typing.
  */
 export const DECREASE_INDENT_PATTERN =
   "^\\s*(?:" +

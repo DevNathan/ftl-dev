@@ -101,6 +101,56 @@ function spanKey(line: number, character: number, length: number): string {
   return `${line}:${character}:${length}`;
 }
 
+/**
+ * Half-open [start, end) ranges for `<#-- … -->` and `[#-- … --]`.
+ * Unclosed comments run to EOF so in-comment scans stay suppressed.
+ */
+export function ftlCommentRanges(text: string): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+  let i = 0;
+  while (i < text.length) {
+    if (text.startsWith("<#--", i)) {
+      const start = i;
+      const endIdx = text.indexOf("-->", i + 4);
+      if (endIdx === -1) {
+        ranges.push([start, text.length]);
+        break;
+      }
+      ranges.push([start, endIdx + 3]);
+      i = endIdx + 3;
+      continue;
+    }
+    if (text.startsWith("[#--", i)) {
+      const start = i;
+      const endIdx = text.indexOf("--]", i + 4);
+      if (endIdx === -1) {
+        ranges.push([start, text.length]);
+        break;
+      }
+      ranges.push([start, endIdx + 3]);
+      i = endIdx + 3;
+      continue;
+    }
+    i++;
+  }
+  return ranges;
+}
+
+function offsetInComment(
+  offset: number,
+  comments: Array<[number, number]>
+): boolean {
+  for (const [start, end] of comments) {
+    if (offset >= start && offset < end) {
+      return true;
+    }
+    if (offset < start) {
+      return false;
+    }
+  }
+  return false;
+}
+
 function addSpan(
   text: string,
   offset: number,
@@ -141,22 +191,33 @@ export function buildSemanticTokenSpansFromIndex(
   const spans: SemanticTokenSpan[] = [];
   const seen = new Set<string>();
   const declOffsets = new Set<number>();
+  const comments = ftlCommentRanges(text);
 
   const localByName = new Map<string, FtlSymbol>();
   for (const sym of index.symbols) {
     // Last declaration wins for kind (matches typical FTL redefine).
+    // Names that only appear inside comments must not drive use highlighting.
+    if (offsetInComment(sym.nameOffset, comments)) {
+      continue;
+    }
     localByName.set(sym.name, sym);
   }
 
   const nsNames = new Set<string>();
   for (const ref of index.pathRefs) {
     if (ref.kind === "import" && ref.asName) {
+      if (offsetInComment(ref.pathOffset, comments)) {
+        continue;
+      }
       nsNames.add(ref.asName);
     }
   }
 
   // 1) Declaration names
   for (const sym of index.symbols) {
+    if (offsetInComment(sym.nameOffset, comments)) {
+      continue;
+    }
     declOffsets.add(sym.nameOffset);
     addSpan(
       text,
@@ -174,7 +235,7 @@ export function buildSemanticTokenSpansFromIndex(
       continue;
     }
     const off = asNameOffset(text, ref);
-    if (off === undefined) {
+    if (off === undefined || offsetInComment(off, comments)) {
       continue;
     }
     declOffsets.add(off);
@@ -187,6 +248,9 @@ export function buildSemanticTokenSpansFromIndex(
     const dotted = /([a-zA-Z_][\w]*)\.([a-zA-Z_][\w]*)/g;
     let m: RegExpExecArray | null;
     while ((m = dotted.exec(text)) !== null) {
+      if (offsetInComment(m.index, comments)) {
+        continue;
+      }
       const ns = m[1]!;
       const member = m[2]!;
       if (!nsNames.has(ns)) {
@@ -220,7 +284,7 @@ export function buildSemanticTokenSpansFromIndex(
   while ((im = ident.exec(text)) !== null) {
     const name = im[0];
     const offset = im.index;
-    if (declOffsets.has(offset)) {
+    if (declOffsets.has(offset) || offsetInComment(offset, comments)) {
       continue;
     }
 

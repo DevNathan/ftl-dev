@@ -1,11 +1,13 @@
 import * as assert from "assert";
+import * as path from "path";
 import {
   buildSemanticTokenSpans,
   encodeSemanticTokenSpans,
+  ftlCommentRanges,
   FTL_SEMANTIC_TOKEN_TYPES,
   semanticTokensForDocument,
 } from "./semanticTokens";
-import { FtlSymbol, indexFtl, offsetToLineCharacter } from "./symbols";
+import { FtlSymbol, indexFtl, lineCharacterToOffset, offsetToLineCharacter } from "./symbols";
 
 function syncTest(name: string, fn: () => void): void {
   try {
@@ -129,6 +131,49 @@ syncTest("ns.member spans when importedByNs provided", () => {
   assert.ok(memHit, "expected helper as function");
 });
 
+syncTest("identifiers inside FTL comments are not highlighted", () => {
+  const text = `<#macro note msg>
+  \${msg}
+</#macro>
+<#-- Tag.find()['test'] note -->
+[#-- note also --]
+\${note}
+`;
+  const spans = buildSemanticTokenSpans(text);
+  const comments = ftlCommentRanges(text);
+  const inComment = (offset: number) =>
+    comments.some(([s, e]) => offset >= s && offset < e);
+
+  for (const s of spans) {
+    const off = lineCharacterToOffset(text, s.line, s.character);
+    assert.ok(
+      !inComment(off),
+      `span at ${s.line}:${s.character} must not lie inside comments`
+    );
+  }
+
+  const realUse = text.lastIndexOf("${note}") + 2;
+  const usePos = offsetToLineCharacter(text, realUse);
+  assert.ok(
+    spans.some(
+      (s) =>
+        s.line === usePos.line &&
+        s.character === usePos.character &&
+        s.length === 4 &&
+        s.tokenType === "method"
+    ),
+    "real use of note outside comments should still highlight"
+  );
+});
+
+syncTest("ftlCommentRanges covers angle and square comments", () => {
+  const text = `a<#-- x -->b[#-- y --]c`;
+  assert.deepStrictEqual(ftlCommentRanges(text), [
+    [1, 11],
+    [12, 22],
+  ]);
+});
+
 syncTest("encodeSemanticTokenSpans is 5 uints per token, sorted", () => {
   const spans = buildSemanticTokenSpans(`<#assign x = 1>\${x}\n`);
   const data = encodeSemanticTokenSpans(spans);
@@ -147,11 +192,11 @@ async function main(): Promise<void> {
 </#function>
 `;
   const files: Record<string, string> = {
-    "/proj/lib.ftl": lib,
+    [path.normalize("/proj/lib.ftl")]: lib,
   };
   const data = await semanticTokensForDocument(
     mainText,
-    "/proj/main.ftl",
+    path.normalize("/proj/main.ftl"),
     async (p) => files[p]
   );
   assert.ok(data.length >= 5 * 2, "namespace + member at least");

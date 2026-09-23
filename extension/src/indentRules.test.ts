@@ -28,8 +28,15 @@ test("if increases; body close decreases", () => {
 test("elseif/else decrease themselves and increase for body", () => {
   assert.ok(lineDecreasesIndent("<#elseif y>"));
   assert.ok(lineDecreasesIndent("<#else>"));
+  assert.ok(lineDecreasesIndent("<#sep>"));
   assert.ok(lineIncreasesIndent("<#elseif y>"));
   assert.ok(lineIncreasesIndent("<#else>"));
+  assert.ok(lineIncreasesIndent("<#sep>"));
+});
+
+test("if with > in condition still increases", () => {
+  assert.ok(lineIncreasesIndent("<#if (x > 5)>"));
+  assert.ok(lineIncreasesIndent("<#elseif (a >= b)>"));
 });
 
 test("short assign does not change indent", () => {
@@ -40,6 +47,7 @@ test("short assign does not change indent", () => {
 
 test("capture assign increases; close decreases", () => {
   assert.ok(lineIncreasesIndent("<#assign note>"));
+  assert.ok(lineIncreasesIndent("<#assign>"));
   assert.ok(lineDecreasesIndent("</#assign>"));
 });
 
