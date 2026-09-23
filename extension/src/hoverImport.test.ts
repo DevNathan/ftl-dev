@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import * as path from "path";
 import { buildCompletions, completionContext } from "./catalog";
 import { builtinHover, directiveHover } from "./docs";
 import { collectImportSymbols } from "./imports";
@@ -40,12 +41,14 @@ test("hover docs for builtin and directive", () => {
 async function main(): Promise<void> {
   const mainText = `<#import "lib.ftl" as lib>\n`;
   const lib = `<#function helper>\n<#return 1>\n</#function>\n`;
+  const mainPath = path.normalize("/proj/main.ftl");
+  const libPath = path.normalize("/proj/lib.ftl");
   const files: Record<string, string> = {
-    "/proj/lib.ftl": lib,
+    [libPath]: lib,
   };
   const idx = indexFtl(mainText);
   const collected = await collectImportSymbols(
-    "/proj/main.ftl",
+    mainPath,
     idx,
     async (p) => files[p]
   );

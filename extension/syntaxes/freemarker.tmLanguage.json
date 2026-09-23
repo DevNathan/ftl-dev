@@ -10,7 +10,7 @@
     { "include": "text.html.basic" }
   ],
   "injections": {
-    "L:text.html.basic - comment": {
+    "L:text.html.basic - comment - string": {
       "patterns": [
         { "include": "#comment" },
         { "include": "#directive-angle" },
@@ -21,9 +21,30 @@
   },
   "repository": {
     "comment": {
-      "name": "comment.block.freemarker",
-      "begin": "<#--",
-      "end": "-->"
+      "patterns": [
+        {
+          "name": "comment.block.freemarker",
+          "begin": "<#--",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.comment.begin.freemarker" }
+          },
+          "end": "-->",
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.comment.end.freemarker" }
+          }
+        },
+        {
+          "name": "comment.block.freemarker",
+          "begin": "\\[#--",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.comment.begin.freemarker" }
+          },
+          "end": "--\\]",
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.comment.end.freemarker" }
+          }
+        }
+      ]
     },
     "directive-names": {
       "match": "\\b(assign|attempt|autoesc|break|case|compress|continue|default|else|elseif|escape|fallback|flush|ftl|function|global|if|import|include|items|list|local|lt|macro|nested|noautoesc|noescape|noparse|nt|outputformat|recover|recurse|return|rt|sep|setting|stop|switch|t|transform|visit)\\b",

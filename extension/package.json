@@ -66,14 +66,29 @@
         "label": "ftl-dev (FreeMarker file icons)",
         "path": "./icons/ftl-icon-theme.json"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "ftl-dev",
+      "properties": {
+        "ftl-dev.comparisonOperatorPresentation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show alphabetic comparison operators (lt, lte, gt, gte) as <, <=, >, >= in the editor. Place the caret on a token to reveal the source text."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[freemarker]": {
+        "editor.autoIndent": "full"
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test:grammar": "vscode-tmgrammar-test -g syntaxes/freemarker.tmLanguage.json -g syntaxes/test-support/text.html.basic.tmLanguage.json '../tests/grammar/**/*.ftl'",
-    "test:unit": "npm run compile && node out/symbols.test.js && node out/catalog.test.js && node out/closeTag.test.js && node out/hoverImport.test.js && node out/diagnostics.test.js && node out/reference/freemarkerRef.test.js && node out/indentRules.test.js && node out/outline.test.js && node out/references.test.js && node out/semanticTokens.test.js",
+    "test:grammar": "vscode-tmgrammar-test -g syntaxes/freemarker.tmLanguage.json -g syntaxes/test-support/text.html.basic.tmLanguage.json \"../tests/grammar/*.ftl\"",
+    "test:unit": "npm run compile && node out/symbols.test.js && node out/catalog.test.js && node out/closeTag.test.js && node out/hoverImport.test.js && node out/diagnostics.test.js && node out/reference/freemarkerRef.test.js && node out/indentRules.test.js && node out/indentAlign.test.js && node out/outline.test.js && node out/references.test.js && node out/semanticTokens.test.js && node out/comparisonDisplay.test.js",
     "test": "npm run test:grammar && npm run test:unit",
     "package": "npm run compile && npx --yes @vscode/vsce package --no-dependencies",
     "publish:ovsx": "npm run package && npx --yes ovsx publish *.vsix"
