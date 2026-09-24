@@ -23,6 +23,7 @@ CodeOSS FreeMarker tooling for **FTL as a scripting / application-logic language
 | [docs/decisions/](docs/decisions/) | Lasting technical choices (ADRs) |
 | [docs/plans/active/](docs/plans/active/) | Work in progress |
 | [docs/plans/completed/](docs/plans/completed/) | Finished plans |
+| [docs/publishing.md](docs/publishing.md) / [docs/versioning.md](docs/versioning.md) | Registry publish on `v*` tags only; bump version + [CHANGELOG](extension/CHANGELOG.md) before every deploy |
 | [tests/](tests/) | Fixtures (`fixtures/`) + grammar tests (`grammar/`) |
 
 ## Operating principles

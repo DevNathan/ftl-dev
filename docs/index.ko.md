@@ -5,7 +5,9 @@
 | 영역 | 경로 |
 |------|------|
 | Product | [product/vision.md](product/vision.md) · [requirements-status.md](product/requirements-status.md) |
-| Decisions | [0001](decisions/0001-codeoss-language-stack.md) · [0002](decisions/0002-undeclared-vs-datamodel.md) · [0003 comparison presentation](decisions/0003-comparison-operator-presentation.md) |
+| Decisions | [0001](decisions/0001-codeoss-language-stack.md) · [0002](decisions/0002-undeclared-vs-datamodel.md) · [0003 comparison presentation](decisions/0003-comparison-operator-presentation.md) · [0004 changelog](decisions/0004-changelog.md) |
 | Active | *(없음 — 최근: [0012](plans/completed/0012-comparison-operator-presentation.md))* |
 | Extension | [../extension/](../extension/) |
+| Publishing | [publishing.md](publishing.md) |
+| Versioning | [versioning.md](versioning.md) · [versioning.ko.md](versioning.ko.md) |
 | Fixtures | [../tests/fixtures/](../tests/fixtures/) (`comparison/` 포함) |
