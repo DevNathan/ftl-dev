@@ -1,41 +1,60 @@
-# ftl-dev
+# FTL-dev
 
-CodeOSS-family FreeMarker (`.ftl`) language support aimed at **real FTL scripting**—not merely HTML template coloring.
+Did you know FreeMarker (ftl for short) can be used as a real programming language? ftl is faster than light (okay, heavily exaggerated), and while it is less extensible than mainstream languages, it is not exactly *insufficient*. Anyway, people barely use ftl, so of course there was no decent all-in-one extension.
 
-FreeMarker is often used as a fast application/scripting layer on Java stacks, but editor tooling lags far behind C/Java-class extensions. This project closes that gap: stronger highlighting, go-to-definition and path navigation, completions, directive closing, and FTL-aware indentation.
+So I built one. With this extension, working in ftl should hurt a little less.
+
+## Why bother / what it fixes
+
+Existing ftl extensions leave a lot to be desired.
+
+- Syntax highlighting that is ugly as hell or just wrong
+- No jump-to-definition for variables and functions—so you dig through files by hand
+- Syntax errors that never get flagged
+- Auto-indent that ignores how ftl is actually supposed to look
+
+Why does nobody support this junk? Probably because nobody uses ftl.
+If the well is dry, dig your own. This extension aims for:
+
+- Highlighting readable enough that your eyeballs stay in your head
+- Ctrl+click to jump to variable and function declarations
+- Catching grammar mistakes before things blow up
+- Auto-indent that follows ftl conventions
+
+## Features
+
+- Syntax highlighting
+- Go-to / navigate definitions, imports, and paths
+- Completions
+- Directive closing · FTL-aware indent
+- Diagnostics · semantic tokens · outline · find references
+- (Optional) comparison-operator presentation (`lt` / `gt` etc. shown as symbols)
 
 ## Install
 
-After Open VSX publish: search **FreeMarker (ftl-dev)** in Cursor / VS Code (Open VSX).  
-Or build a VSIX: `cd extension && npm run package` then **Install from VSIX…**.
+What else is there to do? Grab the extension from the VS Code or CodeOSS-family marketplace.
 
-## Docs
+- Cursor / Open VSX · VS Code Marketplace: **FreeMarker (ftl-dev)** (`nathan-0910.ftl-dev`)
+- Locally: `cd extension && npm run package`, then **Install from VSIX…**
 
-| Doc | Purpose |
-|-----|---------|
-| [AGENTS.md](AGENTS.md) | Agent navigation map |
-| [docs/product/vision.md](docs/product/vision.md) | Product purpose and core features |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical design |
-| [docs/index.md](docs/index.md) | Full documentation map |
-| [docs/product/requirements-status.md](docs/product/requirements-status.md) | Shipped vs gaps |
+[Changelog lives here](extension/CHANGELOG.md).
+I keep it in English only—but you all read English fine, right? :)
 
-## Extension
-
-Code lives in [`extension/`](extension/).
+## Develop (local)
 
 ```bash
 cd extension && npm install && npm run compile
 npm test
 npm run package          # → ftl-dev-*.vsix
-# npx ovsx publish ftl-dev-*.vsix   # requires Open VSX token
 ```
 
-Manual: **Reload Window**, then open [`tests/fixtures/navigation/main.ftl`](tests/fixtures/navigation/main.ftl). Or **F5** (Run Extension).
+Do not forget `Reload Window` afterward. Try [`tests/fixtures/navigation/main.ftl`](tests/fixtures/navigation/main.ftl), or just hit **F5**.
 
 ## License
 
-[Apache License 2.0](LICENSE). Free to use and redistribute; keep [NOTICE](NOTICE) and **link to the project**: https://github.com/DevNathan/ftl-dev
+This project is under [Apache License 2.0](LICENSE).
+Use it freely, keep the [NOTICE](NOTICE), and leave a link to the project: https://github.com/DevNathan/ftl-dev
 
 ## Language
 
-Canonical documentation is **English**. Optional Korean siblings use the `*.ko.md` suffix (e.g. [README.ko.md](README.ko.md)).
+Canonical docs are **English**. Optional Korean: [README.ko.md](README.ko.md) (`*.ko.md`).
