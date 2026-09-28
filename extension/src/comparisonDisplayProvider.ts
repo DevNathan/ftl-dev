@@ -75,7 +75,7 @@ export function registerComparisonDisplay(
 
     const enabled = vscode.workspace
       .getConfiguration()
-      .get<boolean>(SETTING_KEY, true);
+      .get<boolean>(SETTING_KEY, false);
     if (!enabled) {
       clearEditor(editor);
       return;

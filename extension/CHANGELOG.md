@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.0.13] - 2026-09-28
+
+### Added
+
+- Diagnostics for missing or trailing commas in FreeMarker hash literals (`{ "a": 1 "b": 2 }`, `{ "a": 1, }`)
+
+### Changed
+
+- Default `ftl-dev.comparisonOperatorPresentation` to `false` (decoration-based display can break the editor minimap)
+
 ## [0.0.12] - 2026-09-24
 
 ### Added
