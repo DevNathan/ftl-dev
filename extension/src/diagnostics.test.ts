@@ -164,4 +164,58 @@ test("navigation fixture shapes have no layer-A errors", () => {
   assert.strictEqual(diags.length, 0, diags.map((d) => d.message).join("; "));
 });
 
+test("allows well-formed hash literals", () => {
+  const diags = validateFtl(
+    '<#assign h = {"name": "Ada", "age": 36}>\n${{"x": 1, "y": 2}}'
+  );
+  assert.ok(!diags.some((d) => d.message.includes("hash literal") || d.message.includes("hash entries")));
+});
+
+test("flags missing comma between hash entries", () => {
+  const diags = validateFtl('<#assign h = {"a": 1 "b": 2}>');
+  assert.ok(
+    diags.some((d) => d.message.includes("Missing comma between hash entries")),
+    diags.map((d) => d.message).join("; ")
+  );
+});
+
+test("flags missing comma before identifier key", () => {
+  const diags = validateFtl('<#assign h = {"a": 1 b: 2}>');
+  assert.ok(
+    diags.some((d) => d.message.includes("Missing comma between hash entries"))
+  );
+});
+
+test("flags trailing comma in hash literal", () => {
+  const diags = validateFtl('<#assign h = {"a": 1,}>');
+  assert.ok(
+    diags.some((d) => d.message.includes("Trailing comma in hash literal")),
+    diags.map((d) => d.message).join("; ")
+  );
+});
+
+test("flags trailing comma after last of multiple entries", () => {
+  const diags = validateFtl('<#assign h = {"a": 1, "b": 2,}>');
+  assert.ok(
+    diags.some((d) => d.message.includes("Trailing comma in hash literal"))
+  );
+});
+
+test("allows empty hash and single entry", () => {
+  const diags = validateFtl("<#assign a = {}>\n<#assign b = {\"only\": 1}>");
+  assert.ok(!diags.some((d) => d.message.toLowerCase().includes("comma")));
+});
+
+test("checks nested hash commas", () => {
+  const diags = validateFtl('<#assign h = {"outer": {"a": 1 "b": 2}}>');
+  assert.ok(
+    diags.some((d) => d.message.includes("Missing comma between hash entries"))
+  );
+});
+
+test("HTML braces are not treated as hash literals", () => {
+  const diags = validateFtl("<style>body { color: red; }</style>");
+  assert.ok(!diags.some((d) => d.message.toLowerCase().includes("hash")));
+});
+
 console.log("All diagnostics unit tests passed.");

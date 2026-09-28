@@ -31,3 +31,8 @@
 <#macro note msg>
   ${msg}
 </#macro>
+
+<#assign r = {
+  "name": "john"
+  "age": 20
+}/>

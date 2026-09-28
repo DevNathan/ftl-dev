@@ -114,6 +114,7 @@ export function validateFtl(text: string): FtlDiagnostic[] {
   }
 
   out.push(...findDirectiveIssues(text));
+  out.push(...findHashLiteralCommaIssues(text));
 
   return out;
 }
@@ -734,6 +735,532 @@ function findUnclosedInterpolations(text: string): FtlDiagnostic[] {
   }
 
   return diags;
+}
+
+/**
+ * Hash literals `{ "k": v, ... }` — commas between entries are required;
+ * a trailing comma before `}` is a syntax error (FreeMarker).
+ * Only checked inside FTL expressions (`${…}` / directive tag interiors).
+ */
+function findHashLiteralCommaIssues(text: string): FtlDiagnostic[] {
+  const diags: FtlDiagnostic[] = [];
+  for (const { start, end } of ftlExpressionRegions(text)) {
+    let i = start;
+    while (i < end) {
+      const ch = text[i]!;
+      if (ch === '"' || ch === "'") {
+        i = skipString(text, i, end);
+        continue;
+      }
+      if (
+        ch === "{" &&
+        !(i > 0 && (text[i - 1] === "$" || text[i - 1] === "#"))
+      ) {
+        const close = findMatchingBrace(text, i, end);
+        if (close !== -1) {
+          diags.push(...checkHashLiteralCommas(text, i, close));
+        }
+        // Advance one so nested `{` inside this hash are also checked.
+        i++;
+        continue;
+      }
+      i++;
+    }
+  }
+  return diags;
+}
+
+/** Ranges of FTL expression text: interpolation bodies + directive tag inners. */
+function ftlExpressionRegions(
+  text: string
+): Array<{ start: number; end: number }> {
+  const regions: Array<{ start: number; end: number }> = [];
+  let i = 0;
+  let inString: '"' | "'" | null = null;
+  let inComment = false;
+
+  while (i < text.length) {
+    if (!inComment && !inString && text.startsWith("<#--", i)) {
+      inComment = true;
+      i += 4;
+      continue;
+    }
+    if (inComment) {
+      if (text.startsWith("-->", i)) {
+        inComment = false;
+        i += 3;
+      } else {
+        i++;
+      }
+      continue;
+    }
+    if (inString) {
+      if (text[i] === "\\" && i + 1 < text.length) {
+        i += 2;
+        continue;
+      }
+      if (text[i] === inString) {
+        inString = null;
+      }
+      i++;
+      continue;
+    }
+    if (text[i] === '"' || text[i] === "'") {
+      inString = text[i] as '"' | "'";
+      i++;
+      continue;
+    }
+
+    if (text.startsWith("${", i) || text.startsWith("#{", i)) {
+      const open = i;
+      i += 2;
+      const close = findMatchingBrace(text, open + 1, text.length);
+      if (close === -1) {
+        break;
+      }
+      regions.push({ start: open + 2, end: close });
+      i = close + 1;
+      continue;
+    }
+
+    // Directive / user-tag open: <#…> / [#…] / <@…> / [@…]
+    const tag = text.slice(i).match(/^([<\[])([#@])/);
+    if (tag && !text.startsWith("<#--", i)) {
+      const openBracket = tag[1]!;
+      const closeBracket = openBracket === "<" ? ">" : "]";
+      const nameStart = i + 2;
+      if (/[a-zA-Z_]/.test(text[nameStart] ?? "")) {
+        let p = nameStart + 1;
+        while (p < text.length && /[\w.]/.test(text[p]!)) {
+          p++;
+        }
+        const innerStart = p;
+        const close = scanDirectiveClose(text, p, closeBracket);
+        if (close !== -1) {
+          regions.push({ start: innerStart, end: close });
+          i = close + 1;
+          continue;
+        }
+      }
+    }
+
+    i++;
+  }
+
+  return regions;
+}
+
+function scanDirectiveClose(
+  text: string,
+  from: number,
+  closeBracket: string
+): number {
+  let i = from;
+  let inString: '"' | "'" | null = null;
+  let paren = 0;
+  let brace = 0;
+  while (i < text.length) {
+    if (!inString && text.startsWith("<#--", i)) {
+      const endc = text.indexOf("-->", i + 4);
+      if (endc === -1) {
+        return -1;
+      }
+      i = endc + 3;
+      continue;
+    }
+    const c = text[i]!;
+    if (inString) {
+      if (c === "\\" && i + 1 < text.length) {
+        i += 2;
+        continue;
+      }
+      if (c === inString) {
+        inString = null;
+      }
+      i++;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      inString = c;
+      i++;
+      continue;
+    }
+    if (c === "(") {
+      paren++;
+    } else if (c === ")" && paren > 0) {
+      paren--;
+    } else if (c === "{") {
+      brace++;
+    } else if (c === "}" && brace > 0) {
+      brace--;
+    } else if (c === closeBracket && paren === 0 && brace === 0) {
+      return i;
+    }
+    i++;
+  }
+  return -1;
+}
+
+function findMatchingBrace(text: string, openBrace: number, limit: number): number {
+  let i = openBrace + 1;
+  let depth = 1;
+  let inString: '"' | "'" | null = null;
+  while (i < limit && i < text.length) {
+    if (!inString && text.startsWith("<#--", i)) {
+      const endc = text.indexOf("-->", i + 4);
+      if (endc === -1 || endc >= limit) {
+        return -1;
+      }
+      i = endc + 3;
+      continue;
+    }
+    const c = text[i]!;
+    if (inString) {
+      if (c === "\\" && i + 1 < text.length) {
+        i += 2;
+        continue;
+      }
+      if (c === inString) {
+        inString = null;
+      }
+      i++;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      inString = c;
+      i++;
+      continue;
+    }
+    if (c === "{") {
+      depth++;
+    } else if (c === "}") {
+      depth--;
+      if (depth === 0) {
+        return i;
+      }
+    }
+    i++;
+  }
+  return -1;
+}
+
+function skipString(text: string, start: number, limit: number): number {
+  const q = text[start]!;
+  let i = start + 1;
+  while (i < limit && i < text.length) {
+    if (text[i] === "\\" && i + 1 < text.length) {
+      i += 2;
+      continue;
+    }
+    if (text[i] === q) {
+      return i + 1;
+    }
+    i++;
+  }
+  return limit;
+}
+
+/**
+ * Validate commas inside one hash `{…}` spanning [openBrace, closeBrace].
+ * Nested hashes are checked by the outer region walk (each `{` separately).
+ */
+function checkHashLiteralCommas(
+  text: string,
+  openBrace: number,
+  closeBrace: number
+): FtlDiagnostic[] {
+  const diags: FtlDiagnostic[] = [];
+  let i = openBrace + 1;
+
+  const skipWs = (): void => {
+    while (i < closeBrace && /\s/.test(text[i]!)) {
+      i++;
+    }
+  };
+
+  skipWs();
+  if (i >= closeBrace) {
+    return diags; // empty `{}`
+  }
+
+  while (i < closeBrace) {
+    // ---- key until top-level ':' ----
+    const keyStart = i;
+    if (!scanHashPart(text, keyStart, closeBrace, ":", (pos) => {
+      i = pos;
+    })) {
+      // no ':' before `}` — not a well-formed hash entry; stop quietly
+      // (other checkers may cover malformed shapes later)
+      return diags;
+    }
+    const colonAt = i;
+    i = colonAt + 1;
+    skipWs();
+
+    // ---- value until top-level ',' or next key / end ----
+    const valueEnd = scanHashValue(text, i, closeBrace);
+    i = valueEnd;
+    skipWs();
+
+    if (i >= closeBrace) {
+      return diags; // last entry, no trailing comma
+    }
+
+    if (text[i] === ",") {
+      const commaAt = i;
+      i++;
+      skipWs();
+      if (i >= closeBrace) {
+        diags.push({
+          offset: commaAt,
+          length: 1,
+          message:
+            "Trailing comma in hash literal; remove the comma after the last entry.",
+          severity: "error",
+        });
+        return diags;
+      }
+      continue; // next entry
+    }
+
+    // Next key/content without comma (scanHashValue stopped at the new key)
+    diags.push({
+      offset: i,
+      length: 1,
+      message:
+        "Missing comma between hash entries; separate key/value pairs with ','.",
+      severity: "error",
+    });
+    // Resync: continue parsing from here as the next key
+  }
+
+  return diags;
+}
+
+/** Scan until top-level `stopChar` (nesting-aware). Returns false if hit closeBrace first. */
+function scanHashPart(
+  text: string,
+  from: number,
+  closeBrace: number,
+  stopChar: string,
+  onStop: (pos: number) => void
+): boolean {
+  let i = from;
+  let inString: '"' | "'" | null = null;
+  let paren = 0;
+  let bracket = 0;
+  let brace = 0;
+  while (i < closeBrace) {
+    const c = text[i]!;
+    if (inString) {
+      if (c === "\\" && i + 1 < closeBrace) {
+        i += 2;
+        continue;
+      }
+      if (c === inString) {
+        inString = null;
+      }
+      i++;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      inString = c;
+      i++;
+      continue;
+    }
+    if (c === "(") {
+      paren++;
+    } else if (c === ")" && paren > 0) {
+      paren--;
+    } else if (c === "[") {
+      bracket++;
+    } else if (c === "]" && bracket > 0) {
+      bracket--;
+    } else if (c === "{") {
+      brace++;
+    } else if (c === "}" && brace > 0) {
+      brace--;
+    } else if (
+      c === stopChar &&
+      paren === 0 &&
+      bracket === 0 &&
+      brace === 0
+    ) {
+      onStop(i);
+      return true;
+    }
+    i++;
+  }
+  return false;
+}
+
+/**
+ * Scan a hash value; stop at top-level `,`, `closeBrace`, or the start of the
+ * next key when a comma is missing (caller flags that).
+ */
+function scanHashValue(
+  text: string,
+  from: number,
+  closeBrace: number
+): number {
+  let i = from;
+  let inString: '"' | "'" | null = null;
+  let paren = 0;
+  let bracket = 0;
+  let brace = 0;
+  let sawValue = false;
+
+  while (i < closeBrace) {
+    const c = text[i]!;
+
+    if (inString) {
+      if (c === "\\" && i + 1 < closeBrace) {
+        i += 2;
+        continue;
+      }
+      if (c === inString) {
+        inString = null;
+        sawValue = true;
+      }
+      i++;
+      continue;
+    }
+
+    // Top-level comma ends the value
+    if (c === "," && paren === 0 && bracket === 0 && brace === 0) {
+      return i;
+    }
+
+    if (c === '"' || c === "'") {
+      if (
+        sawValue &&
+        paren === 0 &&
+        bracket === 0 &&
+        brace === 0 &&
+        looksLikeHashKeyStart(text, i, closeBrace)
+      ) {
+        return i; // next key without comma
+      }
+      inString = c;
+      sawValue = true;
+      i++;
+      continue;
+    }
+
+    if (
+      sawValue &&
+      paren === 0 &&
+      bracket === 0 &&
+      brace === 0 &&
+      /[a-zA-Z_]/.test(c) &&
+      looksLikeHashKeyStart(text, i, closeBrace)
+    ) {
+      const prev = prevNonWs(text, i - 1, from);
+      if (prev !== -1 && /[\w"'`)\]}.]/.test(text[prev]!)) {
+        return i; // next key without comma
+      }
+    }
+
+    if (c === "(") {
+      paren++;
+      sawValue = true;
+    } else if (c === ")" && paren > 0) {
+      paren--;
+      sawValue = true;
+    } else if (c === "[") {
+      bracket++;
+      sawValue = true;
+    } else if (c === "]" && bracket > 0) {
+      bracket--;
+      sawValue = true;
+    } else if (c === "{") {
+      brace++;
+      sawValue = true;
+    } else if (c === "}" && brace > 0) {
+      brace--;
+      sawValue = true;
+    } else if (!/\s/.test(c)) {
+      sawValue = true;
+    }
+
+    i++;
+  }
+
+  return closeBrace; // last entry
+}
+
+function prevNonWs(text: string, from: number, limit: number): number {
+  let i = from;
+  while (i >= limit && /\s/.test(text[i]!)) {
+    i--;
+  }
+  return i >= limit ? i : -1;
+}
+
+/** True if from `pos` we can parse a key then see top-level `:` before `,` / end. */
+function looksLikeHashKeyStart(
+  text: string,
+  pos: number,
+  closeBrace: number
+): boolean {
+  let i = pos;
+  let inString: '"' | "'" | null = null;
+  let paren = 0;
+  let bracket = 0;
+  let brace = 0;
+  let saw = false;
+  while (i < closeBrace) {
+    const c = text[i]!;
+    if (inString) {
+      if (c === "\\" && i + 1 < closeBrace) {
+        i += 2;
+        continue;
+      }
+      if (c === inString) {
+        inString = null;
+      }
+      i++;
+      saw = true;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      inString = c;
+      i++;
+      saw = true;
+      continue;
+    }
+    if (c === "(") {
+      paren++;
+    } else if (c === ")" && paren > 0) {
+      paren--;
+    } else if (c === "[") {
+      bracket++;
+    } else if (c === "]" && bracket > 0) {
+      bracket--;
+    } else if (c === "{") {
+      brace++;
+    } else if (c === "}" && brace > 0) {
+      brace--;
+    } else if (
+      c === ":" &&
+      paren === 0 &&
+      bracket === 0 &&
+      brace === 0
+    ) {
+      return saw;
+    } else if (
+      (c === "," || c === "}") &&
+      paren === 0 &&
+      bracket === 0 &&
+      brace === 0
+    ) {
+      return false;
+    } else if (!/\s/.test(c)) {
+      saw = true;
+    }
+    i++;
+  }
+  return false;
 }
 
 /** Map diagnostics to 0-based line/character for editors or tests. */
