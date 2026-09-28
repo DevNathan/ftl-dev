@@ -2,7 +2,7 @@
 
 - Date: 2026-09-23
 - Against: [vision.md](vision.md), [ADR 0001](../decisions/0001-codeoss-language-stack.md), [ADR 0002](../decisions/0002-undeclared-vs-datamodel.md), [ADR 0003](../decisions/0003-comparison-operator-presentation.md)
-- Extension: `0.0.11` — plans **0001–0011** completed; **0012** comparison operator presentation shipped
+- Extension: `0.0.13` — plans **0001–0012** completed; hash-literal comma diagnostics; comparison presentation opt-in (default off)
 - Verification: `cd extension && npm test` (grammar + unit) passing
 
 ## Verdict
@@ -20,7 +20,7 @@
 | Completions + Apache docs | **Done** | catalog + `freemarkerRef.ts` |
 | Directive auto-close / FTL indent | **Done** | closeTag + indentRules |
 | Diagnostics layer A | **Done** (phase 1–2) | empty `${}`, duplicate else, unknown directive, `#list`/`as`, … |
-| Comparison op presentation | **Done** | decorations + `comparisonDisplay.ts` (ADR 0003) |
+| Comparison op presentation | **Done** (opt-in) | decorations + `comparisonDisplay.ts` (ADR 0003); default **off** (minimap) |
 | Undeclared / data-model (B) | **Deferred** | ADR 0002 |
 | Rename / workspace symbols | **Not started** | — |
 | LSP / Java enrichment | **Not started / non-goal** | — |

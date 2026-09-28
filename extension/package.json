@@ -2,7 +2,7 @@
   "name": "ftl-dev",
   "displayName": "FreeMarker (ftl-dev)",
   "description": "FreeMarker (.ftl) language support for CodeOSS — scripting-oriented tooling",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "publisher": "nathan-0910",
   "license": "Apache-2.0",
   "icon": "icons/freemarker-icon.png",
@@ -72,8 +72,8 @@
       "properties": {
         "ftl-dev.comparisonOperatorPresentation": {
           "type": "boolean",
-          "default": true,
-          "description": "Show alphabetic comparison operators (lt, lte, gt, gte) as <, <=, >, >= in the editor. Place the caret on a token to reveal the source text."
+          "default": false,
+          "description": "Show alphabetic comparison operators (lt, lte, gt, gte) as <, <=, >, >= in the editor. Off by default (editor decorations can distort the minimap). Place the caret on a token to reveal the source text when enabled."
         }
       }
     },
