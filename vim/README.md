@@ -44,13 +44,7 @@ Then `:PlugInstall`.
 - Indent aligned with `#if` / `#else` / `#recover` / macros
 - Filetype helpers for comments and navigation
 
-FTL directives are highlighted as a **single** group (no mid-name colour split). Built-ins like `?size` use a distinct `ftlBuiltin` colour. Defaults use 256-colour / `guifg` values; enable truecolor if you want the hex colours:
-
-```vim
-set termguicolors
-```
-
-Vim is not limited to 16 colours when the terminal supports 256 or truecolor — old “hurting” looks usually came from linking everything to the colorscheme’s `Statement` / `PreProc` / HTML tag groups.
+Highlight groups are **layered** (`ftlDirKeyword`, `ftlIdentifier`, `ftlMethod`, `ftlBuiltin`, …) and **linked to the colorscheme** (`Statement`, `Identifier`, `Function`, `Special`, …). Do not hardcode near-white `guifg` — that vanishes on light terminal themes. Override with `:hi link ftlIdentifier MyGroup` if you want custom colours.
 
 ## Tests
 
