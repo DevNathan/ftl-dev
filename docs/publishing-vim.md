@@ -25,7 +25,7 @@ Plug 'DevNathan/ftl-dev.vim'
 GitHub → New repository → `ftl-dev.vim` → public → empty (no README).
 
 ```powershell
-git remote add vim-publish https://github.com/DevNathan/ftl-dev.vim.git
+git remote add vim-publish git@github.com:DevNathan/ftl-dev.vim.git
 ```
 
 ## Sync after version bump
