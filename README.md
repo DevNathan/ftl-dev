@@ -38,6 +38,11 @@ What else is there to do? Grab the extension from the VS Code or CodeOSS-family 
 - Cursor / Open VSX · VS Code Marketplace: **FreeMarker (ftl-dev)** (`nathan-0910.ftl-dev`)
 - Locally: `cd extension && npm run package`, then **Install from VSIX…**
 
+### Vim / Neovim
+
+- **Install:** Pathogen / Vundle / vim-plug → `DevNathan/ftl-dev.vim` ([docs/publishing-vim.md](docs/publishing-vim.md)). No npm.
+- **Develop here:** [`vim/`](vim/). Matrix: [docs/product/vim-neovim-matrix.md](docs/product/vim-neovim-matrix.md).
+
 [Changelog lives here](extension/CHANGELOG.md).
 I keep it in English only—but you all read English fine, right? :)
 

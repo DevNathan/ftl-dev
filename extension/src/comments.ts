@@ -1,11 +1,12 @@
 /**
- * FreeMarker comments for editor scanners.
+ * FreeMarker comments for editor scanners (index / diagnostics / decorations).
  *
  * Nesting (`<#-- … <#-- … --> … -->`) is supported so wrapping a region that
  * already contains comments still forms one closed block.
  *
- * Highlighting mute for comments must come from TextMate `comment.block` scope
- * (not a parallel semantic-token path) so brackets / operators are muted too.
+ * Visual mute (gray text, no bracket colorization) is TextMate `comment.block`
+ * only. This module does not mute highlighting; it tells other scanners which
+ * offsets to ignore so they do not re-color or index inside comments.
  */
 
 export type CommentDelimiterIssue = {
@@ -76,6 +77,22 @@ export function ftlCommentRanges(text: string): Array<[number, number]> {
     i++;
   }
   return ranges;
+}
+
+/** True if `offset` lies inside a top-level FTL comment range. */
+export function offsetInFtlComment(
+  offset: number,
+  comments: Array<[number, number]>
+): boolean {
+  for (const [start, end] of comments) {
+    if (offset >= start && offset < end) {
+      return true;
+    }
+    if (offset < start) {
+      return false;
+    }
+  }
+  return false;
 }
 
 /** Offsets of `<#--` / `[#--` that never close (kept for callers/tests). */

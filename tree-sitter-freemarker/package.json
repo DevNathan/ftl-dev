@@ -1,0 +1,20 @@
+{
+  "name": "tree-sitter-freemarker",
+  "version": "0.0.1",
+  "description": "tree-sitter grammar for FreeMarker (ftl-dev)",
+  "main": "bindings/node",
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "build": "tree-sitter build",
+    "test": "tree-sitter test"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.24.0"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.freemarker",
+      "file-types": ["ftl", "ftlh", "ftlx"]
+    }
+  ]
+}

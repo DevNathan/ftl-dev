@@ -2,7 +2,7 @@
 
 - Date: 2026-10-13
 - Against: [vision.md](vision.md), [ADR 0001](../decisions/0001-codeoss-language-stack.md), [ADR 0002](../decisions/0002-undeclared-vs-datamodel.md), [ADR 0003](../decisions/0003-comparison-operator-presentation.md)
-- Extension: `0.0.14` — plans **0001–0012** completed; Signature Help; nested FTL comments + delimiter diagnostics; comparison presentation opt-in (default off)
+- Extension: `0.0.15` — plans **0001–0013** completed; Signature Help; nested FTL comments; Vim plugin tree + docs ([matrix](vim-neovim-matrix.md)); comparison presentation opt-in (default off; not in Vim port)
 - Verification: `cd extension && npm test` (grammar + unit) passing
 
 ## Verdict
@@ -23,6 +23,7 @@
 | Comparison op presentation | **Done** (opt-in) | decorations + `comparisonDisplay.ts` (ADR 0003); default **off** (minimap) |
 | Signature Help (`#function` / `#macro`) | **Done** | `signatureHelp.ts` + provider; not builtins |
 | Nested FTL comments + delimiter diagnostics | **Done** | TextMate `comment.block` + `comments.ts` / diagnostics |
+| Vim / Neovim syntax + shared LSP scaffold | **Done** (scaffold) | [`vim/`](../../vim/), [`server/`](../../server/), ADR 0005 |
 | Undeclared / data-model (B) | **Deferred** | ADR 0002 |
 | Rename / workspace symbols | **Not started** | — |
 | LSP / Java enrichment | **Not started / non-goal** | — |

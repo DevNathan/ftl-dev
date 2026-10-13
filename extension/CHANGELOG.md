@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.0.15] - 2026-10-13
+
+### Fixed
+
+- Symbol index / semantic tokens skip FTL comments in one place (no parallel “comment mute” via semantic `comment` tokens); TextMate remains the only visual mute
+
+### Added
+
+- Vim / Neovim runtime under `vim/` (publish mirror `ftl-dev.vim`, Pathogen/Vundle/vim-plug); optional monorepo language-server scaffold under `server/` (not npm-published)
+
 ## [0.0.14] - 2026-10-13
 
 ### Added

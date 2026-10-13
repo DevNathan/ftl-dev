@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "outDir": "out",
+    "rootDir": "..",
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "../extension/src/diagnostics.ts",
+    "../extension/src/comments.ts",
+    "../extension/src/symbols.ts",
+    "../extension/src/catalog.ts",
+    "../extension/src/signatureHelp.ts",
+    "../extension/src/outline.ts",
+    "../extension/src/references.ts",
+    "../extension/src/imports.ts",
+    "../extension/src/docs.ts",
+    "../extension/src/reference/freemarkerRef.ts"
+  ],
+  "exclude": ["../extension/src/**/*.test.ts", "node_modules"]
+}
