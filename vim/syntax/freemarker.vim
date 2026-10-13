@@ -46,18 +46,19 @@ syn region ftlUserDirective start=/<\/\?@/ end=/\/\?>/ transparent keepend conta
 syn region ftlUserDirectiveSquare start=/\[\/\?@/ end=/\/\?]/ transparent keepend contains=ftlUserName,@ftlExpr
 syn region ftlInterpolation start="${" end="}" transparent keepend contains=@ftlExpr
 
-" High-contrast defaults (distinct hues on purpose)
-hi ftlComment ctermfg=244 guifg=#808080
-hi ftlCommentSquare ctermfg=244 guifg=#808080
-hi ftlDirKeyword ctermfg=39 guifg=#00afff cterm=bold gui=bold
-hi ftlUserName ctermfg=45 guifg=#00d7ff cterm=bold gui=bold
-hi ftlBuiltin ctermfg=208 guifg=#ff8700 cterm=bold gui=bold
-hi ftlMethod ctermfg=177 guifg=#d787ff cterm=bold gui=bold
-hi ftlIdentifier ctermfg=255 guifg=#eeeeee
-hi ftlNumber ctermfg=212 guifg=#ff87d7
-hi ftlOperator ctermfg=228 guifg=#ffff87
-hi ftlBoolean ctermfg=141 guifg=#af87ff
-hi ftlStringD ctermfg=114 guifg=#87d787
-hi ftlStringS ctermfg=114 guifg=#87d787
+" Link to colorscheme groups — NEVER hardcode near-white guifg/ctermfg.
+" Absolute #eeeeee / ctermfg=255 vanishes on light terminal themes.
+hi def link ftlComment Comment
+hi def link ftlCommentSquare Comment
+hi def link ftlDirKeyword Statement
+hi def link ftlUserName Type
+hi def link ftlBuiltin Special
+hi def link ftlMethod Function
+hi def link ftlIdentifier Identifier
+hi def link ftlNumber Number
+hi def link ftlOperator Operator
+hi def link ftlBoolean Boolean
+hi def link ftlStringD String
+hi def link ftlStringS String
 
 let b:current_syntax = "freemarker"

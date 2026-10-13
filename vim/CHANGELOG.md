@@ -6,33 +6,35 @@ Versioning is **independent** of the VS Code extension. Canonical file: [`VERSIO
 
 ## [Unreleased]
 
-## [0.1.3] - 2026-10-13
+## [0.2.0] - 2026-10-13
 
-### Fixed
-
-- Layered highlight groups: `#assign` (`ftlDirKeyword`), vars (`ftlIdentifier`), `.method` (`ftlMethod`), `?builtin` (`ftlBuiltin`) — no longer one solid colour
-- Builtin / identifier char classes: `[\w]` inside `[]` is not a word class; use `[a-zA-Z0-9_]` so `?string` highlights the full name
-- Transparent directive / interpolation regions so only contained atoms paint
-- Syntax smoke gate (`syntax_smoke.vim`) fails the suite on E866/E475 load errors
-
-## [0.1.2] - 2026-10-13
-
-### Fixed
-
-- Builtin pattern uses literal `?` (Vim NFA: `\?` is a quantifier → E866/E475)
-
-## [0.1.1] - 2026-10-13
+First coherent release. Consolidates the 0.1.x hotfix mess into one runtime that loads cleanly and paints correctly on light and dark terminal themes.
 
 ### Added
 
 - Vim runtime: `ftdetect`, `syntax`, `indent`, `ftplugin` for FreeMarker (`.ftl` / `.ftlh` / `.ftlx`)
-- Nested FTL comments, angle/square directives, `${…}` interpolations, distinct `?builtin` highlighting
-- Explicit 256/`guifg` defaults for FTL highlight groups (`termguicolors` recommended)
-- Optional Neovim LSP helper (`lua/ftl_dev/lsp.lua`) — requires a separately built language server
-- Vader + Neovim lua test suite with coverage inventory (`bash test/run.sh`)
+- Nested FTL comments; angle/square directives; `${…}` interpolations
+- Layered highlight groups: `#assign` → `ftlDirKeyword`, vars → `ftlIdentifier`, `.method` → `ftlMethod`, `?builtin` → `ftlBuiltin`
+- Groups **link to the colorscheme** (`Statement`, `Identifier`, `Function`, `Special`, …) — no hardcoded near-white `guifg`/`ctermfg`
+- Optional Neovim LSP helper (`lua/ftl_dev/lsp.lua`) — language server built separately
+- Vader + Neovim lua suite with coverage inventory (`bash test/run.sh`)
+- Syntax smoke gate (`syntax_smoke.vim`) fails on E866/E475 load errors
 
 ### Fixed
 
-- `indentkeys` avoids `[` / `<#` tokens (Vim 8.1 E518)
-- Indent helpers live in `autoload/ftl_dev/indent.vim`
-- Directive openers no longer split colours mid-name (no HTML-base / `matchgroup` steal)
+- `indentkeys` avoids `[` / `<#` (Vim 8.1 E518); indent helpers in `autoload/ftl_dev/indent.vim`
+- Vim NFA: literal `?` for builtins (`\?` is a quantifier); no `[\w]` inside `[]` (not a word class)
+- Transparent directive/interpolation regions — not one solid colour slab
+- No HTML-base / `matchgroup` steal mid-directive name
+
+## [0.1.3] - 2026-10-13
+
+Superseded by 0.2.0 (layered groups + smoke gate; still used absolute colours).
+
+## [0.1.2] - 2026-10-13
+
+Superseded by 0.2.0 (literal `?` for builtins).
+
+## [0.1.1] - 2026-10-13
+
+Superseded by 0.2.0 (initial runtime + tests).

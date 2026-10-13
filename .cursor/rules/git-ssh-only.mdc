@@ -1,0 +1,26 @@
+---
+description: Git remotes and push/fetch MUST use SSH only — never HTTPS
+alwaysApply: true
+---
+
+# Git: SSH only
+
+## Hard ban
+
+- **NEVER** use `https://github.com/...` (or any HTTPS git URL) for `git remote`, `git push`, `git fetch`, `git pull`, `git ls-remote`, or one-off push URLs.
+- **NEVER** run `git remote add` / `git remote set-url` with an `https://` URL.
+- **NEVER** “work around” SSH failures by switching to HTTPS. If SSH fails (`Permission denied (publickey)`), **stop** and tell the user. Do not invent an HTTPS fallback.
+- After any remote change, verify with `git remote -v` that every URL is `git@github.com:...` (or other `git@` / `ssh://` form).
+
+## Allowed
+
+- `git@github.com:DevNathan/ftl-dev.git`
+- `git@github.com:DevNathan/ftl-dev.vim.git` (remote name: `vim-publish`)
+- Documented **user-facing** clone URLs in README may stay HTTPS for humans; agent operations still use SSH.
+
+## Remotes for this repo
+
+| Remote | URL |
+|--------|-----|
+| `origin` | `git@github.com:DevNathan/ftl-dev.git` |
+| `vim-publish` | `git@github.com:DevNathan/ftl-dev.vim.git` |
