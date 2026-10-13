@@ -29,58 +29,56 @@ Execute (square comment is Comment group):
   bwipe!
 
 " coverage: syntax.directive_if
-Execute (<#if is directive/statement):
+Execute (<#if keyword is ftlDirKeyword):
   new
   setfiletype freemarker
   call setline(1, '<#if x>')
-  normal! 1G03l
-  let name = synIDattr(synID(line('.'), col('.'), 1), 'name')
-  Assert name =~? 'ftlDirective\|Statement\|ftlDelimiter\|Delimiter'
+  let col = stridx(getline(1), 'if') + 1
+  AssertEqual synIDattr(synID(1, col, 1), 'name'), 'ftlDirKeyword'
   bwipe!
 
 " coverage: syntax.interpolation
-Execute (${ interp is special):
+Execute (${ body identifier):
   new
   setfiletype freemarker
   call setline(1, '${user}')
-  normal! 1G02l
-  let name = synIDattr(synID(line('.'), col('.'), 1), 'name')
-  Assert name =~? 'ftlInterpolation\|Special\|ftlIdentifier\|Identifier'
+  let col = stridx(getline(1), 'user') + 1
+  AssertEqual synIDattr(synID(1, col, 1), 'name'), 'ftlIdentifier'
   bwipe!
 
 " coverage: syntax.user_directive
-Execute (<@macro is user directive):
+Execute (<@macro name is ftlUserName):
   new
   setfiletype freemarker
   call setline(1, '<@banner>')
-  normal! 1G03l
-  let name = synIDattr(synID(line('.'), col('.'), 1), 'name')
-  Assert name =~? 'ftlUserDirective'
+  let col = stridx(getline(1), 'banner') + 1
+  AssertEqual synIDattr(synID(1, col, 1), 'name'), 'ftlUserName'
   bwipe!
 
 " coverage: syntax.builtin
-Execute (?size builtin differs from identifier):
+Execute (?string builtin is full name not just ?s):
   new
   setfiletype freemarker
-  call setline(1, '<#assign x = received?size>')
-  " column of '?'
+  call setline(1, '<#assign x = m1.now()?string("y")/>')
   let qcol = stridx(getline(1), '?') + 1
-  call cursor(1, qcol)
   AssertEqual synIDattr(synID(1, qcol, 1), 'name'), 'ftlBuiltin'
-  " 'received' should be identifier
-  let rcol = stridx(getline(1), 'received') + 1
-  AssertEqual synIDattr(synID(1, rcol, 1), 'name'), 'ftlIdentifier'
+  " last letter of string in ?string
+  let scol = stridx(getline(1), '?string') + strlen('?string')
+  AssertEqual synIDattr(synID(1, scol, 1), 'name'), 'ftlBuiltin'
   bwipe!
 
+" coverage: syntax.method
 " coverage: syntax.directive_uniform
-Execute (<#assign open token is one syntax group):
+Execute (#assign / var / .method are three groups):
   new
   setfiletype freemarker
-  call setline(1, '<#assign x = 1>')
-  let a = synIDattr(synID(1, 1, 1), 'name')
-  let b = synIDattr(synID(1, 3, 1), 'name')
-  let c = synIDattr(synID(1, 5, 1), 'name')
-  AssertEqual a, 'ftlDirective'
-  AssertEqual b, 'ftlDirective'
-  AssertEqual c, 'ftlDirective'
+  call setline(1, '<#assign ymd = m1.now()?string("y")/>')
+  let kcol = stridx(getline(1), 'assign') + 1
+  AssertEqual synIDattr(synID(1, kcol, 1), 'name'), 'ftlDirKeyword'
+  let ycol = stridx(getline(1), 'ymd') + 1
+  AssertEqual synIDattr(synID(1, ycol, 1), 'name'), 'ftlIdentifier'
+  let mcol = stridx(getline(1), 'm1') + 1
+  AssertEqual synIDattr(synID(1, mcol, 1), 'name'), 'ftlIdentifier'
+  let dcol = stridx(getline(1), '.now') + 1
+  AssertEqual synIDattr(synID(1, dcol, 1), 'name'), 'ftlMethod'
   bwipe!

@@ -6,6 +6,15 @@ Versioning is **independent** of the VS Code extension. Canonical file: [`VERSIO
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-13
+
+### Fixed
+
+- Layered highlight groups: `#assign` (`ftlDirKeyword`), vars (`ftlIdentifier`), `.method` (`ftlMethod`), `?builtin` (`ftlBuiltin`) — no longer one solid colour
+- Builtin / identifier char classes: `[\w]` inside `[]` is not a word class; use `[a-zA-Z0-9_]` so `?string` highlights the full name
+- Transparent directive / interpolation regions so only contained atoms paint
+- Syntax smoke gate (`syntax_smoke.vim`) fails the suite on E866/E475 load errors
+
 ## [0.1.2] - 2026-10-13
 
 ### Fixed

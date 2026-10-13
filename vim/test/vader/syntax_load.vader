@@ -1,0 +1,30 @@
+" coverage: syntax.load_clean
+Execute (syntax/freemarker.vim sources with no E866/E475):
+  new
+  call setline(1, [
+        \ '<#assign x = m1.now()?string("yyyy")/>',
+        \ '<#assign y = x?substring(0,8)/>',
+        \ '${x}',
+        \ '<#-- c -->',
+        \ '[#if true][/#if]',
+        \ ])
+  let v:errmsg = ''
+  redir => g:ftl_msgs
+  silent! setfiletype freemarker
+  redir END
+  AssertEqual b:current_syntax, 'freemarker'
+  Assert g:ftl_msgs !~# 'E866'
+  Assert g:ftl_msgs !~# 'E475'
+  Assert v:errmsg ==# ''
+  " full builtin word — NOT just '?s' ([\w] collection bug)
+  let q = stridx(getline(1), '?string') + 1
+  AssertEqual synIDattr(synID(1, q, 1), 'name'), 'ftlBuiltin'
+  let t = stridx(getline(1), '?string') + len('?string')
+  AssertEqual synIDattr(synID(1, t, 1), 'name'), 'ftlBuiltin'
+  let sub = stridx(getline(2), '?substring') + 1
+  AssertEqual synIDattr(synID(2, sub, 1), 'name'), 'ftlBuiltin'
+  let sub_end = stridx(getline(2), '?substring') + len('?substring')
+  AssertEqual synIDattr(synID(2, sub_end, 1), 'name'), 'ftlBuiltin'
+  let a = stridx(getline(1), 'assign') + 1
+  AssertEqual synIDattr(synID(1, a, 1), 'name'), 'ftlDirKeyword'
+  bwipe!

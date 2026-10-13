@@ -28,6 +28,11 @@ fi
 echo "Coverage inventory: 100% of units tagged in vader cases."
 
 export VIMINIT=
+
+# Fail fast if syntax file itself is invalid on this Vim (catches E866/E475)
+vim -Nu "$TEST/vimrc" -S "$TEST/syntax_smoke.vim"
+echo "Syntax smoke passed."
+
 vim -Nu "$TEST/vimrc" -c "Vader! $TEST/vader/*.vader" -c 'qa!'
 echo "Vader suite passed."
 

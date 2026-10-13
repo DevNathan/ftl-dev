@@ -58,7 +58,13 @@ Vim is not limited to 16 colours when the terminal supports 256 or truecolor —
 cd vim && bash test/run.sh
 ```
 
-Requires `vim`, `git`, `python3`, and `nvim` (for `lua/ftl_dev/lsp.lua`). The runner checks [test/coverage_inventory.json](test/coverage_inventory.json) so every listed unit has a Vader/Lua coverage tag (**100% inventory coverage**), then runs the suite.
+Requires `vim`, `git`, `python3`, and `nvim` (for `lua/ftl_dev/lsp.lua`).
+
+The runner:
+
+1. Checks [test/coverage_inventory.json](test/coverage_inventory.json) tags (**100% inventory**)
+2. **`syntax_smoke.vim`** — sources `syntax/freemarker.vim` and **fails on E866/E475** (Vim NFA regexp mistakes). Inventory-only tagging is not enough; this is the load gate.
+3. Vader suite + Neovim lua tests
 
 Version: see [`VERSION`](VERSION). Updates: re-pull with your plugin manager (`PluginUpdate` / `PlugUpdate` / …).
 

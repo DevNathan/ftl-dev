@@ -34,12 +34,15 @@
     { "id": "lua.lsp.setup_requires_cmd", "file": "lua/ftl_dev/lsp.lua" },
     { "id": "lua.lsp.setup_ok", "file": "lua/ftl_dev/lsp.lua" },
     { "id": "syntax.guard", "file": "syntax/freemarker.vim" },
+    { "id": "syntax.load_clean", "file": "syntax/freemarker.vim" },
+
     { "id": "syntax.comment_angle", "file": "syntax/freemarker.vim" },
     { "id": "syntax.comment_square", "file": "syntax/freemarker.vim" },
     { "id": "syntax.directive_if", "file": "syntax/freemarker.vim" },
     { "id": "syntax.interpolation", "file": "syntax/freemarker.vim" },
     { "id": "syntax.user_directive", "file": "syntax/freemarker.vim" },
     { "id": "syntax.builtin", "file": "syntax/freemarker.vim" },
+    { "id": "syntax.method", "file": "syntax/freemarker.vim" },
     { "id": "syntax.directive_uniform", "file": "syntax/freemarker.vim" },
     { "id": "syntax.current_syntax", "file": "syntax/freemarker.vim" }
   ]
