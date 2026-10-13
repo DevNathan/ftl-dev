@@ -31,7 +31,7 @@ inoremap <buffer> ${ ${}<Left>
 " Simple directive close hint: after typing </#  use omni / LSP; keep lightweight
 " gf for quoted include/import paths on the line
 setlocal include=\\v\\[#<]#\\s*(include\|import)\\s+[\"']
-setlocal includeexpr=substitute(v:fname,'^[\"'']\\\|[\"'']$','','g')
+setlocal includeexpr=ftl_dev#ft#strip_include_quotes(v:fname)
 setlocal suffixesadd=.ftl,.ftlh,.ftlx
 
 let b:undo_ftplugin =

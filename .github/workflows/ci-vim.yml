@@ -1,0 +1,23 @@
+name: CI Vim
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "vim/**"
+      - ".github/workflows/ci-vim.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "vim/**"
+      - ".github/workflows/ci-vim.yml"
+
+jobs:
+  test-vim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Vim and Neovim
+        run: sudo apt-get update && sudo apt-get install -y vim-nox neovim python3
+      - name: Run ftl-dev.vim tests (100% inventory coverage)
+        run: bash vim/test/run.sh
