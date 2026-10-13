@@ -4,7 +4,7 @@ Direction is recorded in [docs/decisions/0001-codeoss-language-stack.md](docs/de
 
 ## Overview
 
-A CodeOSS (VS Code / Cursor / compatible) extension that treats FreeMarker as a **scripting language**: lexical highlighting plus a language service for navigation, completion, and semantic coloring. Primary target remains CodeOSS; a **shared LSP** under [`server/`](server/) serves Vim/Neovim (and can replace in-process providers later). Vim syntax lives under [`vim/`](vim/). See [ADR 0005](docs/decisions/0005-vim-neovim-port.md).
+A CodeOSS (VS Code / Cursor / compatible) extension that treats FreeMarker as a **scripting language**: lexical highlighting plus a language service for navigation, completion, and semantic coloring. Primary target remains CodeOSS; a **shared LSP** under [`server/`](server/) serves Vim/Neovim (and can replace in-process providers later). Vim syntax lives in the separate **[`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim)** repository. See [ADR 0005](docs/decisions/0005-vim-neovim-port.md).
 
 ## Components
 
@@ -48,7 +48,7 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 | FTL indent (`if`/`elseif`/`else` aligned) | `indentationRules` / `onEnterRules` in `language-configuration.json` (patterns in `src/indentRules.ts`); auto-close aligns `</` indent with opener |
 | Comparison op presentation (`gte`→`>=`) | Text decorations ([ADR 0003](docs/decisions/0003-comparison-operator-presentation.md)); caret reveals source |
 | Parameter hints (`#function` / `#macro`) | `SignatureHelpProvider` (`signatureHelp.ts`) / LSP |
-| Vim / Neovim highlight + indent | [`vim/`](vim/) runtime (`syntax`, `indent`, `ftplugin`) |
+| Vim / Neovim highlight + indent | Separate repo [`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim) |
 | Shared language server | [`server/`](server/) stdio LSP (no comparison decorations) |
 
 ## Testing

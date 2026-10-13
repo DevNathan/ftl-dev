@@ -2,13 +2,13 @@
 
 - Date: 2026-10-13
 - ADR: [0005-vim-neovim-port.md](../decisions/0005-vim-neovim-port.md)
-- Assumption: language logic is shared via **LSP** ([`server/`](../../server/)); syntax via [`vim/`](../../vim/).
+- Assumption: language logic is shared via **LSP** ([`server/`](../../server/)); syntax via **[`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim)** (separate git).
 
 ## Required
 
 | Feature | Vim | Neovim | Notes |
 |---------|-----|--------|-------|
-| Lexical / syntax highlighting | **Supported** | **Supported** | [`vim/syntax`](../../vim/syntax/freemarker.vim); optional [`tree-sitter-freemarker`](../../tree-sitter-freemarker/) |
+| Lexical / syntax highlighting | **Supported** | **Supported** | `ftl-dev.vim` syntax; optional [`tree-sitter-freemarker`](../../tree-sitter-freemarker/) in this VSIX repo only |
 
 ## Via LSP (`server/`) — reuses `extension/src`
 
@@ -30,7 +30,7 @@ Without LSP, the rows above are **not** provided by the Vim runtime alone.
 
 | Feature | Vim | Neovim | Notes |
 |---------|-----|--------|-------|
-| Indent (`#if` / `#else` / `#recover`) | **Supported** | **Supported** | [`vim/indent`](../../vim/indent/freemarker.vim) |
+| Indent (`#if` / `#else` / `#recover`) | **Supported** | **Supported** | `ftl-dev.vim` indent |
 | `${` auto-close | **Approximate** | **Approximate** | ftplugin mapping |
 | Comment toggle | **Supported** | **Supported** | `commentstring` |
 | Match / jump block tags | **Approximate** | **Approximate** | matchit `b:match_words` |
@@ -46,9 +46,7 @@ Without LSP, the rows above are **not** provided by the Vim runtime alone.
 | Java / data-model enrichment | **Deferred (all editors)** | ADR 0002 |
 | Rename / workspace symbols | **Not implemented (all editors)** | Future LSP |
 
-## Install sketch
-
-**Published plugin** (Pathogen / Vundle / vim-plug — after mirror exists):
+## Install
 
 ```vim
 Plugin 'DevNathan/ftl-dev.vim'
@@ -59,6 +57,4 @@ Plugin 'DevNathan/ftl-dev.vim'
 git clone https://github.com/DevNathan/ftl-dev.vim.git ~/.vim/bundle/ftl-dev.vim
 ```
 
-**Monorepo checkout:** `set runtimepath^=/path/to/ftl-dev/vim`
-
-Publish: [publishing-vim.md](../publishing-vim.md). Language server is optional monorepo tooling only (not npm).
+Language server is optional tooling in **this** (VSIX) repo only (not npm, not part of the Plug download).

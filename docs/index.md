@@ -9,13 +9,11 @@ Canonical language: **English**. Korean siblings: `*.ko.md` (see [index.ko.md](i
 | Active plans | [plans/active/](plans/active/) | *(none)* |
 | Completed plans | [plans/completed/](plans/completed/) | Through [0013 Vim/Neovim port](plans/completed/0013-vim-neovim-port.md) |
 | Extension | [../extension/](../extension/) | CodeOSS package (grammar + navigation providers) |
-| Vim runtime | [../vim/](../vim/) | Syntax / indent / ftplugin; tests: `bash vim/test/run.sh` |
+| Vim runtime | [ftl-dev.vim](https://github.com/DevNathan/ftl-dev.vim) | **Separate git** — syntax / indent / ftplugin |
 | Language server | [../server/](../server/) | Shared LSP (stdio) for Vim / Neovim / future VS Code |
 | Publishing | [publishing.md](publishing.md) | Open VSX + VS Marketplace via GitHub Actions |
-| Publishing (Vim) | [publishing-vim.md](publishing-vim.md) | Mirror `vim/` → GitHub `ftl-dev.vim` |
-| Publishing (LS) | [publishing-language-server.md](publishing-language-server.md) | Monorepo-only; not npm |
+| Publishing (LS) | [publishing-language-server.md](publishing-language-server.md) | This repo only; not npm |
 | Versioning | [versioning.md](versioning.md) | Extension `package.json` bumps |
-| Versioning (Vim) | [versioning-vim.md](versioning-vim.md) | `vim/VERSION` / `ftl-dev.vim` tags |
 | Changelog | [../extension/CHANGELOG.md](../extension/CHANGELOG.md) | Per-version user-facing notes (Keep a Changelog; [ADR 0004](decisions/0004-changelog.md)) |
 | Grammar tests | [../tests/grammar/](../tests/grammar/) | `vscode-tmgrammar-test` fixtures |
 | UX fixtures | [../tests/fixtures/](../tests/fixtures/) | `sample/`, `navigation/`, `comparison/` for F5 / manual checks |

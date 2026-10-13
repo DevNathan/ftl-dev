@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Added
 
-- Vim / Neovim runtime under `vim/` (publish mirror `ftl-dev.vim`, Pathogen/Vundle/vim-plug); optional monorepo language-server scaffold under `server/` (not npm-published)
+- Vim / Neovim via separate repo `ftl-dev.vim` (Pathogen/Vundle/vim-plug); optional language-server scaffold under `server/` (not npm-published)
 
 ## [0.0.14] - 2026-10-13
 
