@@ -2,9 +2,12 @@ import * as vscode from "vscode";
 import { ComparisonOp, findComparisonOps } from "./comparisonDisplay";
 import { offsetToLineCharacter } from "./symbols";
 
-const SETTING_KEY = "ftl-dev.comparisonOperatorPresentation";
+const SETTING_KEY = "comparisonOperatorPresentation";
+const SETTING_SECTION = "ftl-dev";
+const FULL_SETTING_KEY = `${SETTING_SECTION}.${SETTING_KEY}`;
 
 const DISPLAY_COLOR = new vscode.ThemeColor("editor.foreground");
+const DISPLAYS = ["<", "<=", ">", ">="] as const;
 
 function createDecorationType(
   display: string
@@ -50,22 +53,69 @@ function overlapsSelection(
   return false;
 }
 
+function isEnabled(): boolean {
+  return vscode.workspace
+    .getConfiguration(SETTING_SECTION)
+    .get<boolean>(SETTING_KEY, false);
+}
+
+/** Warn when both old and new extension ids may decorate the same buffer. */
+function warnDuplicateFtlDevExtensions(): void {
+  const freemarkerExts = vscode.extensions.all.filter((e) => {
+    const id = e.id.toLowerCase();
+    return id.includes("ftl-dev") || id.includes("freemarker");
+  });
+  if (freemarkerExts.length <= 1) {
+    return;
+  }
+  const list = freemarkerExts.map((e) => e.id).join(", ");
+  void vscode.window
+    .showWarningMessage(
+      `Multiple FreeMarker extensions are active (${list}). Uninstall the older id (e.g. nathan.ftl-dev) — leftover comparison decorations can corrupt the editor/minimap even when ftl-dev settings are off.`,
+      "Open Extensions"
+    )
+    .then((choice) => {
+      if (choice === "Open Extensions") {
+        void vscode.commands.executeCommand(
+          "workbench.extensions.search",
+          "@installed ftl"
+        );
+      }
+    });
+}
+
 export function registerComparisonDisplay(
   context: vscode.ExtensionContext
 ): void {
-  const types = new Map<string, vscode.TextEditorDecorationType>();
-  for (const display of ["<", "<=", ">", ">="]) {
-    const t = createDecorationType(display);
-    types.set(display, t);
-    context.subscriptions.push(t);
-  }
+  /** Created only while the setting is on; disposed when off. */
+  let types: Map<string, vscode.TextEditorDecorationType> | undefined;
 
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const clearEditor = (editor: vscode.TextEditor): void => {
-    for (const t of types.values()) {
-      editor.setDecorations(t, []);
+  const ensureTypes = (): Map<string, vscode.TextEditorDecorationType> => {
+    if (types) {
+      return types;
     }
+    types = new Map();
+    for (const display of DISPLAYS) {
+      types.set(display, createDecorationType(display));
+    }
+    return types;
+  };
+
+  const disposeTypes = (): void => {
+    if (!types) {
+      return;
+    }
+    for (const editor of vscode.window.visibleTextEditors) {
+      for (const t of types.values()) {
+        editor.setDecorations(t, []);
+      }
+    }
+    for (const t of types.values()) {
+      t.dispose();
+    }
+    types = undefined;
   };
 
   const refreshEditor = (editor: vscode.TextEditor | undefined): void => {
@@ -73,18 +123,16 @@ export function registerComparisonDisplay(
       return;
     }
 
-    const enabled = vscode.workspace
-      .getConfiguration()
-      .get<boolean>(SETTING_KEY, false);
-    if (!enabled) {
-      clearEditor(editor);
+    if (!isEnabled()) {
+      disposeTypes();
       return;
     }
 
+    const typeMap = ensureTypes();
     const text = editor.document.getText();
     const ops = findComparisonOps(text);
     const buckets = new Map<string, vscode.DecorationOptions[]>();
-    for (const display of types.keys()) {
+    for (const display of typeMap.keys()) {
       buckets.set(display, []);
     }
 
@@ -105,7 +153,7 @@ export function registerComparisonDisplay(
       });
     }
 
-    for (const [display, decorationType] of types) {
+    for (const [display, decorationType] of typeMap) {
       editor.setDecorations(decorationType, buckets.get(display) ?? []);
     }
   };
@@ -118,6 +166,10 @@ export function registerComparisonDisplay(
   };
 
   const refreshVisible = (): void => {
+    if (!isEnabled()) {
+      disposeTypes();
+      return;
+    }
     for (const editor of vscode.window.visibleTextEditors) {
       refreshEditor(editor);
     }
@@ -142,7 +194,7 @@ export function registerComparisonDisplay(
       }
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration(SETTING_KEY)) {
+      if (e.affectsConfiguration(FULL_SETTING_KEY)) {
         refreshVisible();
       }
     }),
@@ -151,9 +203,11 @@ export function registerComparisonDisplay(
         if (timer) {
           clearTimeout(timer);
         }
+        disposeTypes();
       },
     }
   );
 
+  warnDuplicateFtlDevExtensions();
   refreshVisible();
 }

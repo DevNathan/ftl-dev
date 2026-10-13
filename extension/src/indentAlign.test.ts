@@ -63,6 +63,36 @@ test("recover aligns to attempt", () => {
   assert.ok(after.includes("\n<#recover>"), after);
 });
 
+test("recover aligns even when </#attempt> is on the same line", () => {
+  // Common after HTML-style pair + typing recover before the close on the body line.
+  const before =
+    "<#attempt>\n" +
+    "  <#recover";
+  const withCloser = before + "></#attempt>";
+  const edit = alignIndentAfterCloser(withCloser, before.length + 1);
+  assert.ok(edit, "expected align edit");
+  const after = applyIndentAlignEdit(withCloser, edit!);
+  assert.strictEqual(after, "<#attempt>\n<#recover></#attempt>");
+});
+
+test("close attempt after recover aligns to attempt", () => {
+  const before =
+    "<#attempt>\n" +
+    "  risky\n" +
+    "<#recover>\n" +
+    "  handle\n" +
+    "  </#attempt";
+  const after = typeCloser(before, ">");
+  assert.strictEqual(
+    after,
+    "<#attempt>\n" +
+      "  risky\n" +
+      "<#recover>\n" +
+      "  handle\n" +
+      "</#attempt>"
+  );
+});
+
 test("close tag aligns to opener", () => {
   const before =
     "<#if x>\n" +

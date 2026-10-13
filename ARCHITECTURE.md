@@ -47,6 +47,7 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 | Directive auto-close | `autoClosingPairs` + snippets / on-type edits |
 | FTL indent (`if`/`elseif`/`else` aligned) | `indentationRules` / `onEnterRules` in `language-configuration.json` (patterns in `src/indentRules.ts`); auto-close aligns `</` indent with opener |
 | Comparison op presentation (`gte`→`>=`) | Text decorations ([ADR 0003](docs/decisions/0003-comparison-operator-presentation.md)); caret reveals source |
+| Parameter hints (`#function` / `#macro`) | `SignatureHelpProvider` (`signatureHelp.ts`) |
 
 ## Testing
 

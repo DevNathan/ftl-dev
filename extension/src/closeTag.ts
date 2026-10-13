@@ -1,3 +1,5 @@
+import { skipFtlComment } from "./comments";
+
 export type CloseEdit = {
   /**
    * Replace [start, end) with `text` (preferred for `</` → full close tag).
@@ -234,10 +236,15 @@ function pushAngleTags(textBefore: string, stack: OpenSite[]): void {
       break;
     }
 
-    // HTML / FTL comments and doctype — skip through end
-    if (textBefore.startsWith("!--", p) || textBefore.startsWith("#--", p)) {
+    // HTML / FTL comments and doctype — skip through end (FTL comments nest)
+    if (textBefore.startsWith("!--", p)) {
       const end = textBefore.indexOf("-->", p);
       i = end === -1 ? textBefore.length : end + 3;
+      continue;
+    }
+    if (textBefore.startsWith("#--", p)) {
+      // `p` is after `<`; comment starts at `start`
+      i = skipFtlComment(textBefore, start);
       continue;
     }
     if (
@@ -591,20 +598,13 @@ export function autoClosePairOnEnter(
       ? `</${open.name}>`
       : `${open.openBracket}/${open.name}${open.openBracket === "<" ? ">" : "]"}`;
 
-  // Already closed on the same remainder or following non-empty line?
-  const rest = text.slice(lineEnd);
-  if (
-    rest.startsWith(closeToken) ||
-    (() => {
-      const nextLine = rest.match(/^\r?\n([^\r\n]*)/);
-      return nextLine && nextLine[1]!.trim() === closeToken;
-    })()
-  ) {
+  // Same-line pair left behind after Enter split, or open line already had a close.
+  if (prevContent.includes(closeToken)) {
     return undefined;
   }
-  // Same-line pair left behind after Enter split: afterText was the close tag
-  // (now on the next line) — covered above. Also skip if open line had trailing close.
-  if (prevContent.includes(closeToken)) {
+
+  // Already balanced later in the file (body may sit between caret and `</#if>`).
+  if (!isOpenStillUnclosed(text, prev.contentStart, open.openBracket)) {
     return undefined;
   }
 
@@ -617,6 +617,24 @@ export function autoClosePairOnEnter(
     },
     cursorAt: afterNl + bodyIndent.length,
   };
+}
+
+/**
+ * True when the open tag that started at `openOffset` is still on the
+ * unclosed stack after scanning the whole document.
+ */
+function isOpenStillUnclosed(
+  text: string,
+  openOffset: number,
+  openBracket: "<" | "["
+): boolean {
+  const stack: OpenSite[] = [];
+  if (openBracket === "[") {
+    pushFtlTags(text, "[", stack);
+  } else {
+    pushAngleTags(text, stack);
+  }
+  return stack.some((s) => s.offset === openOffset);
 }
 
 /** Tag text like `<#if x>` / `<div class="a">` (not necessarily a whole line). */

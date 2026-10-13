@@ -28,13 +28,35 @@ export class FtlCompletionProvider
     const before = text.slice(0, offset);
     const ctx = completionContext(before);
     const index = indexFtl(text);
-    const local = [...new Set(index.symbols.map((s) => s.name))];
     const imported = await collectImportSymbols(
       document.uri.fsPath,
       index,
       readFs
     );
-    const symbolNames = [...local, ...imported.qualified];
+
+    // Prefer `asFunctionCall` when any decl of that name is a #function.
+    const byName = new Map<
+      string,
+      { name: string; asFunctionCall?: boolean }
+    >();
+    for (const s of index.symbols) {
+      const prev = byName.get(s.name);
+      byName.set(s.name, {
+        name: s.name,
+        asFunctionCall: s.kind === "function" || prev?.asFunctionCall,
+      });
+    }
+    for (const [ns, syms] of imported.byNs) {
+      for (const s of syms) {
+        const q = `${ns}.${s.name}`;
+        const prev = byName.get(q);
+        byName.set(q, {
+          name: q,
+          asFunctionCall: s.kind === "function" || prev?.asFunctionCall,
+        });
+      }
+    }
+    const symbols = [...byName.values()];
 
     const kindMap: Record<string, vscode.CompletionItemKind> = {
       directive: vscode.CompletionItemKind.Keyword,
@@ -42,8 +64,12 @@ export class FtlCompletionProvider
       symbol: vscode.CompletionItemKind.Variable,
     };
 
-    return buildCompletions(ctx, symbolNames).map((c) => {
-      const item = new vscode.CompletionItem(c.label, kindMap[c.kind]);
+    return buildCompletions(ctx, symbols).map((c) => {
+      const kind =
+        c.insertAsSnippet
+          ? vscode.CompletionItemKind.Function
+          : kindMap[c.kind];
+      const item = new vscode.CompletionItem(c.label, kind);
       item.detail = c.detail;
       if (c.documentation) {
         const md = new vscode.MarkdownString(c.documentation);
@@ -51,7 +77,17 @@ export class FtlCompletionProvider
         item.documentation = md;
       }
       if (c.insertText) {
-        item.insertText = c.insertText;
+        // Don't double-up when the user already typed `twice(|`
+        const nextCh = document.getText(
+          new vscode.Range(position, position.translate(0, 1))
+        );
+        if (c.insertAsSnippet && nextCh === "(") {
+          item.insertText = c.label;
+        } else {
+          item.insertText = c.insertAsSnippet
+            ? new vscode.SnippetString(c.insertText)
+            : c.insertText;
+        }
       }
       const prefixLen =
         ctx.type === "directive" ||

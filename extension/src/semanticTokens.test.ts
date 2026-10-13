@@ -148,7 +148,7 @@ syncTest("identifiers inside FTL comments are not highlighted", () => {
     const off = lineCharacterToOffset(text, s.line, s.character);
     assert.ok(
       !inComment(off),
-      `span at ${s.line}:${s.character} must not lie inside comments`
+      `no semantic spans inside comments (got ${s.tokenType} at ${s.line}:${s.character})`
     );
   }
 
@@ -172,6 +172,30 @@ syncTest("ftlCommentRanges covers angle and square comments", () => {
     [1, 11],
     [12, 22],
   ]);
+});
+
+syncTest("ftlCommentRanges nests inner comments", () => {
+  const text = `<#--\n<#-- inner -->\n<#assign x = 1>\n-->`;
+  assert.deepStrictEqual(ftlCommentRanges(text), [[0, text.length]]);
+});
+
+syncTest("unclosed comment range covers to EOF; no identifier spans inside", () => {
+  const text = `<#--\n<#assign x = 1>`;
+  assert.deepStrictEqual(ftlCommentRanges(text), [[0, text.length]]);
+  const spans = buildSemanticTokenSpans(text);
+  assert.ok(
+    !spans.some((s) => s.tokenType === "variable"),
+    "decls inside unclosed comment must not get variable tokens"
+  );
+});
+
+syncTest("closed nested comment suppresses identifier semantic tokens", () => {
+  const text = `<#--\n<#-- inner -->\n<#assign x = 1>\n-->`;
+  const spans = buildSemanticTokenSpans(text);
+  assert.ok(
+    !spans.some((s) => s.tokenType === "variable"),
+    "decls inside closed comment must not get variable tokens"
+  );
 });
 
 syncTest("encodeSemanticTokenSpans is 5 uints per token, sorted", () => {

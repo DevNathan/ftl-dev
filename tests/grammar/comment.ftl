@@ -6,3 +6,10 @@
 [#-- square.find()['x'] --]
 // <----------------------- comment.block.freemarker
 //     ^ comment.block.freemarker
+<#--
+// <---- comment.block.freemarker
+<#assign live_code = 1>
+// <----------------------- comment.block.freemarker
+<#-- outer <#-- inner --> still -->
+// <-------------------------------- comment.block.freemarker
+//           ^ comment.block.freemarker

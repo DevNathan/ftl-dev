@@ -169,6 +169,13 @@ test("Enter when close already on next line does nothing", () => {
   assert.strictEqual(autoClosePairOnEnter(text, cursor), undefined);
 });
 
+test("Enter inside already-closed if with body does not double-close", () => {
+  // Cursor on blank line between `<#if>` and body; `</#if>` already exists below.
+  const text = "<#if>\n\t\n\t<#assign let=10/>\n</#if>";
+  const cursor = "<#if>\n\t".length;
+  assert.strictEqual(autoClosePairOnEnter(text, cursor, "\t"), undefined);
+});
+
 test("Enter after [#list] inserts [/#list]", () => {
   const text = "[#list xs as x]\n  ";
   const edit = autoClosePairOnEnter(text, text.length);

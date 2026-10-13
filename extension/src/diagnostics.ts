@@ -1,4 +1,5 @@
 import { DIRECTIVES } from "./catalog";
+import { findCommentDelimiterIssues, skipFtlComment } from "./comments";
 import { offsetToLineCharacter } from "./symbols";
 
 export type FtlDiagnostic = {
@@ -16,28 +17,16 @@ const KNOWN_DIRECTIVES = new Set(DIRECTIVES);
  */
 export function validateFtl(text: string): FtlDiagnostic[] {
   const out: FtlDiagnostic[] = [];
-  const inComment = { v: false };
   let inString: '"' | "'" | null = null;
   let i = 0;
 
   while (i < text.length) {
-    // FTL comment <#-- ... -->
+    // FTL comment <#-- … --> / [#-- … --] (nested)
     if (
-      !inComment.v &&
       !inString &&
-      text.startsWith("<#--", i)
+      (text.startsWith("<#--", i) || text.startsWith("[#--", i))
     ) {
-      inComment.v = true;
-      i += 4;
-      continue;
-    }
-    if (inComment.v) {
-      if (text.startsWith("-->", i)) {
-        inComment.v = false;
-        i += 3;
-      } else {
-        i++;
-      }
+      i = skipFtlComment(text, i);
       continue;
     }
 
@@ -99,15 +88,24 @@ export function validateFtl(text: string): FtlDiagnostic[] {
   // Unclosed ${ ... }
   out.push(...findUnclosedInterpolations(text));
 
-  // Unclosed <#-- 
-  if (text.includes("<#--") && !balancedComments(text)) {
-    const start = text.lastIndexOf("<#--");
-    const after = text.slice(start);
-    if (!after.includes("-->")) {
+  // Unmatched comment delimiters (unclosed `<#--` / orphan `-->`)
+  for (const issue of findCommentDelimiterIssues(text)) {
+    if (issue.kind === "unclosed-open") {
       out.push({
-        offset: start,
+        offset: issue.offset,
         length: 4,
-        message: "Unclosed FreeMarker comment; expected '-->'.",
+        message: issue.angle
+          ? "Unclosed FreeMarker comment; expected '-->'."
+          : "Unclosed FreeMarker comment; expected '--]'.",
+        severity: "error",
+      });
+    } else {
+      out.push({
+        offset: issue.offset,
+        length: 3,
+        message: issue.angle
+          ? "Unexpected '-->'; no matching '<#--'."
+          : "Unexpected '--]'; no matching '[#--'.",
         severity: "error",
       });
     }
@@ -293,21 +291,12 @@ function findUnclosedDirectiveOpens(text: string): FtlDiagnostic[] {
   const diags: FtlDiagnostic[] = [];
   let i = 0;
   let inString: '"' | "'" | null = null;
-  let inComment = false;
-
   while (i < text.length) {
-    if (!inComment && !inString && text.startsWith("<#--", i)) {
-      inComment = true;
-      i += 4;
-      continue;
-    }
-    if (inComment) {
-      if (text.startsWith("-->", i)) {
-        inComment = false;
-        i += 3;
-      } else {
-        i++;
-      }
+    if (
+      !inString &&
+      (text.startsWith("<#--", i) || text.startsWith("[#--", i))
+    ) {
+      i = skipFtlComment(text, i);
       continue;
     }
     if (inString) {
@@ -345,13 +334,11 @@ function findUnclosedDirectiveOpens(text: string): FtlDiagnostic[] {
     let paren = 0;
     let brace = 0;
     while (i < text.length) {
-      if (!inString && text.startsWith("<#--", i)) {
-        const endc = text.indexOf("-->", i + 4);
-        if (endc === -1) {
-          i = text.length;
-          break;
-        }
-        i = endc + 3;
+      if (
+        !inString &&
+        (text.startsWith("<#--", i) || text.startsWith("[#--", i))
+      ) {
+        i = skipFtlComment(text, i);
         continue;
       }
       const c = text[i]!;
@@ -433,21 +420,12 @@ function scanDirectives(text: string): DirTok[] {
   const tokens: DirTok[] = [];
   let i = 0;
   let inString: '"' | "'" | null = null;
-  let inComment = false;
-
   while (i < text.length) {
-    if (!inComment && !inString && text.startsWith("<#--", i)) {
-      inComment = true;
-      i += 4;
-      continue;
-    }
-    if (inComment) {
-      if (text.startsWith("-->", i)) {
-        inComment = false;
-        i += 3;
-      } else {
-        i++;
-      }
+    if (
+      !inString &&
+      (text.startsWith("<#--", i) || text.startsWith("[#--", i))
+    ) {
+      i = skipFtlComment(text, i);
       continue;
     }
     if (inString) {
@@ -486,13 +464,11 @@ function scanDirectives(text: string): DirTok[] {
     let paren = 0;
     let brace = 0;
     while (i < text.length) {
-      if (!inString && text.startsWith("<#--", i)) {
-        const endc = text.indexOf("-->", i + 4);
-        if (endc === -1) {
-          i = text.length;
-          break;
-        }
-        i = endc + 3;
+      if (
+        !inString &&
+        (text.startsWith("<#--", i) || text.startsWith("[#--", i))
+      ) {
+        i = skipFtlComment(text, i);
         continue;
       }
       const c = text[i]!;
@@ -610,44 +586,16 @@ function scanDirectives(text: string): DirTok[] {
   return tokens;
 }
 
-function balancedComments(text: string): boolean {
-  let i = 0;
-  let open = 0;
-  while (i < text.length) {
-    if (text.startsWith("<#--", i)) {
-      open++;
-      i += 4;
-      continue;
-    }
-    if (text.startsWith("-->", i) && open > 0) {
-      open--;
-      i += 3;
-      continue;
-    }
-    i++;
-  }
-  return open === 0;
-}
-
 function findUnclosedInterpolations(text: string): FtlDiagnostic[] {
   const diags: FtlDiagnostic[] = [];
   let i = 0;
   let inString: '"' | "'" | null = null;
-  let inComment = false;
-
   while (i < text.length) {
-    if (!inComment && !inString && text.startsWith("<#--", i)) {
-      inComment = true;
-      i += 4;
-      continue;
-    }
-    if (inComment) {
-      if (text.startsWith("-->", i)) {
-        inComment = false;
-        i += 3;
-      } else {
-        i++;
-      }
+    if (
+      !inString &&
+      (text.startsWith("<#--", i) || text.startsWith("[#--", i))
+    ) {
+      i = skipFtlComment(text, i);
       continue;
     }
     if (inString) {
@@ -673,12 +621,15 @@ function findUnclosedInterpolations(text: string): FtlDiagnostic[] {
       let depth = 1;
       let found = false;
       while (i < text.length) {
-        if (!inString && text.startsWith("<#--", i)) {
-          const endc = text.indexOf("-->", i + 4);
-          if (endc === -1) {
+        if (
+          !inString &&
+          (text.startsWith("<#--", i) || text.startsWith("[#--", i))
+        ) {
+          const next = skipFtlComment(text, i);
+          if (next <= i) {
             break;
           }
-          i = endc + 3;
+          i = next;
           continue;
         }
         const c = text[i]!;
@@ -777,21 +728,12 @@ function ftlExpressionRegions(
   const regions: Array<{ start: number; end: number }> = [];
   let i = 0;
   let inString: '"' | "'" | null = null;
-  let inComment = false;
-
   while (i < text.length) {
-    if (!inComment && !inString && text.startsWith("<#--", i)) {
-      inComment = true;
-      i += 4;
-      continue;
-    }
-    if (inComment) {
-      if (text.startsWith("-->", i)) {
-        inComment = false;
-        i += 3;
-      } else {
-        i++;
-      }
+    if (
+      !inString &&
+      (text.startsWith("<#--", i) || text.startsWith("[#--", i))
+    ) {
+      i = skipFtlComment(text, i);
       continue;
     }
     if (inString) {
@@ -860,12 +802,11 @@ function scanDirectiveClose(
   let paren = 0;
   let brace = 0;
   while (i < text.length) {
-    if (!inString && text.startsWith("<#--", i)) {
-      const endc = text.indexOf("-->", i + 4);
-      if (endc === -1) {
-        return -1;
-      }
-      i = endc + 3;
+    if (
+      !inString &&
+      (text.startsWith("<#--", i) || text.startsWith("[#--", i))
+    ) {
+      i = skipFtlComment(text, i);
       continue;
     }
     const c = text[i]!;
@@ -906,12 +847,15 @@ function findMatchingBrace(text: string, openBrace: number, limit: number): numb
   let depth = 1;
   let inString: '"' | "'" | null = null;
   while (i < limit && i < text.length) {
-    if (!inString && text.startsWith("<#--", i)) {
-      const endc = text.indexOf("-->", i + 4);
-      if (endc === -1 || endc >= limit) {
+    if (
+      !inString &&
+      (text.startsWith("<#--", i) || text.startsWith("[#--", i))
+    ) {
+      const next = skipFtlComment(text, i);
+      if (next > limit) {
         return -1;
       }
-      i = endc + 3;
+      i = next;
       continue;
     }
     const c = text[i]!;

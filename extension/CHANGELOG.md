@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.0.14] - 2026-10-13
+
+### Added
+
+- Signature Help (parameter hints) for user `#function` calls (`${fn(…)}`) and `#macro` calls (`<@macro …>`), including `#import` namespaces; triggers on `(`, `,`, `=`
+- Completing a `#function` symbol inserts `name()` with the caret between the parentheses
+- Nested / multiline FTL comments via TextMate `comment.block` (mutes brackets and operators too); diagnostics for unclosed `<#--` / `[#--` and orphan `-->` / `--]`
+
+### Fixed
+
+- Comparison-operator decorations are fully disposed when the setting is off (avoids leftover `letterSpacing` / opacity types corrupting the editor)
+- Warn on activate if multiple FreeMarker / ftl-dev extensions are installed (old `nathan.ftl-dev` alongside `nathan-0910.ftl-dev`)
+- Enter after `<#if>` no longer inserts a second `</#if>` when the block is already closed below (body between caret and close)
+- Close-tag / mid-block indent align also runs when autocomplete inserts a full tag ending in `>` / `]` (not only a single-character closer)
+- `#recover` / `#else` / close-tag indent align on `>` still runs when other text follows on the same line (e.g. `  <#recover>|</#attempt>`)
+
 ## [0.0.13] - 2026-09-28
 
 ### Added
