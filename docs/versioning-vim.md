@@ -8,7 +8,7 @@ See also: [publishing-vim.md](publishing-vim.md), [versioning.md](versioning.md)
 
 ## Scheme
 
-Same semver rules as the extension (`MAJOR.MINOR.PATCH`). Current release: `0.1.3`.
+Same semver rules as the extension (`MAJOR.MINOR.PATCH`). Current release: `0.2.0`.
 
 | Bump | When |
 |------|------|

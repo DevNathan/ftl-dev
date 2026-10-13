@@ -55,13 +55,18 @@ if ($LASTEXITCODE -ne 0) {
 if ($PushTag) {
   $tag = "v$version"
   Write-Host "Tagging $tag on $splitBranch and pushing to $Remote ..."
-  git tag -d $tag 2>$null | Out-Null
-  git tag -a $tag -m $tag $splitBranch
-  git push $Remote "refs/tags/$tag"
+  # git tag -d writes to stderr when absent; do not let PS Stop treat that as fatal
+  & git tag -d $tag 2>$null | Out-Null
+  $global:LASTEXITCODE = 0
+  & git tag -a $tag -m $tag $splitBranch
+  if ($LASTEXITCODE -ne 0) {
+    throw "git tag -a $tag failed"
+  }
+  & git push $Remote "refs/tags/$tag"
   if ($LASTEXITCODE -ne 0) {
     throw "tag push failed"
   }
-  Write-Host "Monorepo already has vim-$tag if you tagged earlier."
+  Write-Host "Publish tag $tag pushed. Monorepo tag should be vim-$tag."
 }
 
 Write-Host "Done. Install: Plugin 'DevNathan/ftl-dev.vim' (version $version)"
