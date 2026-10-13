@@ -26,6 +26,7 @@ If the well is dry, dig your own. This extension aims for:
 - Syntax highlighting
 - Go-to / navigate definitions, imports, and paths
 - Completions
+- Parameter hints for `#function` / `#macro` calls (Signature Help)
 - Directive closing · FTL-aware indent
 - Diagnostics · semantic tokens · outline · find references
 - (Optional) comparison-operator presentation (`lt` / `gt` etc. shown as symbols)

@@ -1,8 +1,8 @@
 # Requirements status (vision vs shipped)
 
-- Date: 2026-09-23
+- Date: 2026-10-13
 - Against: [vision.md](vision.md), [ADR 0001](../decisions/0001-codeoss-language-stack.md), [ADR 0002](../decisions/0002-undeclared-vs-datamodel.md), [ADR 0003](../decisions/0003-comparison-operator-presentation.md)
-- Extension: `0.0.13` — plans **0001–0012** completed; hash-literal comma diagnostics; comparison presentation opt-in (default off)
+- Extension: `0.0.14` — plans **0001–0012** completed; Signature Help; nested FTL comments + delimiter diagnostics; comparison presentation opt-in (default off)
 - Verification: `cd extension && npm test` (grammar + unit) passing
 
 ## Verdict
@@ -21,6 +21,8 @@
 | Directive auto-close / FTL indent | **Done** | closeTag + indentRules |
 | Diagnostics layer A | **Done** (phase 1–2) | empty `${}`, duplicate else, unknown directive, `#list`/`as`, … |
 | Comparison op presentation | **Done** (opt-in) | decorations + `comparisonDisplay.ts` (ADR 0003); default **off** (minimap) |
+| Signature Help (`#function` / `#macro`) | **Done** | `signatureHelp.ts` + provider; not builtins |
+| Nested FTL comments + delimiter diagnostics | **Done** | TextMate `comment.block` + `comments.ts` / diagnostics |
 | Undeclared / data-model (B) | **Deferred** | ADR 0002 |
 | Rename / workspace symbols | **Not started** | — |
 | LSP / Java enrichment | **Not started / non-goal** | — |
@@ -30,4 +32,5 @@
 1. **RenameProvider** (builds on references)
 2. **Workspace Symbol** search
 3. Optional **`strictVariables`** (ADR 0002)
-4. **LSP** extraction when needed
+4. Builtin / `?built_in(…)` signature help
+5. **LSP** extraction when needed

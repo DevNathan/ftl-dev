@@ -12,6 +12,7 @@ import {
   FtlDefinitionProvider,
   FtlDocumentLinkProvider,
 } from "./providers";
+import { FtlSignatureHelpProvider } from "./signatureHelpProvider";
 import {
   FTL_SEMANTIC_TOKEN_TYPES,
   semanticTokensForDocument,
@@ -72,6 +73,13 @@ export function activate(context: vscode.ExtensionContext): void {
       "/"
     ),
     vscode.languages.registerHoverProvider(FTL_SELECTOR, new FtlHoverProvider()),
+    vscode.languages.registerSignatureHelpProvider(
+      FTL_SELECTOR,
+      new FtlSignatureHelpProvider(),
+      "(",
+      ",",
+      "="
+    ),
     vscode.languages.registerDocumentSymbolProvider(
       FTL_SELECTOR,
       new FtlDocumentSymbolProvider()

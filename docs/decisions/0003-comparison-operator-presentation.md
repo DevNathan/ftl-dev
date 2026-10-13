@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-23
-- Updated: 2026-09-28 (default off)
+- Updated: 2026-09-28 (default off; dispose decorations when off)
 
 ## Context
 
@@ -18,6 +18,7 @@ Use **text editor decorations** for presentation:
 2. Inject the symbolic form with `after.contentText`.
 3. When the caret or a selection intersects the token range, omit that decoration so the real `gte` (etc.) is visible for editing.
 4. Toggle with `ftl-dev.comparisonOperatorPresentation` (**default `false`**). Opt-in because those decorations distort the editor minimap.
+5. Create decoration types **only while enabled**; dispose them when the setting is off so the editor never keeps `opacity` / `letterSpacing` types around.
 
 Scan only FTL expression regions (`${…}`, interiors of `<#…>` / `[#…]` open tags). Never restyle the whitespace directive `<#lt>` / `[#lt]` (token immediately after `#`).
 
@@ -27,4 +28,5 @@ Do **not** invent an LSP fold protocol for this; keep the feature in the extensi
 
 - UX approximates IntelliJ "click to reveal" via caret/selection, not true fold expand/collapse.
 - Decorations are a known workaround (minimap / layout quirks); default off keeps the common path clean.
+- Publisher moves (`nathan.ftl-dev` → `nathan-0910.ftl-dev`) can leave two extensions active; warn on activate if multiple FreeMarker extensions are installed.
 - Pure finder logic stays unit-testable without the VS Code UI.

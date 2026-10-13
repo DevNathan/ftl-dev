@@ -61,4 +61,36 @@ test("general completions include file symbols", () => {
   assert.ok(items.some((i) => i.label === "banner" && i.kind === "symbol"));
 });
 
+test("function symbols insert name($0) snippet", () => {
+  const items = buildCompletions(
+    { type: "general", prefix: "twi" },
+    [
+      { name: "twice", asFunctionCall: true },
+      { name: "title" },
+    ]
+  );
+  const hit = items.find((i) => i.label === "twice");
+  assert.ok(hit);
+  assert.strictEqual(hit!.insertText, "twice($0)");
+  assert.strictEqual(hit!.insertAsSnippet, true);
+
+  const assignItems = buildCompletions(
+    { type: "general", prefix: "tit" },
+    [{ name: "title" }, { name: "twice", asFunctionCall: true }]
+  );
+  const title = assignItems.find((i) => i.label === "title");
+  assert.ok(title);
+  assert.ok(!title!.insertAsSnippet);
+});
+
+test("ns function member inserts helper($0)", () => {
+  const items = buildCompletions(
+    { type: "ns", ns: "lib", prefix: "hel" },
+    [{ name: "lib.helper", asFunctionCall: true }]
+  );
+  assert.strictEqual(items.length, 1);
+  assert.strictEqual(items[0]!.insertText, "helper($0)");
+  assert.strictEqual(items[0]!.insertAsSnippet, true);
+});
+
 console.log("All catalog unit tests passed.");

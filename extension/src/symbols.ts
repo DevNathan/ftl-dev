@@ -1,11 +1,22 @@
 export type SymbolKind = "assign" | "macro" | "function" | "local" | "global";
 
+/** Parameter of a `#macro` / `#function` open tag. */
+export interface FtlParam {
+  name: string;
+  /** Raw default expression when declared as `name=expr`. */
+  defaultValue?: string;
+  /** True for catch-all `name...`. */
+  catchAll?: boolean;
+}
+
 export interface FtlSymbol {
   name: string;
   kind: SymbolKind;
   /** Absolute offset of the name in the document */
   nameOffset: number;
   nameLength: number;
+  /** Present for `macro` / `function` when the open tag lists parameters. */
+  params?: FtlParam[];
 }
 
 export interface FtlPathRef {
@@ -36,9 +47,23 @@ export function indexFtl(text: string): FtlIndex {
   let m: RegExpExecArray | null;
   while ((m = DECL.exec(text)) !== null) {
     const kind = m[1] as SymbolKind;
-    const name = m[2];
+    const name = m[2]!;
     const nameOffset = m.index + m[0].lastIndexOf(name);
-    symbols.push({ name, kind, nameOffset, nameLength: name.length });
+    const sym: FtlSymbol = { name, kind, nameOffset, nameLength: name.length };
+    if (kind === "macro" || kind === "function") {
+      const openBracket = text[m.index] === "[" ? "[" : "<";
+      const closeBracket = openBracket === "[" ? "]" : ">";
+      const afterName = m.index + m[0].length;
+      const tagEnd = scanDirectiveTagEnd(text, afterName, closeBracket);
+      if (tagEnd !== -1) {
+        const inner = text.slice(afterName, tagEnd).replace(/\/\s*$/, "");
+        const params = parseParamList(inner);
+        if (params.length) {
+          sym.params = params;
+        }
+      }
+    }
+    symbols.push(sym);
   }
 
   PATH_REF.lastIndex = 0;
@@ -144,4 +169,197 @@ export function findDefinitions(
   const parts = name.split(".");
   const simple = parts[parts.length - 1]!;
   return index.symbols.filter((s) => s.name === simple || s.name === name);
+}
+
+/** Index of closing `>` / `]` for a directive open tag, or -1. */
+function scanDirectiveTagEnd(
+  text: string,
+  from: number,
+  closeBracket: ">" | "]"
+): number {
+  let inStr: '"' | "'" | null = null;
+  let paren = 0;
+  let brace = 0;
+  let bracket = 0;
+  for (let i = from; i < text.length; i++) {
+    const ch = text[i]!;
+    if (inStr) {
+      if (ch === "\\" && i + 1 < text.length) {
+        i++;
+        continue;
+      }
+      if (ch === inStr) {
+        inStr = null;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inStr = ch;
+      continue;
+    }
+    if (ch === "(") {
+      paren++;
+      continue;
+    }
+    if (ch === ")" && paren > 0) {
+      paren--;
+      continue;
+    }
+    if (ch === "{") {
+      brace++;
+      continue;
+    }
+    if (ch === "}" && brace > 0) {
+      brace--;
+      continue;
+    }
+    if (ch === "[" && closeBracket === ">") {
+      bracket++;
+      continue;
+    }
+    if (ch === "]" && closeBracket === ">" && bracket > 0) {
+      bracket--;
+      continue;
+    }
+    if (
+      ch === closeBracket &&
+      paren === 0 &&
+      brace === 0 &&
+      (closeBracket === "]" || bracket === 0)
+    ) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Parse `#macro` / `#function` parameter list text (between name and tag closer).
+ * Supports `name`, `name=default`, and catch-all `name...`.
+ */
+export function parseParamList(inner: string): FtlParam[] {
+  const params: FtlParam[] = [];
+  let i = 0;
+  while (i < inner.length) {
+    while (i < inner.length && /\s/.test(inner[i]!)) {
+      i++;
+    }
+    if (i >= inner.length) {
+      break;
+    }
+    if (!/[a-zA-Z_]/.test(inner[i]!)) {
+      // Skip unknown token junk until whitespace
+      while (i < inner.length && !/\s/.test(inner[i]!)) {
+        i++;
+      }
+      continue;
+    }
+    const nameStart = i;
+    i++;
+    while (i < inner.length && /[\w]/.test(inner[i]!)) {
+      i++;
+    }
+    const name = inner.slice(nameStart, i);
+    let catchAll = false;
+    if (inner.startsWith("...", i)) {
+      catchAll = true;
+      i += 3;
+    }
+    let defaultValue: string | undefined;
+    while (i < inner.length && /\s/.test(inner[i]!)) {
+      i++;
+    }
+    if (inner[i] === "=") {
+      i++;
+      while (i < inner.length && /\s/.test(inner[i]!)) {
+        i++;
+      }
+      const valueStart = i;
+      i = scanParamDefaultEnd(inner, i);
+      defaultValue = inner.slice(valueStart, i).trim();
+      if (!defaultValue) {
+        defaultValue = undefined;
+      }
+    }
+    params.push({
+      name,
+      ...(defaultValue !== undefined ? { defaultValue } : {}),
+      ...(catchAll ? { catchAll: true } : {}),
+    });
+  }
+  return params;
+}
+
+/** End offset of a parameter default expression (space-separated at depth 0). */
+function scanParamDefaultEnd(text: string, from: number): number {
+  let inStr: '"' | "'" | null = null;
+  let paren = 0;
+  let brace = 0;
+  let bracket = 0;
+  for (let i = from; i < text.length; i++) {
+    const ch = text[i]!;
+    if (inStr) {
+      if (ch === "\\" && i + 1 < text.length) {
+        i++;
+        continue;
+      }
+      if (ch === inStr) {
+        inStr = null;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inStr = ch;
+      continue;
+    }
+    if (ch === "(") {
+      paren++;
+      continue;
+    }
+    if (ch === ")" && paren > 0) {
+      paren--;
+      continue;
+    }
+    if (ch === "{") {
+      brace++;
+      continue;
+    }
+    if (ch === "}" && brace > 0) {
+      brace--;
+      continue;
+    }
+    if (ch === "[") {
+      bracket++;
+      continue;
+    }
+    if (ch === "]" && bracket > 0) {
+      bracket--;
+      continue;
+    }
+    if (/\s/.test(ch) && paren === 0 && brace === 0 && bracket === 0) {
+      return i;
+    }
+  }
+  return text.length;
+}
+
+/** Format `name(a, b=1)` / `name(a...)` for signature labels. */
+export function formatSignatureLabel(
+  name: string,
+  params: readonly FtlParam[] | undefined
+): string {
+  if (!params || params.length === 0) {
+    return `${name}()`;
+  }
+  const parts = params.map((p) => {
+    let s = p.name;
+    if (p.catchAll) {
+      s += "...";
+    }
+    if (p.defaultValue !== undefined) {
+      s += `=${p.defaultValue}`;
+    }
+    return s;
+  });
+  return `${name}(${parts.join(", ")})`;
 }

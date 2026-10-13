@@ -168,9 +168,18 @@ export interface CompletionCandidate {
   kind: CompletionKind;
   /** Text inserted if different from label (optional). */
   insertText?: string;
+  /** When true, `insertText` is a snippet (e.g. `twice($0)`). */
+  insertAsSnippet?: boolean;
   detail?: string;
   /** Markdown shown in the Ctrl+Space docs panel. */
   documentation?: string;
+}
+
+/** Symbol offered in general / ns completion (from `#function` / `#macro` / assigns). */
+export interface SymbolCompletionEntry {
+  name: string;
+  /** User `#function` — insert `name($0)` with caret between parens. */
+  asFunctionCall?: boolean;
 }
 
 export type CompletionContext =
@@ -209,10 +218,18 @@ function filterPrefix(names: readonly string[], prefix: string): string[] {
   return names.filter((n) => n.toLowerCase().startsWith(p));
 }
 
+function asSymbolEntries(
+  symbols: readonly SymbolCompletionEntry[] | readonly string[]
+): SymbolCompletionEntry[] {
+  return symbols.map((s) => (typeof s === "string" ? { name: s } : s));
+}
+
 export function buildCompletions(
   ctx: CompletionContext,
-  symbolNames: readonly string[]
+  symbols: readonly SymbolCompletionEntry[] | readonly string[] = []
 ): CompletionCandidate[] {
+  const entries = asSymbolEntries(symbols);
+
   if (ctx.type === "directive") {
     return filterPrefix(DIRECTIVES, ctx.prefix).map((label) => {
       const ref = getDirectiveRef(label);
@@ -242,34 +259,40 @@ export function buildCompletions(
   if (ctx.type === "ns") {
     const head = `${ctx.ns}.`;
     const out: CompletionCandidate[] = [];
-    for (const q of symbolNames) {
-      if (!q.startsWith(head)) {
+    for (const entry of entries) {
+      if (!entry.name.startsWith(head)) {
         continue;
       }
-      const member = q.slice(head.length);
+      const member = entry.name.slice(head.length);
+      if (member.includes(".")) {
+        continue;
+      }
       if (!member.toLowerCase().startsWith(ctx.prefix.toLowerCase())) {
         continue;
       }
-      out.push({
-        label: member,
-        kind: "symbol",
-        detail: `from ${ctx.ns}`,
-        insertText: member,
-      });
+      out.push(symbolCandidate(member, entry.asFunctionCall, `from ${ctx.ns}`));
     }
     return out;
   }
 
   const out: CompletionCandidate[] = [];
   const seen = new Set<string>();
+  const matched = filterPrefix(
+    entries.map((e) => e.name),
+    ctx.prefix
+  );
+  const byName = new Map(entries.map((e) => [e.name, e]));
 
-  for (const name of filterPrefix(symbolNames, ctx.prefix)) {
+  for (const name of matched) {
     seen.add(name);
-    out.push({
-      label: name,
-      kind: "symbol",
-      detail: name.includes(".") ? "imported FTL symbol" : "FTL symbol",
-    });
+    const entry = byName.get(name)!;
+    out.push(
+      symbolCandidate(
+        name,
+        entry.asFunctionCall,
+        name.includes(".") ? "imported FTL symbol" : "FTL symbol"
+      )
+    );
   }
 
   if (ctx.prefix.length >= 1) {
@@ -289,4 +312,25 @@ export function buildCompletions(
   }
 
   return out;
+}
+
+function symbolCandidate(
+  name: string,
+  asFunctionCall: boolean | undefined,
+  detail: string
+): CompletionCandidate {
+  if (asFunctionCall) {
+    return {
+      label: name,
+      kind: "symbol",
+      detail: detail.includes("function") ? detail : `${detail} (function)`,
+      insertText: `${name}($0)`,
+      insertAsSnippet: true,
+    };
+  }
+  return {
+    label: name,
+    kind: "symbol",
+    detail,
+  };
 }

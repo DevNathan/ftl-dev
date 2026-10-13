@@ -8,7 +8,9 @@ import {
 
 /**
  * `/` — self-close or expand `</` to matching close.
- * `>` / `]` — align mid-block indent; HTML-style insert close tag after caret.
+ * `>` / `]` (or longer inserts ending with them) — align mid-block (`#recover`,
+ * `#else`, …) / close-tag indent to the opener; single-char `>` / `]` also
+ * HTML-style pair after an open tag.
  * Enter — fallback pair+indent when open was pasted without a closer.
  */
 export function registerAutoClose(context: vscode.ExtensionContext): void {
@@ -57,13 +59,8 @@ export function registerAutoClose(context: vscode.ExtensionContext): void {
         return;
       }
 
-      if (ch !== "/" && ch !== ">" && ch !== "]") {
-        return;
-      }
-
-      const offset = doc.offsetAt(change.range.start) + ch.length;
-
       if (ch === "/") {
+        const offset = doc.offsetAt(change.range.start) + ch.length;
         const edit = autoCloseAfterSlash(doc.getText(), offset);
         if (!edit) {
           return;
@@ -79,11 +76,19 @@ export function registerAutoClose(context: vscode.ExtensionContext): void {
         return;
       }
 
-      // Mid-block outdent first; otherwise HTML-style pair on the closer.
+      // Single `>` / `]`, or a longer insert that finishes a tag (autocomplete
+      // completing `</#attempt>` / `<#recover>`). Only single-char closers pair.
+      const endsWithCloser = ch.endsWith(">") || ch.endsWith("]");
+      if (!endsWithCloser) {
+        return;
+      }
+
+      const offset = doc.offsetAt(change.range.start) + ch.length;
       const align = alignIndentAfterCloser(doc.getText(), offset);
-      const pair = align
-        ? undefined
-        : autoClosePairOnCloser(doc.getText(), offset);
+      const pair =
+        align || (ch !== ">" && ch !== "]")
+          ? undefined
+          : autoClosePairOnCloser(doc.getText(), offset);
       const edit = align ?? pair;
       if (!edit) {
         return;

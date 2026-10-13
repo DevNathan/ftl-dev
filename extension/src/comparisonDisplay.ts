@@ -1,3 +1,5 @@
+import { skipFtlComment } from "./comments";
+
 /**
  * Find FreeMarker alphabetic comparison operators (`lt`/`lte`/`gt`/`gte`)
  * that should be presented as `<`/`<=`/`>`/`>=` in the editor.
@@ -33,11 +35,9 @@ export function findExpressionSpans(text: string): Span[] {
   let inString: '"' | "'" | null = null;
 
   while (i < text.length) {
-    // FTL comments
+    // FTL comments (nested)
     if (!inString && (text.startsWith("<#--", i) || text.startsWith("[#--", i))) {
-      const closer = text.startsWith("<#--", i) ? "-->" : "--]";
-      const end = text.indexOf(closer, i + 4);
-      i = end === -1 ? text.length : end + closer.length;
+      i = skipFtlComment(text, i);
       continue;
     }
 

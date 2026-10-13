@@ -52,6 +52,21 @@ test("flags unclosed comment", () => {
   assert.ok(diags.some((d) => d.message.includes("Unclosed FreeMarker comment")));
 });
 
+test("flags orphan comment closer", () => {
+  const diags = validateFtl("hello --> world");
+  assert.ok(diags.some((d) => d.message.includes("Unexpected '-->'")));
+});
+
+test("flags orphan square comment closer", () => {
+  const diags = validateFtl("hello --] world");
+  assert.ok(diags.some((d) => d.message.includes("Unexpected '--]'")));
+});
+
+test("HTML comment does not flag orphan FTL closer", () => {
+  const diags = validateFtl("<!-- html -->");
+  assert.ok(!diags.some((d) => d.message.includes("Unexpected '-->'")));
+});
+
 test("flags unclosed directive tag <#assign", () => {
   const diags = validateFtl("<#assign \n\n<h1></h1>");
   assert.ok(diags.some((d) => d.message.includes("Unclosed directive tag")));

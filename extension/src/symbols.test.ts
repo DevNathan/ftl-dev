@@ -37,6 +37,10 @@ test("indexes assign macro function", () => {
     "function:add",
     "macro:greet",
   ]);
+  const greet = idx.symbols.find((s) => s.name === "greet");
+  const add = idx.symbols.find((s) => s.name === "add");
+  assert.deepStrictEqual(greet?.params, [{ name: "name" }]);
+  assert.deepStrictEqual(add?.params, [{ name: "a" }, { name: "b" }]);
 });
 
 test("indexes include and import paths", () => {

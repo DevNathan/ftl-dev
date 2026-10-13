@@ -1,3 +1,4 @@
+<#--
 <#-- navigation fixture: main template -->
 <#import "lib.ftl" as lib>
 <#include "header.ftl">
@@ -17,6 +18,7 @@
 </#function>
 
 ${title}
+<#-- Signature Help: caret inside args shows banner(text) / twice(n) -->
 <@banner text="Hello"/>
 ${twice(3)}
 ${lib.helper()}
@@ -63,3 +65,4 @@ ${lib.helper()}
 <#recover>
 
 </#attempt>
+-->

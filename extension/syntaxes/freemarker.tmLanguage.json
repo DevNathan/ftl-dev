@@ -24,6 +24,7 @@
       "patterns": [
         {
           "name": "comment.block.freemarker",
+          "comment": "Single TextMate comment scope mutes all syntax (incl. brackets). applyEndPatternLast so nested <#--…--> claims inner closers first.",
           "begin": "<#--",
           "beginCaptures": {
             "0": { "name": "punctuation.definition.comment.begin.freemarker" }
@@ -31,7 +32,9 @@
           "end": "-->",
           "endCaptures": {
             "0": { "name": "punctuation.definition.comment.end.freemarker" }
-          }
+          },
+          "applyEndPatternLast": true,
+          "patterns": [{ "include": "#comment" }]
         },
         {
           "name": "comment.block.freemarker",
@@ -42,7 +45,9 @@
           "end": "--\\]",
           "endCaptures": {
             "0": { "name": "punctuation.definition.comment.end.freemarker" }
-          }
+          },
+          "applyEndPatternLast": true,
+          "patterns": [{ "include": "#comment" }]
         }
       ]
     },

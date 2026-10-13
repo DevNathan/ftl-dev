@@ -1,5 +1,5 @@
 <#-- imported library -->
-<#function helper>
+<#function helper x="">
   <#return "from-lib">
 </#function>
 

@@ -41,13 +41,8 @@ export function alignIndentAfterCloser(
   const openBracket = closer === ">" ? "<" : "[";
 
   const line = lineIndentAt(text, offset - 1);
-  const after = text.slice(offset);
-  const nl = after.search(/\r?\n/);
-  const lineEnd = nl === -1 ? text.length : offset + nl;
-  if (text.slice(offset, lineEnd).trim() !== "") {
-    return undefined;
-  }
-
+  // Tag text ends at the closer we just typed. Trailing same-line content
+  // (e.g. `  <#recover>|</#attempt>` after HTML-style pair) must not block align.
   const content = text.slice(line.contentStart, offset);
   const mid = content.match(
     new RegExp(

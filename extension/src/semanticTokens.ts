@@ -35,6 +35,7 @@
  * ```
  */
 
+import { ftlCommentRanges } from "./comments";
 import { collectImportSymbols, FileReader } from "./imports";
 import {
   FtlIndex,
@@ -44,6 +45,8 @@ import {
   offsetToLineCharacter,
   SymbolKind,
 } from "./symbols";
+
+export { ftlCommentRanges } from "./comments";
 
 /** VS Code standard legend entries used by this provider. */
 export const FTL_SEMANTIC_TOKEN_TYPES = [
@@ -101,41 +104,6 @@ function spanKey(line: number, character: number, length: number): string {
   return `${line}:${character}:${length}`;
 }
 
-/**
- * Half-open [start, end) ranges for `<#-- … -->` and `[#-- … --]`.
- * Unclosed comments run to EOF so in-comment scans stay suppressed.
- */
-export function ftlCommentRanges(text: string): Array<[number, number]> {
-  const ranges: Array<[number, number]> = [];
-  let i = 0;
-  while (i < text.length) {
-    if (text.startsWith("<#--", i)) {
-      const start = i;
-      const endIdx = text.indexOf("-->", i + 4);
-      if (endIdx === -1) {
-        ranges.push([start, text.length]);
-        break;
-      }
-      ranges.push([start, endIdx + 3]);
-      i = endIdx + 3;
-      continue;
-    }
-    if (text.startsWith("[#--", i)) {
-      const start = i;
-      const endIdx = text.indexOf("--]", i + 4);
-      if (endIdx === -1) {
-        ranges.push([start, text.length]);
-        break;
-      }
-      ranges.push([start, endIdx + 3]);
-      i = endIdx + 3;
-      continue;
-    }
-    i++;
-  }
-  return ranges;
-}
-
 function offsetInComment(
   offset: number,
   comments: Array<[number, number]>
@@ -174,6 +142,7 @@ function addSpan(
 /**
  * Build semantic token spans for an FTL document.
  * Declarations + cheap in-file identifier uses; optional `ns.member` via imports.
+ * Comment muting is TextMate `comment.block` only (not a second semantic path).
  */
 export function buildSemanticTokenSpans(
   text: string,
