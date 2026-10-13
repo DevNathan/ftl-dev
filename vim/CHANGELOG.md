@@ -6,7 +6,7 @@ Versioning is **independent** of the VS Code extension. Canonical file: [`VERSIO
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-10-13
+## [0.1.1] - 2026-10-13
 
 ### Added
 
