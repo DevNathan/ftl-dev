@@ -1,4 +1,4 @@
-# Sync monorepo vim/ → remote ftl-dev.vim (plugin-manager installable root).
+# Sync monorepo vim/ -> remote ftl-dev.vim (plugin-manager installable root).
 # Prerequisites:
 #   git remote add vim-publish https://github.com/DevNathan/ftl-dev.vim.git
 # Usage:
@@ -28,42 +28,40 @@ if ($version -notmatch '^\d+\.\d+\.\d+') {
 
 $remotes = git remote
 if ($remotes -notcontains $Remote) {
-  throw @"
-Remote '$Remote' not found.
-Create the GitHub repo DevNathan/ftl-dev.vim, then:
-  git remote add $Remote https://github.com/DevNathan/ftl-dev.vim.git
-"@
+  throw "Remote '$Remote' not found. Run: git remote add $Remote https://github.com/DevNathan/ftl-dev.vim.git"
 }
 
 $splitBranch = "vim-publish-split"
-Write-Host "Splitting prefix=vim → $splitBranch …"
+Write-Host "Splitting prefix=vim -> $splitBranch ..."
 git branch -D $splitBranch 2>$null | Out-Null
+# git writes "not found" to stderr when branch is absent; ignore that
+$global:LASTEXITCODE = 0
 git subtree split --prefix=vim -b $splitBranch
 if ($LASTEXITCODE -ne 0) {
   throw "git subtree split failed"
 }
 
-$pushArgs = @("push", $Remote, "${splitBranch}:${Branch}")
 if ($Force) {
-  $pushArgs = @("push", "--force-with-lease", $Remote, "${splitBranch}:${Branch}")
+  Write-Host "Pushing $splitBranch -> ${Remote}/${Branch} (force-with-lease) ..."
+  git push --force-with-lease $Remote "${splitBranch}:${Branch}"
+} else {
+  Write-Host "Pushing $splitBranch -> ${Remote}/${Branch} ..."
+  git push $Remote "${splitBranch}:${Branch}"
 }
-
-Write-Host "Pushing $splitBranch → ${Remote}/${Branch} …"
-& git @pushArgs
 if ($LASTEXITCODE -ne 0) {
-  throw "git push failed (create empty repo on GitHub first, or pass -Force to overwrite)"
+  throw "git push failed (create empty repo on GitHub first, or pass -Force)"
 }
 
 if ($PushTag) {
   $tag = "v$version"
-  Write-Host "Tagging $tag on $splitBranch and pushing to $Remote …"
+  Write-Host "Tagging $tag on $splitBranch and pushing to $Remote ..."
   git tag -d $tag 2>$null | Out-Null
   git tag -a $tag -m $tag $splitBranch
   git push $Remote "refs/tags/$tag"
   if ($LASTEXITCODE -ne 0) {
     throw "tag push failed"
   }
-  Write-Host "Also consider: git tag -a vim-$tag -m vim-$tag && git push origin vim-$tag"
+  Write-Host "Monorepo already has vim-$tag if you tagged earlier."
 }
 
-Write-Host "Done. Plugin consumers: Plug 'DevNathan/ftl-dev.vim' (version $version)"
+Write-Host "Done. Install: Plugin 'DevNathan/ftl-dev.vim' (version $version)"
