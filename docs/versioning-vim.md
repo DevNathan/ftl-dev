@@ -8,7 +8,7 @@ See also: [publishing-vim.md](publishing-vim.md), [versioning.md](versioning.md)
 
 ## Scheme
 
-Same semver rules as the extension (`MAJOR.MINOR.PATCH`), starting at `0.1.0` for the first public Vim plugin release.
+Same semver rules as the extension (`MAJOR.MINOR.PATCH`). Current release line: `1.1.x`.
 
 | Bump | When |
 |------|------|
