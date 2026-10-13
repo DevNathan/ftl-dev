@@ -17,9 +17,12 @@ CodeOSS용 FreeMarker 도구 — **HTML 생성만이 아니라 FTL 스크립트/
 
 ## 문서 맵
 
+Vim 런타임은 **별도 git** ([ftl-dev.vim](https://github.com/DevNathan/ftl-dev.vim)). 이 저장소(VSIX)에 `vim/`을 두지 않습니다.
+
 | 경로 | 내용 |
 |------|------|
 | [extension/](extension/) | CodeOSS 익스텐션 (grammar 스파이크) |
+| [server/](server/) | 선택적 LSP (stdio) |
 | [docs/product/](docs/product/) | 왜 만드는지, 기능 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 익스텐션 구조 |
 | [docs/decisions/](docs/decisions/) | ADR |
