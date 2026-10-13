@@ -1,0 +1,44 @@
+" coverage: ftplugin.guard
+" coverage: ftplugin.commentstring
+" coverage: ftplugin.comments
+" coverage: ftplugin.matchpairs
+" coverage: ftplugin.include
+" coverage: ftplugin.includeexpr
+" coverage: ftplugin.suffixesadd
+" coverage: ftplugin.undo
+Execute (ftplugin sets buffer options):
+  new
+  setfiletype freemarker
+  AssertEqual &l:commentstring, ftl_dev#ft#expected_commentstring()
+  Assert &l:comments =~# '<#--'
+  Assert &l:matchpairs =~# '<:>'
+  Assert &l:include =~# 'include'
+  AssertEqual &l:suffixesadd, ftl_dev#ft#expected_suffixesadd()
+  Assert !empty(b:undo_ftplugin)
+  runtime ftplugin/freemarker.vim
+  AssertEqual b:did_ftplugin, 1
+  bwipe!
+
+" coverage: ft.strip_quotes
+Execute (includeexpr quote strip helper):
+  AssertEqual ftl_dev#ft#strip_include_quotes('"lib.ftl"'), 'lib.ftl'
+  AssertEqual ftl_dev#ft#strip_include_quotes("'lib.ftl'"), 'lib.ftl'
+  AssertEqual ftl_dev#ft#strip_include_quotes('lib.ftl'), 'lib.ftl'
+
+" coverage: ftplugin.imap_dollar
+Execute (imap ${ inserts closing brace):
+  new
+  setfiletype freemarker
+  call feedkeys('i${', 'x')
+  Assert getline(1) =~# '${}'
+  bwipe!
+
+" coverage: ftplugin.match_words
+" coverage: ft.match_words_helper
+Execute (match_words when matchit is loaded):
+  runtime! macros/matchit.vim
+  new
+  setfiletype freemarker
+  Assert ftl_dev#ft#match_words_defined()
+  Assert b:match_words =~# '<#if'
+  bwipe!

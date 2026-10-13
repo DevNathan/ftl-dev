@@ -9,7 +9,7 @@ Canonical language: **English**. Korean siblings: `*.ko.md` (see [index.ko.md](i
 | Active plans | [plans/active/](plans/active/) | *(none)* |
 | Completed plans | [plans/completed/](plans/completed/) | Through [0013 Vim/Neovim port](plans/completed/0013-vim-neovim-port.md) |
 | Extension | [../extension/](../extension/) | CodeOSS package (grammar + navigation providers) |
-| Vim runtime | [../vim/](../vim/) | Syntax / indent / ftplugin for Vim & Neovim |
+| Vim runtime | [../vim/](../vim/) | Syntax / indent / ftplugin; tests: `bash vim/test/run.sh` |
 | Language server | [../server/](../server/) | Shared LSP (stdio) for Vim / Neovim / future VS Code |
 | Publishing | [publishing.md](publishing.md) | Open VSX + VS Marketplace via GitHub Actions |
 | Publishing (Vim) | [publishing-vim.md](publishing-vim.md) | Mirror `vim/` → GitHub `ftl-dev.vim` |

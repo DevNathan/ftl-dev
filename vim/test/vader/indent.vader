@@ -1,0 +1,67 @@
+" coverage: indent.compute.lnum1
+Execute (indent compute lnum 1 is 0):
+  AssertEqual ftl_dev#indent#compute(1, ['<#if x>'], 2), 0
+
+" coverage: indent.compute.empty_prev
+Execute (indent compute with only blank previous lines):
+  AssertEqual ftl_dev#indent#compute(3, ['', '', 'x'], 2), 0
+
+" coverage: indent.inc.angle_if
+Execute (indent increases after <#if>):
+  AssertEqual ftl_dev#indent#increases('<#if x>'), 1
+  AssertEqual ftl_dev#indent#compute(2, ['<#if x>', 'body'], 2), 2
+
+" coverage: indent.inc.square_if
+Execute (indent increases after [#if]):
+  AssertEqual ftl_dev#indent#increases('[#if x]'), 1
+  AssertEqual ftl_dev#indent#compute(2, ['[#if x]', 'body'], 2), 2
+
+" coverage: indent.inc.mid_else
+Execute (indent increases after <#else>):
+  AssertEqual ftl_dev#indent#increases('<#else>'), 1
+
+" coverage: indent.inc.capture_assign
+Execute (indent increases after capture <#assign>):
+  AssertEqual ftl_dev#indent#increases('<#assign name>'), 1
+  AssertEqual ftl_dev#indent#increases('<#assign x = 1>'), 0
+
+" coverage: indent.inc.user_macro
+Execute (indent increases after <@macro>):
+  AssertEqual ftl_dev#indent#increases('<@banner text="x">'), 1
+
+" coverage: indent.inc.user_macro_selfclose_no
+Execute (indent does not increase after self-close macro):
+  AssertEqual ftl_dev#indent#increases('<@banner text="x"/>'), 0
+
+" coverage: indent.dec.else
+Execute (indent decreases for <#else>):
+  AssertEqual ftl_dev#indent#decreases('  <#else>'), 1
+  AssertEqual ftl_dev#indent#compute(3, ['<#if x>', '  body', '  <#else>'], 2), 0
+
+" coverage: indent.dec.close_if
+Execute (indent decreases for </#if>):
+  AssertEqual ftl_dev#indent#decreases('</#if>'), 1
+
+" coverage: indent.dec.close_macro
+Execute (indent decreases for </@macro>):
+  AssertEqual ftl_dev#indent#decreases('</@banner>'), 1
+
+" coverage: indent.clamp_negative
+Execute (indent clamps negative to 0):
+  AssertEqual ftl_dev#indent#compute(2, ['x', '</#if>'], 2), 0
+
+" coverage: indent.guard
+" coverage: indent.keys
+" coverage: indent.expr_wrapper
+Execute (indent file loads without E518 and sets indentexpr):
+  new
+  setfiletype freemarker
+  AssertEqual &l:indentexpr, 'GetFreemarkerIndent()'
+  AssertEqual &l:indentkeys, 'o,O,!^F'
+  " second load hits guard
+  runtime indent/freemarker.vim
+  AssertEqual &l:indentexpr, 'GetFreemarkerIndent()'
+  call setline(1, ['<#if x>', ''])
+  normal! 2G
+  AssertEqual GetFreemarkerIndent(), 2
+  bwipe!

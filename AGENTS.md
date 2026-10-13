@@ -18,7 +18,7 @@ CodeOSS FreeMarker tooling for **FTL as a scripting / application-logic language
 | Path | What |
 |------|------|
 | [extension/](extension/) | CodeOSS extension (grammar + providers) |
-| [vim/](vim/) | Vim / Neovim runtime (source of truth; publish mirror `ftl-dev.vim`) |
+| [vim/](vim/) | Vim / Neovim runtime (source of truth; publish mirror `ftl-dev.vim`; `bash vim/test/run.sh`) |
 | [docs/publishing-vim.md](docs/publishing-vim.md) | Sync `vim/` → `ftl-dev.vim` (Pathogen/Vundle style) |
 | [server/](server/) | Shared FreeMarker language server (LSP stdio) |
 | [tree-sitter-freemarker/](tree-sitter-freemarker/) | Optional Neovim tree-sitter scaffold |
