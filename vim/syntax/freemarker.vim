@@ -23,7 +23,8 @@ syn region ftlUserDirectiveSquare start=/\[\/\?@[a-zA-Z_][\w.]*/ end=/\/\?\]/ co
 
 syn region ftlInterpolation start=/\${/ end=/}/ contains=@ftlExpr keepend
 
-syn match ftlBuiltin /\?[a-zA-Z_][\w]*/ contained
+" Literal '?': in Vim magic, `\?` is a quantifier (E866); bare `?` is literal.
+syn match ftlBuiltin /?[a-zA-Z_][\w]*/ contained
 syn match ftlIdentifier /\<[a-zA-Z_][\w.]*\>/ contained
 syn match ftlNumber /\<\d\+\%(\.\d\+\)\?\>/ contained
 syn match ftlOperator /[=<>!+\-*\/%|&]/ contained
