@@ -6,6 +6,12 @@ Versioning is **independent** of the VS Code extension. Canonical file: [`VERSIO
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-13
+
+### Fixed
+
+- Builtin pattern uses literal `?` (Vim NFA: `\?` is a quantifier → E866/E475)
+
 ## [0.1.1] - 2026-10-13
 
 ### Added
