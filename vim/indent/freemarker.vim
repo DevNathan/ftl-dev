@@ -5,7 +5,8 @@ endif
 let b:did_indent = 1
 
 setlocal indentexpr=GetFreemarkerIndent()
-setlocal indentkeys=o,O,0<#,0</# ,0[# ,0[/# ,0<@,0</@,!^F
+" Keep keys simple: `[` / `<#` in indentkeys break :set on Vim 8.1 (E518).
+setlocal indentkeys=o,O,!^F
 
 " Block openers + mid-block + capture assign + user macros (angle, last > on line)
 let s:inc = '^\s*\%('

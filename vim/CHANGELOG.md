@@ -6,6 +6,12 @@ Versioning is **independent** of the VS Code extension. Canonical file: [`VERSIO
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-13
+
+### Fixed
+
+- `indentkeys` no longer uses `[` / `<#` tokens (Vim 8.1 E518 unknown option)
+
 ## [0.1.0] - 2026-10-13
 
 ### Added
