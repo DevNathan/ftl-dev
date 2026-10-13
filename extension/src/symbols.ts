@@ -1,3 +1,5 @@
+import { ftlCommentRanges, offsetInFtlComment } from "./comments";
+
 export type SymbolKind = "assign" | "macro" | "function" | "local" | "global";
 
 /** Parameter of a `#macro` / `#function` open tag. */
@@ -42,10 +44,14 @@ const PATH_REF =
 export function indexFtl(text: string): FtlIndex {
   const symbols: FtlSymbol[] = [];
   const pathRefs: FtlPathRef[] = [];
+  const comments = ftlCommentRanges(text);
 
   DECL.lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = DECL.exec(text)) !== null) {
+    if (offsetInFtlComment(m.index, comments)) {
+      continue;
+    }
     const kind = m[1] as SymbolKind;
     const name = m[2]!;
     const nameOffset = m.index + m[0].lastIndexOf(name);
@@ -68,6 +74,9 @@ export function indexFtl(text: string): FtlIndex {
 
   PATH_REF.lastIndex = 0;
   while ((m = PATH_REF.exec(text)) !== null) {
+    if (offsetInFtlComment(m.index, comments)) {
+      continue;
+    }
     const kind = m[1] as "include" | "import";
     const path = m[2];
     const asName = m[3];

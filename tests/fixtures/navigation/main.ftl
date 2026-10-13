@@ -5,6 +5,7 @@
 
 <#assign title = "Demo">
 
+
 <#macro banner text>
   <h1>${text}</h1>
 </#macro>

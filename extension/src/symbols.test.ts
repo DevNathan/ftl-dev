@@ -86,4 +86,14 @@ test("square-bracket directives", () => {
   );
 });
 
+test("does not index declarations inside FTL comments", () => {
+  const text = `<#-- <#assign dead = 1> <#macro m> </#macro> -->
+<#assign live = 2>`;
+  const idx = indexFtl(text);
+  assert.deepStrictEqual(
+    idx.symbols.map((s) => `${s.kind}:${s.name}`),
+    ["assign:live"]
+  );
+});
+
 console.log("All symbol unit tests passed.");
