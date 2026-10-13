@@ -40,8 +40,7 @@ What else is there to do? Grab the extension from the VS Code or CodeOSS-family 
 
 ### Vim / Neovim
 
-- **Install:** Pathogen / Vundle / vim-plug → `DevNathan/ftl-dev.vim` ([docs/publishing-vim.md](docs/publishing-vim.md)). No npm.
-- **Develop here:** [`vim/`](vim/). Matrix: [docs/product/vim-neovim-matrix.md](docs/product/vim-neovim-matrix.md).
+Separate repository: **[DevNathan/ftl-dev.vim](https://github.com/DevNathan/ftl-dev.vim)** (Pathogen / Vundle / vim-plug). Not developed or published from this VSIX tree. Capability matrix: [docs/product/vim-neovim-matrix.md](docs/product/vim-neovim-matrix.md).
 
 [Changelog lives here](extension/CHANGELOG.md).
 I keep it in English only—but you all read English fine, right? :)

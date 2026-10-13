@@ -1,6 +1,6 @@
 # Language server (monorepo only)
 
-The Vim plugin ([`ftl-dev.vim`](publishing-vim.md)) is distributed like other Vim plugins (**Pathogen / Vundle / vim-plug**). There is **no npm registry publish** for the language server.
+The Vim plugin ([`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim)) is a separate git repo distributed like other Vim plugins (**Pathogen / Vundle / vim-plug**). There is **no npm registry publish** for the language server.
 
 [`server/`](../server/) remains in this monorepo for:
 

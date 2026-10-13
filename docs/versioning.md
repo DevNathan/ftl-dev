@@ -2,7 +2,7 @@
 
 Canonical version for the **VS Code / Open VSX extension** is **`extension/package.json` → `"version"`**.
 
-The Vim plugin uses a **separate** version file — see [versioning-vim.md](versioning-vim.md) (`vim/VERSION` → repo `ftl-dev.vim`).
+The Vim plugin is a **separate repository** ([`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim)) with its own `VERSION` / `CHANGELOG.md` / `v*` tags.
 
 That string is the marketplace identity of a release. Open VSX and Visual Studio Marketplace both refuse (or ignore) republishing the **same** `publisher.name` + `version`. Ship a **new** version every time you intend to publish.
 

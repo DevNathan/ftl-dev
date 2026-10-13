@@ -1,6 +1,6 @@
 # tree-sitter-freemarker
 
-Optional **Neovim** highlighting path for ftl-dev. Classic Vim and Neovim both work with the Vim runtime under [`../vim/`](../vim/) (recommended default).
+Optional **Neovim** highlighting path for ftl-dev contributors. Classic Vim and Neovim users should install [`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim) (recommended default). This tree-sitter scaffold is **not** part of that plugin download.
 
 ## Status
 

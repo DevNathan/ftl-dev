@@ -23,7 +23,7 @@
 | Comparison op presentation | **Done** (opt-in) | decorations + `comparisonDisplay.ts` (ADR 0003); default **off** (minimap) |
 | Signature Help (`#function` / `#macro`) | **Done** | `signatureHelp.ts` + provider; not builtins |
 | Nested FTL comments + delimiter diagnostics | **Done** | TextMate `comment.block` + `comments.ts` / diagnostics |
-| Vim / Neovim syntax + shared LSP scaffold | **Done** (scaffold) | [`vim/`](../../vim/), [`server/`](../../server/), ADR 0005 |
+| Vim / Neovim syntax + shared LSP scaffold | **Done** (scaffold) | [`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim) (separate git), [`server/`](../../server/), ADR 0005 |
 | Undeclared / data-model (B) | **Deferred** | ADR 0002 |
 | Rename / workspace symbols | **Not started** | — |
 | LSP / Java enrichment | **Not started / non-goal** | — |
