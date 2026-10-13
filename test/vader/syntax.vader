@@ -1,0 +1,86 @@
+" coverage: syntax.current_syntax
+" coverage: syntax.guard
+Execute (syntax sets b:current_syntax and guards reload):
+  new
+  setfiletype freemarker
+  AssertEqual b:current_syntax, 'freemarker'
+  runtime syntax/freemarker.vim
+  AssertEqual b:current_syntax, 'freemarker'
+  bwipe!
+
+" coverage: syntax.comment_angle
+Execute (angle comment is Comment group):
+  new
+  setfiletype freemarker
+  call setline(1, '<#-- hello -->')
+  normal! 1G05l
+  let name = synIDattr(synID(line('.'), col('.'), 1), 'name')
+  Assert name =~? 'ftlComment\|Comment'
+  bwipe!
+
+" coverage: syntax.comment_square
+Execute (square comment is Comment group):
+  new
+  setfiletype freemarker
+  call setline(1, '[#-- hello --]')
+  normal! 1G05l
+  let name = synIDattr(synID(line('.'), col('.'), 1), 'name')
+  Assert name =~? 'ftlComment\|Comment'
+  bwipe!
+
+" coverage: syntax.directive_if
+Execute (<#if is directive/statement):
+  new
+  setfiletype freemarker
+  call setline(1, '<#if x>')
+  normal! 1G03l
+  let name = synIDattr(synID(line('.'), col('.'), 1), 'name')
+  Assert name =~? 'ftlDirective\|Statement\|ftlDelimiter\|Delimiter'
+  bwipe!
+
+" coverage: syntax.interpolation
+Execute (${ interp is special):
+  new
+  setfiletype freemarker
+  call setline(1, '${user}')
+  normal! 1G02l
+  let name = synIDattr(synID(line('.'), col('.'), 1), 'name')
+  Assert name =~? 'ftlInterpolation\|Special\|ftlIdentifier\|Identifier'
+  bwipe!
+
+" coverage: syntax.user_directive
+Execute (<@macro is user directive):
+  new
+  setfiletype freemarker
+  call setline(1, '<@banner>')
+  normal! 1G03l
+  let name = synIDattr(synID(line('.'), col('.'), 1), 'name')
+  Assert name =~? 'ftlUserDirective'
+  bwipe!
+
+" coverage: syntax.builtin
+Execute (?size builtin differs from identifier):
+  new
+  setfiletype freemarker
+  call setline(1, '<#assign x = received?size>')
+  " column of '?'
+  let qcol = stridx(getline(1), '?') + 1
+  call cursor(1, qcol)
+  AssertEqual synIDattr(synID(1, qcol, 1), 'name'), 'ftlBuiltin'
+  " 'received' should be identifier
+  let rcol = stridx(getline(1), 'received') + 1
+  AssertEqual synIDattr(synID(1, rcol, 1), 'name'), 'ftlIdentifier'
+  bwipe!
+
+" coverage: syntax.directive_uniform
+Execute (<#assign open token is one syntax group):
+  new
+  setfiletype freemarker
+  call setline(1, '<#assign x = 1>')
+  let a = synIDattr(synID(1, 1, 1), 'name')
+  let b = synIDattr(synID(1, 3, 1), 'name')
+  let c = synIDattr(synID(1, 5, 1), 'name')
+  AssertEqual a, 'ftlDirective'
+  AssertEqual b, 'ftlDirective'
+  AssertEqual c, 'ftlDirective'
+  bwipe!

@@ -6,6 +6,27 @@ Versioning is **independent** of the VS Code extension. Canonical file: [`VERSIO
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-13
+
+### Fixed
+
+- Directive openers (`<#assign`, …) no longer split colours mid-name (dropped HTML-base + `matchgroup`)
+- `?builtin` uses dedicated `ftlBuiltin` highlighting distinct from identifiers
+
+### Changed
+
+- Explicit 256/`guifg` defaults for FTL groups (override with colorscheme or `termguicolors`)
+
+## [0.1.2] - 2026-10-13
+
+### Added
+
+- Full Vader + Neovim lua test suite with coverage inventory (100% of listed units)
+
+### Fixed
+
+- Indent logic moved to `autoload/ftl_dev/indent.vim` for testable pure helpers
+
 ## [0.1.1] - 2026-10-13
 
 ### Fixed
