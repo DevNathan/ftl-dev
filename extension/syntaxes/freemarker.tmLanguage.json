@@ -70,6 +70,7 @@
             "0": { "name": "punctuation.definition.tag.end.freemarker" }
           },
           "patterns": [
+            { "include": "#comment" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -88,6 +89,7 @@
             "0": { "name": "punctuation.definition.tag.end.freemarker" }
           },
           "patterns": [
+            { "include": "#comment" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -106,6 +108,7 @@
             "0": { "name": "punctuation.definition.tag.end.freemarker" }
           },
           "patterns": [
+            { "include": "#comment" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -128,6 +131,7 @@
             "0": { "name": "punctuation.definition.tag.end.freemarker" }
           },
           "patterns": [
+            { "include": "#comment" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -146,6 +150,7 @@
             "0": { "name": "punctuation.definition.tag.end.freemarker" }
           },
           "patterns": [
+            { "include": "#comment" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -164,6 +169,7 @@
             "0": { "name": "punctuation.definition.tag.end.freemarker" }
           },
           "patterns": [
+            { "include": "#comment" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -182,6 +188,7 @@
         "0": { "name": "punctuation.definition.interpolation.end.freemarker" }
       },
       "patterns": [
+        { "include": "#comment" },
         { "include": "#string-double" },
         { "include": "#string-single" },
         { "include": "#expression" }

@@ -1,3 +1,5 @@
+import { ftlCommentRanges, offsetInFtlComment } from "./comments";
+import { escapeRe } from "./scan";
 import { FtlIndex, identifierAt, indexFtl } from "./symbols";
 
 export interface ReferenceHit {
@@ -10,17 +12,15 @@ export interface FindReferencesOptions {
   includeDeclaration?: boolean;
 }
 
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 /**
  * Collect occurrences of an identifier (or dotted `ns.sym`) in `text`.
  * Matches are whole-identifier (or whole dotted name), not substrings.
+ * Hits inside FTL comments are omitted.
  */
 export function findNameOccurrences(
   text: string,
-  name: string
+  name: string,
+  comments = ftlCommentRanges(text)
 ): ReferenceHit[] {
   if (!name) {
     return [];
@@ -30,11 +30,14 @@ export function findNameOccurrences(
   // Dotted: match full `ns.sym` as a unit (word chars + dots between).
   const pattern =
     parts.length > 1
-      ? `(?<![a-zA-Z0-9_])${parts.map(escapeRegExp).join("\\.")}(?![a-zA-Z0-9_])`
-      : `(?<![a-zA-Z0-9_])${escapeRegExp(name)}(?![a-zA-Z0-9_])`;
+      ? `(?<![a-zA-Z0-9_])${parts.map(escapeRe).join("\\.")}(?![a-zA-Z0-9_])`
+      : `(?<![a-zA-Z0-9_])${escapeRe(name)}(?![a-zA-Z0-9_])`;
   const re = new RegExp(pattern, "g");
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
+    if (offsetInFtlComment(m.index, comments)) {
+      continue;
+    }
     hits.push({ startOffset: m.index, endOffset: m.index + m[0].length });
   }
   return hits;
@@ -76,6 +79,7 @@ export function findReferencesInText(
 ): ReferenceHit[] {
   const includeDeclaration = options.includeDeclaration !== false;
   const index = indexFtl(text);
+  const comments = ftlCommentRanges(text);
   const parts = symbolName.split(".");
   const simple = parts[parts.length - 1]!;
   const names = new Set<string>();
@@ -91,7 +95,7 @@ export function findReferencesInText(
   const seen = new Set<string>();
   const hits: ReferenceHit[] = [];
   for (const n of names) {
-    for (const hit of findNameOccurrences(text, n)) {
+    for (const hit of findNameOccurrences(text, n, comments)) {
       const key = `${hit.startOffset}:${hit.endOffset}`;
       if (seen.has(key)) {
         continue;

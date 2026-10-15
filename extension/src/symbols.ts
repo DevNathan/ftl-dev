@@ -1,5 +1,12 @@
 import { ftlCommentRanges, offsetInFtlComment } from "./comments";
 
+export {
+  buildLineMap,
+  lineCharacterToOffsetMapped,
+  offsetToPos,
+  type LineMap,
+} from "./lineMap";
+
 export type SymbolKind = "assign" | "macro" | "function" | "local" | "global";
 
 /** Parameter of a `#macro` / `#function` open tag. */

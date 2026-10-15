@@ -76,4 +76,31 @@ test("sequential comments are separate ranges", () => {
   assert.strictEqual(text.slice(ranges[1]![0], ranges[1]![1]), "<#-- b -->");
 });
 
+test("apostrophe / quote inside FTL comment does not desync delimiter scan", () => {
+  for (const text of [
+    "<#-- don't -->",
+    '<#-- say "hi -->',
+    "[#-- don't --]",
+    "<#assign x = 1 <#-- it's --> />\n<p>after</p>",
+    "<#-- it's --> \"s\" <#-- 'x' -->",
+  ]) {
+    assert.deepStrictEqual(findCommentDelimiterIssues(text), [], text);
+  }
+});
+
+test("unclosed and orphan are still reported around quote-bearing comments", () => {
+  const unclosed = "<#-- don't";
+  assert.deepStrictEqual(findCommentDelimiterIssues(unclosed), [
+    { offset: 0, angle: true, kind: "unclosed-open" },
+  ]);
+  const text = "<#-- don't --> -->";
+  assert.deepStrictEqual(findCommentDelimiterIssues(text), [
+    { offset: text.lastIndexOf("-->"), angle: true, kind: "orphan-close" },
+  ]);
+  const sq = "x [#-- it's";
+  assert.deepStrictEqual(findCommentDelimiterIssues(sq), [
+    { offset: 2, angle: false, kind: "unclosed-open" },
+  ]);
+});
+
 console.log("All comments unit tests passed.");

@@ -60,10 +60,13 @@ export const DECREASE_INDENT_PATTERN =
   `[\\[<]/@[a-zA-Z_][\\w.]*\\b` +
   ")";
 
+const INCREASE_INDENT_RE = new RegExp(INCREASE_INDENT_PATTERN);
+const DECREASE_INDENT_RE = new RegExp(DECREASE_INDENT_PATTERN);
+
 export function lineIncreasesIndent(line: string): boolean {
-  return new RegExp(INCREASE_INDENT_PATTERN).test(line);
+  return INCREASE_INDENT_RE.test(line);
 }
 
 export function lineDecreasesIndent(line: string): boolean {
-  return new RegExp(DECREASE_INDENT_PATTERN).test(line);
+  return DECREASE_INDENT_RE.test(line);
 }

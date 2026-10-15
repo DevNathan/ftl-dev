@@ -1,16 +1,7 @@
 import * as vscode from "vscode";
-import { collectImportSymbols } from "./imports";
+import { sharedDocCache } from "./docCache";
 import { signatureHelpAt } from "./signatureHelp";
-import { indexFtl, lineCharacterToOffset } from "./symbols";
-
-async function readFs(fsPath: string): Promise<string | undefined> {
-  try {
-    const data = await vscode.workspace.fs.readFile(vscode.Uri.file(fsPath));
-    return Buffer.from(data).toString("utf8");
-  } catch {
-    return undefined;
-  }
-}
+import { readFsPath } from "./vscodeIo";
 
 export class FtlSignatureHelpProvider
   implements vscode.SignatureHelpProvider
@@ -22,20 +13,17 @@ export class FtlSignatureHelpProvider
     _context: vscode.SignatureHelpContext
   ): Promise<vscode.SignatureHelp | undefined> {
     const text = document.getText();
-    const offset = lineCharacterToOffset(
+    const offset = document.offsetAt(position);
+    const cached = await sharedDocCache.getWithImports(
+      document.uri.toString(),
+      document.version,
       text,
-      position.line,
-      position.character
-    );
-    const local = indexFtl(text);
-    const imported = await collectImportSymbols(
       document.uri.fsPath,
-      local,
-      readFs
+      readFsPath
     );
     const result = signatureHelpAt(text, offset, {
-      local,
-      byNs: imported.byNs,
+      local: cached.index,
+      byNs: cached.importByNs ?? new Map(),
     });
     if (!result) {
       return undefined;

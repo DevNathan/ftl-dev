@@ -1,11 +1,10 @@
 import * as vscode from "vscode";
+import { sharedDocCache } from "./docCache";
 import { OutlineSymbol, buildOutline } from "./outline";
 import { findReferencesAt } from "./references";
-import {
-  SymbolKind,
-  lineCharacterToOffset,
-  offsetToLineCharacter,
-} from "./symbols";
+import { SymbolKind } from "./symbols";
+import { lineMapFor, rangeFromOffsets } from "./vscodeRanges";
+import { offsetToPos } from "./lineMap";
 
 function symbolKindToVscode(kind: SymbolKind): vscode.SymbolKind {
   switch (kind) {
@@ -21,27 +20,23 @@ function symbolKindToVscode(kind: SymbolKind): vscode.SymbolKind {
   }
 }
 
-function rangeFromOffsets(
-  text: string,
-  offset: number,
-  length: number
-): vscode.Range {
-  const start = offsetToLineCharacter(text, offset);
-  const end = offsetToLineCharacter(text, offset + length);
-  return new vscode.Range(
-    start.line,
-    start.character,
-    end.line,
-    end.character
-  );
-}
-
 function toDocumentSymbol(
   text: string,
-  entry: OutlineSymbol
+  entry: OutlineSymbol,
+  map: ReturnType<typeof lineMapFor>
 ): vscode.DocumentSymbol {
-  const selection = rangeFromOffsets(text, entry.nameOffset, entry.nameLength);
-  const range = rangeFromOffsets(text, entry.rangeOffset, entry.rangeLength);
+  const selection = rangeFromOffsets(
+    text,
+    entry.nameOffset,
+    entry.nameLength,
+    map
+  );
+  const range = rangeFromOffsets(
+    text,
+    entry.rangeOffset,
+    entry.rangeLength,
+    map
+  );
   const sym = new vscode.DocumentSymbol(
     entry.name,
     entry.kind,
@@ -49,7 +44,7 @@ function toDocumentSymbol(
     range,
     selection
   );
-  sym.children = entry.children.map((c) => toDocumentSymbol(text, c));
+  sym.children = entry.children.map((c) => toDocumentSymbol(text, c, map));
   return sym;
 }
 
@@ -60,7 +55,9 @@ export class FtlDocumentSymbolProvider
     document: vscode.TextDocument
   ): vscode.DocumentSymbol[] {
     const text = document.getText();
-    return buildOutline(text).map((e) => toDocumentSymbol(text, e));
+    sharedDocCache.get(document.uri.toString(), document.version, text);
+    const map = lineMapFor(text);
+    return buildOutline(text).map((e) => toDocumentSymbol(text, e, map));
   }
 }
 
@@ -71,20 +68,17 @@ export class FtlReferenceProvider implements vscode.ReferenceProvider {
     context: vscode.ReferenceContext
   ): vscode.Location[] | undefined {
     const text = document.getText();
-    const offset = lineCharacterToOffset(
-      text,
-      position.line,
-      position.character
-    );
+    const offset = document.offsetAt(position);
     const hits = findReferencesAt(text, offset, {
       includeDeclaration: context.includeDeclaration,
     });
     if (!hits) {
       return undefined;
     }
+    const map = lineMapFor(text);
     return hits.map((h) => {
-      const start = offsetToLineCharacter(text, h.startOffset);
-      const end = offsetToLineCharacter(text, h.endOffset);
+      const start = offsetToPos(map, h.startOffset);
+      const end = offsetToPos(map, h.endOffset);
       return new vscode.Location(
         document.uri,
         new vscode.Range(

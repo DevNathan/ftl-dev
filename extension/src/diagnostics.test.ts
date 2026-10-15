@@ -233,4 +233,117 @@ test("HTML braces are not treated as hash literals", () => {
   assert.ok(!diags.some((d) => d.message.toLowerCase().includes("hash")));
 });
 
+function hashMessages(text: string): string[] {
+  return validateFtl(text)
+    .filter(
+      (d) =>
+        d.message.includes("hash literal") ||
+        d.message.includes("hash entries") ||
+        d.message.toLowerCase().includes("comma")
+    )
+    .map((d) => d.message);
+}
+
+const COMMENT_BODIES = [
+  ":",
+  ",",
+  "{",
+  "}",
+  "[",
+  "]",
+  "'",
+  '"',
+  "a: b, {c} ['d'] \"e\"",
+];
+
+test("comment containing colon between hash entries is ignored", () => {
+  const text = [
+    "<#assign x = [",
+    "  {",
+    '    "name": "COMP",',
+    "    <#-- 이것도: 문제가 있음 -->",
+    '    "idx": BI_COMP,',
+    '    "description": "구분 비트"',
+    "  }",
+    "] />",
+  ].join("\n");
+  assert.deepStrictEqual(hashMessages(text), []);
+});
+
+test("comment bodies with hash punctuation are ignored at any hash position", () => {
+  for (const body of COMMENT_BODIES) {
+    for (const [open, close] of [
+      ["<#--", "-->"],
+      ["[#--", "--]"],
+    ] as const) {
+      const c = `${open} ${body} ${close}`;
+      const variants = [
+        `{ ${c} "a": 1, "b": 2 }`,
+        `{ "a": 1, ${c} "b": 2 }`,
+        `{ "a": 1 ${c}, "b": 2 }`,
+        `{ "a": 1, "b": 2 ${c} }`,
+        `{ "a": ${c} 1, "b": 2 }`,
+        // trailing-comma + comment is covered separately (still an error)
+        `{ "outer": { "a": 1, ${c} "b": 2 } }`,
+      ];
+      for (const hash of variants) {
+        assert.deepStrictEqual(
+          hashMessages(`<#assign h = ${hash}>`),
+          [],
+          `directive: ${hash}`
+        );
+        assert.deepStrictEqual(
+          hashMessages(`\${${hash}}`),
+          [],
+          `interpolation: ${hash}`
+        );
+      }
+    }
+  }
+});
+
+test("missing comma still flagged with comment between entries", () => {
+  const quoted = '<#assign h = {"a": 1 <#-- c --> "b": 2}>';
+  const diags = validateFtl(quoted).filter((d) =>
+    d.message.includes("Missing comma between hash entries")
+  );
+  assert.ok(diags.length >= 1, quoted);
+  assert.strictEqual(diags[0]!.offset, quoted.indexOf('"b"'));
+
+  const ident = "<#assign h = {a: 1 <#-- c --> b: 2}>";
+  const identDiags = validateFtl(ident).filter((d) =>
+    d.message.includes("Missing comma between hash entries")
+  );
+  assert.ok(identDiags.length >= 1, ident);
+  assert.strictEqual(identDiags[0]!.offset, ident.indexOf("b:"));
+});
+
+test("trailing comma flagged when comment follows it", () => {
+  const text = '<#assign h = {"a": 1, <#-- trailing -->}>';
+  const diags = validateFtl(text).filter((d) =>
+    d.message.includes("Trailing comma in hash literal")
+  );
+  assert.ok(diags.length >= 1, text);
+  assert.strictEqual(diags[0]!.offset, text.indexOf(","));
+});
+
+test("braces and quotes inside comments do not create fake hashes", () => {
+  const text =
+    '<#assign h = {"a": 1 <#-- { "x": 1 "y": 2 } --> , "b": 2}>';
+  assert.deepStrictEqual(hashMessages(text), []);
+});
+
+test("apostrophe inside FTL comment is not an unclosed string / comment", () => {
+  assert.ok(
+    !validateFtl("<#-- don't -->").some((d) =>
+      d.message.includes("Unclosed FreeMarker comment")
+    )
+  );
+  assert.ok(
+    !validateFtl('<#assign x = 1 <#-- say "hi --> />').some((d) =>
+      d.message.toLowerCase().includes("unclosed")
+    )
+  );
+});
+
 console.log("All diagnostics unit tests passed.");

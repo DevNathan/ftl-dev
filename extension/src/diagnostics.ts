@@ -1,6 +1,14 @@
 import { DIRECTIVES } from "./catalog";
 import { findCommentDelimiterIssues, skipFtlComment } from "./comments";
-import { offsetToLineCharacter } from "./symbols";
+import { buildLineMap, offsetToPos } from "./lineMap";
+import {
+  findMatchingBrace,
+  isFtlCommentStart,
+  matchDirectiveHead,
+  scanDirectiveClose,
+  skipCommentAt,
+  skipString,
+} from "./scan";
 
 export type FtlDiagnostic = {
   offset: number;
@@ -175,7 +183,7 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
     }
 
     if (tok.name === "elseif") {
-      const parentIf = [...stack].reverse().find((t) => t.name === "if");
+      const parentIf = findStackDir(stack, "if");
       if (!parentIf) {
         diags.push({
           offset: tok.offset,
@@ -196,7 +204,7 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
     }
 
     if (tok.name === "else") {
-      const parentIf = [...stack].reverse().find((t) => t.name === "if");
+      const parentIf = findStackDir(stack, "if");
       if (!parentIf) {
         diags.push({
           offset: tok.offset,
@@ -286,6 +294,16 @@ function isBlockDirectiveOpen(tok: DirTok): boolean {
   return !/(=|\+\+|--|\+=|-=|\*=|\/=|%=)/.test(inner);
 }
 
+/** Nearest enclosing open on the stack with the given name (top → bottom). */
+function findStackDir(stack: DirTok[], name: string): DirTok | undefined {
+  for (let i = stack.length - 1; i >= 0; i--) {
+    if (stack[i]!.name === name) {
+      return stack[i];
+    }
+  }
+  return undefined;
+}
+
 /** `<#assign` … EOF without `>` / `/>` */
 function findUnclosedDirectiveOpens(text: string): FtlDiagnostic[] {
   const diags: FtlDiagnostic[] = [];
@@ -316,18 +334,16 @@ function findUnclosedDirectiveOpens(text: string): FtlDiagnostic[] {
       continue;
     }
 
-    const angle = text.slice(i).match(/^(<\/?[#@][a-zA-Z_][\w\.]*)/);
-    const square = text.slice(i).match(/^(\[\/?[#@][a-zA-Z_][\w\.]*)/);
-    const m = angle ?? square;
-    if (!m) {
+    const head = matchDirectiveHead(text, i);
+    if (!head) {
       i++;
       continue;
     }
 
     const start = i;
-    const openCh = m[1]![0]!;
+    const openCh = head.bracket;
     const closeCh = openCh === "[" ? "]" : ">";
-    i += m[1]!.length;
+    i += head.length;
 
     // scan until close bracket (respect strings / paren depth) or HTML / next FTL tag
     let closed = false;
@@ -406,7 +422,7 @@ function findUnclosedDirectiveOpens(text: string): FtlDiagnostic[] {
     if (!closed) {
       diags.push({
         offset: start,
-        length: Math.min(m[1]!.length, text.length - start),
+        length: Math.min(head.length, text.length - start),
         message: `Unclosed directive tag; expected '${closeCh}' or '/${closeCh}'.`,
         severity: "error",
       });
@@ -445,19 +461,19 @@ function scanDirectives(text: string): DirTok[] {
       continue;
     }
 
-    const head = text.slice(i).match(/^([<\[])(\/)?([#@])([a-zA-Z_][\w\.]*)\b/);
+    const head = matchDirectiveHead(text, i);
     if (!head) {
       i++;
       continue;
     }
 
     const start = i;
-    const bracket = head[1] as "<" | "[";
-    const isClose = head[2] === "/";
-    const sigil = head[3] as "#" | "@";
-    const name = head[4]!;
+    const bracket = head.bracket;
+    const isClose = head.isClose;
+    const sigil = head.sigil;
+    const name = head.name;
     const closeCh = bracket === "[" ? "]" : ">";
-    i += head[0].length;
+    i += head.length;
 
     const innerStart = i;
     let closed = false;
@@ -699,6 +715,10 @@ function findHashLiteralCommaIssues(text: string): FtlDiagnostic[] {
     let i = start;
     while (i < end) {
       const ch = text[i]!;
+      if (isFtlCommentStart(text, i)) {
+        i = skipCommentWithin(text, i, end);
+        continue;
+      }
       if (ch === '"' || ch === "'") {
         i = skipString(text, i, end);
         continue;
@@ -719,6 +739,11 @@ function findHashLiteralCommaIssues(text: string): FtlDiagnostic[] {
     }
   }
   return diags;
+}
+
+/** Skip the FTL comment at `i`, never past `limit` (unclosed / overrun → `limit`). */
+function skipCommentWithin(text: string, i: number, limit: number): number {
+  return skipCommentAt(text, i, limit);
 }
 
 /** Ranges of FTL expression text: interpolation bodies + directive tag inners. */
@@ -765,19 +790,13 @@ function ftlExpressionRegions(
       continue;
     }
 
-    // Directive / user-tag open: <#…> / [#…] / <@…> / [@…]
-    const tag = text.slice(i).match(/^([<\[])([#@])/);
-    if (tag && !text.startsWith("<#--", i)) {
-      const openBracket = tag[1]!;
-      const closeBracket = openBracket === "<" ? ">" : "]";
-      const nameStart = i + 2;
-      if (/[a-zA-Z_]/.test(text[nameStart] ?? "")) {
-        let p = nameStart + 1;
-        while (p < text.length && /[\w.]/.test(text[p]!)) {
-          p++;
-        }
-        const innerStart = p;
-        const close = scanDirectiveClose(text, p, closeBracket);
+    // Directive / user-tag open: <#…> / [#…] / <@…> / [@…] (not comments)
+    if (!text.startsWith("<#--", i) && !text.startsWith("[#--", i)) {
+      const head = matchDirectiveHead(text, i);
+      if (head && !head.isClose) {
+        const closeBracket = head.bracket === "<" ? ">" : "]";
+        const innerStart = i + head.length;
+        const close = scanDirectiveClose(text, innerStart, closeBracket);
         if (close !== -1) {
           regions.push({ start: innerStart, end: close });
           i = close + 1;
@@ -790,118 +809,6 @@ function ftlExpressionRegions(
   }
 
   return regions;
-}
-
-function scanDirectiveClose(
-  text: string,
-  from: number,
-  closeBracket: string
-): number {
-  let i = from;
-  let inString: '"' | "'" | null = null;
-  let paren = 0;
-  let brace = 0;
-  while (i < text.length) {
-    if (
-      !inString &&
-      (text.startsWith("<#--", i) || text.startsWith("[#--", i))
-    ) {
-      i = skipFtlComment(text, i);
-      continue;
-    }
-    const c = text[i]!;
-    if (inString) {
-      if (c === "\\" && i + 1 < text.length) {
-        i += 2;
-        continue;
-      }
-      if (c === inString) {
-        inString = null;
-      }
-      i++;
-      continue;
-    }
-    if (c === '"' || c === "'") {
-      inString = c;
-      i++;
-      continue;
-    }
-    if (c === "(") {
-      paren++;
-    } else if (c === ")" && paren > 0) {
-      paren--;
-    } else if (c === "{") {
-      brace++;
-    } else if (c === "}" && brace > 0) {
-      brace--;
-    } else if (c === closeBracket && paren === 0 && brace === 0) {
-      return i;
-    }
-    i++;
-  }
-  return -1;
-}
-
-function findMatchingBrace(text: string, openBrace: number, limit: number): number {
-  let i = openBrace + 1;
-  let depth = 1;
-  let inString: '"' | "'" | null = null;
-  while (i < limit && i < text.length) {
-    if (
-      !inString &&
-      (text.startsWith("<#--", i) || text.startsWith("[#--", i))
-    ) {
-      const next = skipFtlComment(text, i);
-      if (next > limit) {
-        return -1;
-      }
-      i = next;
-      continue;
-    }
-    const c = text[i]!;
-    if (inString) {
-      if (c === "\\" && i + 1 < text.length) {
-        i += 2;
-        continue;
-      }
-      if (c === inString) {
-        inString = null;
-      }
-      i++;
-      continue;
-    }
-    if (c === '"' || c === "'") {
-      inString = c;
-      i++;
-      continue;
-    }
-    if (c === "{") {
-      depth++;
-    } else if (c === "}") {
-      depth--;
-      if (depth === 0) {
-        return i;
-      }
-    }
-    i++;
-  }
-  return -1;
-}
-
-function skipString(text: string, start: number, limit: number): number {
-  const q = text[start]!;
-  let i = start + 1;
-  while (i < limit && i < text.length) {
-    if (text[i] === "\\" && i + 1 < text.length) {
-      i += 2;
-      continue;
-    }
-    if (text[i] === q) {
-      return i + 1;
-    }
-    i++;
-  }
-  return limit;
 }
 
 /**
@@ -917,8 +824,14 @@ function checkHashLiteralCommas(
   let i = openBrace + 1;
 
   const skipWs = (): void => {
-    while (i < closeBrace && /\s/.test(text[i]!)) {
-      i++;
+    while (i < closeBrace) {
+      if (/\s/.test(text[i]!)) {
+        i++;
+      } else if (isFtlCommentStart(text, i)) {
+        i = skipCommentWithin(text, i, closeBrace);
+      } else {
+        break;
+      }
     }
   };
 
@@ -1007,6 +920,10 @@ function scanHashPart(
       i++;
       continue;
     }
+    if (isFtlCommentStart(text, i)) {
+      i = skipCommentWithin(text, i, closeBrace);
+      continue;
+    }
     if (c === '"' || c === "'") {
       inString = c;
       i++;
@@ -1053,6 +970,8 @@ function scanHashValue(
   let bracket = 0;
   let brace = 0;
   let sawValue = false;
+  /** Last significant (non-whitespace, non-comment) offset; comments act as whitespace. */
+  let lastSig = -1;
 
   while (i < closeBrace) {
     const c = text[i]!;
@@ -1065,8 +984,14 @@ function scanHashValue(
       if (c === inString) {
         inString = null;
         sawValue = true;
+        lastSig = i;
       }
       i++;
+      continue;
+    }
+
+    if (isFtlCommentStart(text, i)) {
+      i = skipCommentWithin(text, i, closeBrace);
       continue;
     }
 
@@ -1087,6 +1012,7 @@ function scanHashValue(
       }
       inString = c;
       sawValue = true;
+      lastSig = i;
       i++;
       continue;
     }
@@ -1099,8 +1025,7 @@ function scanHashValue(
       /[a-zA-Z_]/.test(c) &&
       looksLikeHashKeyStart(text, i, closeBrace)
     ) {
-      const prev = prevNonWs(text, i - 1, from);
-      if (prev !== -1 && /[\w"'`)\]}.]/.test(text[prev]!)) {
+      if (lastSig !== -1 && /[\w"'`)\]}.]/.test(text[lastSig]!)) {
         return i; // next key without comma
       }
     }
@@ -1127,18 +1052,13 @@ function scanHashValue(
       sawValue = true;
     }
 
+    if (!/\s/.test(c)) {
+      lastSig = i;
+    }
     i++;
   }
 
   return closeBrace; // last entry
-}
-
-function prevNonWs(text: string, from: number, limit: number): number {
-  let i = from;
-  while (i >= limit && /\s/.test(text[i]!)) {
-    i--;
-  }
-  return i >= limit ? i : -1;
 }
 
 /** True if from `pos` we can parse a key then see top-level `:` before `,` / end. */
@@ -1165,6 +1085,10 @@ function looksLikeHashKeyStart(
       }
       i++;
       saw = true;
+      continue;
+    }
+    if (isFtlCommentStart(text, i)) {
+      i = skipCommentWithin(text, i, closeBrace);
       continue;
     }
     if (c === '"' || c === "'") {
@@ -1210,10 +1134,11 @@ function looksLikeHashKeyStart(
 /** Map diagnostics to 0-based line/character for editors or tests. */
 export function diagnosticPositions(
   text: string,
-  d: FtlDiagnostic
+  d: FtlDiagnostic,
+  lineMap = buildLineMap(text)
 ): { line: number; character: number; endLine: number; endCharacter: number } {
-  const start = offsetToLineCharacter(text, d.offset);
-  const end = offsetToLineCharacter(text, d.offset + d.length);
+  const start = offsetToPos(lineMap, d.offset);
+  const end = offsetToPos(lineMap, d.offset + d.length);
   return {
     line: start.line,
     character: start.character,

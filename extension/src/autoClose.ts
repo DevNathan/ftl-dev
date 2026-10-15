@@ -4,7 +4,12 @@ import {
   autoCloseAfterSlash,
   autoClosePairOnCloser,
   autoClosePairOnEnter,
+  CloseEdit,
 } from "./closeTag";
+
+type AutoEdit = CloseEdit & {
+  replace?: { start: number; end: number; text: string };
+};
 
 /**
  * `/` — self-close or expand `</` to matching close.
@@ -15,6 +20,17 @@ import {
  */
 export function registerAutoClose(context: vscode.ExtensionContext): void {
   let applying = false;
+
+  const runEdit = (doc: vscode.TextDocument, edit: AutoEdit): void => {
+    applying = true;
+    void (async () => {
+      try {
+        await applyEdit(doc, edit);
+      } finally {
+        applying = false;
+      }
+    })();
+  };
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((e) => {
@@ -33,46 +49,29 @@ export function registerAutoClose(context: vscode.ExtensionContext): void {
       }
       const ch = change.text;
       const doc = e.document;
+      const offset = doc.offsetAt(change.range.start) + ch.length;
 
       if (/^\r?\n[ \t]*$/.test(ch)) {
         const editor = vscode.window.activeTextEditor;
         if (!editor || editor.document !== doc) {
           return;
         }
-        const offset = doc.offsetAt(change.range.start) + ch.length;
         const edit = autoClosePairOnEnter(
           doc.getText(),
           offset,
           indentUnitOf(editor)
         );
-        if (!edit) {
-          return;
+        if (edit) {
+          runEdit(doc, edit);
         }
-        applying = true;
-        void (async () => {
-          try {
-            await applyEdit(doc, edit);
-          } finally {
-            applying = false;
-          }
-        })();
         return;
       }
 
       if (ch === "/") {
-        const offset = doc.offsetAt(change.range.start) + ch.length;
         const edit = autoCloseAfterSlash(doc.getText(), offset);
-        if (!edit) {
-          return;
+        if (edit) {
+          runEdit(doc, edit);
         }
-        applying = true;
-        void (async () => {
-          try {
-            await applyEdit(doc, edit);
-          } finally {
-            applying = false;
-          }
-        })();
         return;
       }
 
@@ -83,24 +82,15 @@ export function registerAutoClose(context: vscode.ExtensionContext): void {
         return;
       }
 
-      const offset = doc.offsetAt(change.range.start) + ch.length;
       const align = alignIndentAfterCloser(doc.getText(), offset);
       const pair =
         align || (ch !== ">" && ch !== "]")
           ? undefined
           : autoClosePairOnCloser(doc.getText(), offset);
       const edit = align ?? pair;
-      if (!edit) {
-        return;
+      if (edit) {
+        runEdit(doc, edit);
       }
-      applying = true;
-      void (async () => {
-        try {
-          await applyEdit(doc, edit);
-        } finally {
-          applying = false;
-        }
-      })();
     })
   );
 }
@@ -112,12 +102,7 @@ function indentUnitOf(editor: vscode.TextEditor): string {
 
 async function applyEdit(
   doc: vscode.TextDocument,
-  edit: {
-    replace?: { start: number; end: number; text: string };
-    insertAt?: number;
-    insertText?: string;
-    cursorAt?: number;
-  }
+  edit: AutoEdit
 ): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.document !== doc) {
