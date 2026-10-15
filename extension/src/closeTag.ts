@@ -1,4 +1,5 @@
 import { skipFtlComment } from "./comments";
+import { escapeRe } from "./scan";
 
 export type CloseEdit = {
   /**
@@ -704,10 +705,6 @@ function isBlockOpenForClose(
     return false;
   }
   return shouldPairClose(sigil, name, inner);
-}
-
-function escapeRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /** Apply a CloseEdit to a string (for tests). */

@@ -40,12 +40,12 @@ import {
   offsetInFtlComment,
 } from "./comments";
 import { collectImportSymbols, FileReader } from "./imports";
+import { buildLineMap, LineMap, offsetToPos } from "./lineMap";
 import {
   FtlIndex,
   FtlPathRef,
   FtlSymbol,
   indexFtl,
-  offsetToLineCharacter,
   SymbolKind,
 } from "./symbols";
 
@@ -109,6 +109,7 @@ function spanKey(line: number, character: number, length: number): string {
 
 function addSpan(
   text: string,
+  map: LineMap,
   offset: number,
   length: number,
   tokenType: FtlSemanticTokenType,
@@ -118,7 +119,7 @@ function addSpan(
   if (length <= 0 || offset < 0 || offset + length > text.length) {
     return;
   }
-  const { line, character } = offsetToLineCharacter(text, offset);
+  const { line, character } = offsetToPos(map, offset);
   const key = spanKey(line, character, length);
   if (seen.has(key)) {
     return;
@@ -151,6 +152,7 @@ export function buildSemanticTokenSpansFromIndex(
   const spans: SemanticTokenSpan[] = [];
   const seen = new Set<string>();
   const declOffsets = new Set<number>();
+  const map = buildLineMap(text);
   // Only for use-scans (step 3–4); index already excludes comment decls.
   const comments = ftlCommentRanges(text);
 
@@ -172,6 +174,7 @@ export function buildSemanticTokenSpansFromIndex(
     declOffsets.add(sym.nameOffset);
     addSpan(
       text,
+      map,
       sym.nameOffset,
       sym.nameLength,
       kindToTokenType(sym.kind),
@@ -190,12 +193,20 @@ export function buildSemanticTokenSpansFromIndex(
       continue;
     }
     declOffsets.add(off);
-    addSpan(text, off, ref.asName.length, "namespace", spans, seen);
+    addSpan(text, map, off, ref.asName.length, "namespace", spans, seen);
   }
 
   // 3) `ns.member` when import-resolvable
   const importedByNs = options.importedByNs;
   if (importedByNs && nsNames.size > 0) {
+    const remoteByNsName = new Map<string, Map<string, FtlSymbol>>();
+    for (const [ns, syms] of importedByNs) {
+      const byName = new Map<string, FtlSymbol>();
+      for (const s of syms) {
+        byName.set(s.name, s);
+      }
+      remoteByNsName.set(ns, byName);
+    }
     const dotted = /([a-zA-Z_][\w]*)\.([a-zA-Z_][\w]*)/g;
     let m: RegExpExecArray | null;
     while ((m = dotted.exec(text)) !== null) {
@@ -207,19 +218,16 @@ export function buildSemanticTokenSpansFromIndex(
       if (!nsNames.has(ns)) {
         continue;
       }
-      const remote = importedByNs.get(ns);
-      if (!remote) {
-        continue;
-      }
-      const rem = remote.find((s) => s.name === member);
+      const rem = remoteByNsName.get(ns)?.get(member);
       if (!rem) {
         continue;
       }
       const nsOffset = m.index;
       const memberOffset = m.index + ns.length + 1;
-      addSpan(text, nsOffset, ns.length, "namespace", spans, seen);
+      addSpan(text, map, nsOffset, ns.length, "namespace", spans, seen);
       addSpan(
         text,
+        map,
         memberOffset,
         member.length,
         kindToTokenType(rem.kind),
@@ -240,7 +248,7 @@ export function buildSemanticTokenSpansFromIndex(
     }
 
     if (nsNames.has(name)) {
-      addSpan(text, offset, name.length, "namespace", spans, seen);
+      addSpan(text, map, offset, name.length, "namespace", spans, seen);
       continue;
     }
 
@@ -248,6 +256,7 @@ export function buildSemanticTokenSpansFromIndex(
     if (local) {
       addSpan(
         text,
+        map,
         offset,
         name.length,
         kindToTokenType(local.kind),
@@ -265,11 +274,18 @@ export function buildSemanticTokenSpansFromIndex(
 
 /**
  * Encode spans as VS Code semantic tokens data (5×uint32 per token, delta-encoded).
+ * Assumes spans are already sorted by (line, character); sorts only if needed.
  */
-export function encodeSemanticTokenSpans(spans: SemanticTokenSpan[]): Uint32Array {
-  const sorted = [...spans].sort((a, b) =>
-    a.line !== b.line ? a.line - b.line : a.character - b.character
-  );
+export function encodeSemanticTokenSpans(
+  spans: SemanticTokenSpan[],
+  options: { alreadySorted?: boolean } = {}
+): Uint32Array {
+  const sorted =
+    options.alreadySorted === true
+      ? spans
+      : [...spans].sort((a, b) =>
+          a.line !== b.line ? a.line - b.line : a.character - b.character
+        );
   const data: number[] = [];
   let prevLine = 0;
   let prevChar = 0;
@@ -298,5 +314,5 @@ export async function semanticTokensForDocument(
   const spans = buildSemanticTokenSpansFromIndex(text, index, {
     importedByNs: byNs,
   });
-  return encodeSemanticTokenSpans(spans);
+  return encodeSemanticTokenSpans(spans, { alreadySorted: true });
 }

@@ -7,6 +7,34 @@
 
 import { lineIndentAt, OpenSite } from "./closeTag";
 import { BLOCK_OPEN, CAPTURE_ASSIGN, MID_BLOCK } from "./indentRules";
+import { escapeRe } from "./scan";
+
+const MID_ALIGN_RE_CACHE = new Map<string, RegExp>();
+const CLOSE_ALIGN_RE_CACHE = new Map<string, RegExp>();
+
+function midAlignRe(openBracket: string, closer: string): RegExp {
+  const key = `${openBracket}${closer}`;
+  let re = MID_ALIGN_RE_CACHE.get(key);
+  if (!re) {
+    re = new RegExp(
+      `^${escapeRe(openBracket)}#(${MID_BLOCK})\\b[\\s\\S]*${escapeRe(closer)}$`
+    );
+    MID_ALIGN_RE_CACHE.set(key, re);
+  }
+  return re;
+}
+
+function closeAlignRe(openBracket: string, closer: string): RegExp {
+  const key = `${openBracket}${closer}`;
+  let re = CLOSE_ALIGN_RE_CACHE.get(key);
+  if (!re) {
+    re = new RegExp(
+      `^${escapeRe(openBracket)}/(#|@)([a-zA-Z_][\\w.]*)\\b[\\s\\S]*${escapeRe(closer)}$`
+    );
+    CLOSE_ALIGN_RE_CACHE.set(key, re);
+  }
+  return re;
+}
 
 export type IndentAlignEdit = {
   replace: { start: number; end: number; text: string };
@@ -44,11 +72,7 @@ export function alignIndentAfterCloser(
   // Tag text ends at the closer we just typed. Trailing same-line content
   // (e.g. `  <#recover>|</#attempt>` after HTML-style pair) must not block align.
   const content = text.slice(line.contentStart, offset);
-  const mid = content.match(
-    new RegExp(
-      `^${escapeRe(openBracket)}#(${MID_BLOCK})\\b[\\s\\S]*${escapeRe(closer)}$`
-    )
-  );
+  const mid = content.match(midAlignRe(openBracket, closer));
   if (mid) {
     const name = mid[1]!;
     const parent = findMidBlockParent(
@@ -59,11 +83,7 @@ export function alignIndentAfterCloser(
     return alignTo(line, offset, parent?.indent);
   }
 
-  const close = content.match(
-    new RegExp(
-      `^${escapeRe(openBracket)}/(#|@)([a-zA-Z_][\\w.]*)\\b[\\s\\S]*${escapeRe(closer)}$`
-    )
-  );
+  const close = content.match(closeAlignRe(openBracket, closer));
   if (close) {
     const sigil = close[1]!;
     const name = close[2]!;
@@ -275,10 +295,6 @@ function isBlockOpen(sigil: string, name: string, inner: string): boolean {
   }
   const body = inner.replace(/\/\s*$/, "").trim();
   return !/(=|\+\+|--|\+=|-=|\*=|\/=|%=)/.test(body);
-}
-
-function escapeRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /** Apply an IndentAlignEdit to a string (for tests). */

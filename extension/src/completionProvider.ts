@@ -1,16 +1,7 @@
 import * as vscode from "vscode";
 import { buildCompletions, completionContext } from "./catalog";
-import { collectImportSymbols } from "./imports";
-import { indexFtl, lineCharacterToOffset } from "./symbols";
-
-async function readFs(fsPath: string): Promise<string | undefined> {
-  try {
-    const data = await vscode.workspace.fs.readFile(vscode.Uri.file(fsPath));
-    return Buffer.from(data).toString("utf8");
-  } catch {
-    return undefined;
-  }
-}
+import { sharedDocCache } from "./docCache";
+import { readFsPath } from "./vscodeIo";
 
 export class FtlCompletionProvider
   implements vscode.CompletionItemProvider
@@ -20,19 +11,20 @@ export class FtlCompletionProvider
     position: vscode.Position
   ): Promise<vscode.CompletionItem[]> {
     const text = document.getText();
-    const offset = lineCharacterToOffset(
-      text,
-      position.line,
-      position.character
-    );
+    const offset = document.offsetAt(position);
     const before = text.slice(0, offset);
     const ctx = completionContext(before);
-    const index = indexFtl(text);
-    const imported = await collectImportSymbols(
+    const cached = await sharedDocCache.getWithImports(
+      document.uri.toString(),
+      document.version,
+      text,
       document.uri.fsPath,
-      index,
-      readFs
+      readFsPath
     );
+    const index = cached.index;
+    const imported = {
+      byNs: cached.importByNs ?? new Map(),
+    };
 
     // Prefer `asFunctionCall` when any decl of that name is a #function.
     const byName = new Map<

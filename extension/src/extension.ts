@@ -15,34 +15,10 @@ import {
 import { FtlSignatureHelpProvider } from "./signatureHelpProvider";
 import {
   FTL_SEMANTIC_TOKEN_TYPES,
-  semanticTokensForDocument,
-} from "./semanticTokens";
+  FtlSemanticTokensProvider,
+} from "./semanticTokensProvider";
 
 const FTL_SELECTOR: vscode.DocumentSelector = { language: "freemarker" };
-
-async function readFs(fsPath: string): Promise<string | undefined> {
-  try {
-    const data = await vscode.workspace.fs.readFile(vscode.Uri.file(fsPath));
-    return Buffer.from(data).toString("utf8");
-  } catch {
-    return undefined;
-  }
-}
-
-class FtlSemanticTokensProvider
-  implements vscode.DocumentSemanticTokensProvider
-{
-  async provideDocumentSemanticTokens(
-    document: vscode.TextDocument
-  ): Promise<vscode.SemanticTokens> {
-    const data = await semanticTokensForDocument(
-      document.getText(),
-      document.uri.fsPath,
-      readFs
-    );
-    return new vscode.SemanticTokens(data);
-  }
-}
 
 export function activate(context: vscode.ExtensionContext): void {
   console.log("ftl-dev: FreeMarker extension activated");

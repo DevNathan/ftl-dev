@@ -111,12 +111,26 @@ export function findCommentDelimiterIssues(
   text: string
 ): CommentDelimiterIssue[] {
   const issues: CommentDelimiterIssue[] = [];
-  const angleStack: number[] = [];
-  const squareStack: number[] = [];
   let i = 0;
   let inString: '"' | "'" | null = null;
 
   while (i < text.length) {
+    // FTL comments first: quotes / `-->` inside them must not touch string state.
+    if (!inString && (text.startsWith("<#--", i) || text.startsWith("[#--", i))) {
+      const end = findFtlCommentEnd(text, i);
+      if (end === -1) {
+        // Unclosed runs to EOF (same as TextMate), so nothing after it matters.
+        issues.push({
+          offset: i,
+          angle: text.startsWith("<#--", i),
+          kind: "unclosed-open",
+        });
+        break;
+      }
+      i = end;
+      continue;
+    }
+
     if (inString) {
       if (text[i] === "\\" && i + 1 < text.length) {
         i += 2;
@@ -142,42 +156,19 @@ export function findCommentDelimiterIssues(
       continue;
     }
 
-    if (text.startsWith("<#--", i)) {
-      angleStack.push(i);
-      i += 4;
-      continue;
-    }
-    if (text.startsWith("[#--", i)) {
-      squareStack.push(i);
-      i += 4;
-      continue;
-    }
+    // Any closer reached here is outside every comment → orphan.
     if (text.startsWith("-->", i)) {
-      if (angleStack.length > 0) {
-        angleStack.pop();
-      } else {
-        issues.push({ offset: i, angle: true, kind: "orphan-close" });
-      }
+      issues.push({ offset: i, angle: true, kind: "orphan-close" });
       i += 3;
       continue;
     }
     if (text.startsWith("--]", i)) {
-      if (squareStack.length > 0) {
-        squareStack.pop();
-      } else {
-        issues.push({ offset: i, angle: false, kind: "orphan-close" });
-      }
+      issues.push({ offset: i, angle: false, kind: "orphan-close" });
       i += 3;
       continue;
     }
     i++;
   }
 
-  for (const offset of angleStack) {
-    issues.push({ offset, angle: true, kind: "unclosed-open" });
-  }
-  for (const offset of squareStack) {
-    issues.push({ offset, angle: false, kind: "unclosed-open" });
-  }
   return issues;
 }

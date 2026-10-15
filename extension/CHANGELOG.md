@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-15
+
+### Changed
+
+- Internal refactor for readability and editor performance; **behavior frozen** to the existing unit/grammar test suite (no intentional feature or diagnostic-message changes)
+- Shared scan helpers (`scan.ts`), line-start maps (`lineMap.ts`), and document-version cache (`docCache.ts`) for index / imports across providers
+- Diagnostics provider debounced (~200ms) with stale-version discard; `validateFtl` uses shared directive-head matching (no per-char `slice().match`)
+- Indent increase/decrease regexes compiled once; `escapeRe` centralized; auto-close apply path deduplicated
+- Semantic tokens use line maps and import-symbol maps; reference search skips FTL comments
+- Thin VS Code adapters share `vscodeIo` / `vscodeRanges`; semantic tokens provider extracted; hover token helpers moved to `hoverTokens.ts`
+
+### Fixed
+
+- A FreeMarker comment inside a directive or interpolation (e.g. `<#assign x = [ …, <#-- c -->, … ] />`) no longer ends the tag early in TextMate, so highlighting below the comment is no longer lost (gray)
+- Hash-literal comma diagnostics ignore FTL comments; `:` / `,` / quotes inside a comment between entries no longer cause a false `Missing comma between hash entries`
+- `Unclosed FreeMarker comment` is no longer reported for `'` / `"` inside a closed comment (e.g. `<#-- don't -->`)
+
 ## [0.0.15] - 2026-10-13
 
 ### Fixed
