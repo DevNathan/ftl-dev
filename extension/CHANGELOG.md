@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-19
+
+### Fixed
+
+- Self-close `/` → `>` allow-list only: empty tag body (`<#assign /`) or trailer after a **closed** string (`<#include "x" /`). Unquoted paths (`<#include lib/`), strings (`loadText("./`), macro args, and expression `/` stay manual — adversarial suite added
+
 ## [0.2.0] - 2026-10-19
 
 ### Added

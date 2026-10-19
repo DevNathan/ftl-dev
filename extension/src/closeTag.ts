@@ -167,8 +167,24 @@ function matchInnermostOpenBeforeSlash(before: string):
 }
 
 function hasNestedAngleTagOpen(inner: string): boolean {
+  let inStr: '"' | "'" | null = null;
   for (let p = 0; p < inner.length; p++) {
-    if (inner[p] === "<" && looksLikeAngleTagOpen(inner, p)) {
+    const ch = inner[p]!;
+    if (inStr) {
+      if (ch === "\\" && p + 1 < inner.length) {
+        p++;
+        continue;
+      }
+      if (ch === inStr) {
+        inStr = null;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inStr = ch;
+      continue;
+    }
+    if (ch === "<" && looksLikeAngleTagOpen(inner, p)) {
       return true;
     }
   }
@@ -176,8 +192,24 @@ function hasNestedAngleTagOpen(inner: string): boolean {
 }
 
 function hasNestedSquareTagOpen(inner: string): boolean {
+  let inStr: '"' | "'" | null = null;
   for (let p = 0; p < inner.length; p++) {
-    if (inner[p] === "[" && looksLikeSquareTagOpen(inner, p)) {
+    const ch = inner[p]!;
+    if (inStr) {
+      if (ch === "\\" && p + 1 < inner.length) {
+        p++;
+        continue;
+      }
+      if (ch === inStr) {
+        inStr = null;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inStr = ch;
+      continue;
+    }
+    if (ch === "[" && looksLikeSquareTagOpen(inner, p)) {
       return true;
     }
   }
@@ -878,23 +910,84 @@ function isBlockOpenForClose(
  * Whether `/` after `inner` (tag text after the directive name, excluding the
  * trailing `/`) should auto-insert `>` / `]`.
  *
- * - `<#assign /` / `<#include "x" /` → yes
- * - `<#local x = startBit /` (operand then `/`) → no (likely division)
+ * Deny-first (only clear tag trailers self-close):
+ *
+ * | Context | Example | Auto `>` |
+ * |---------|---------|----------|
+ * | empty body | `<#assign /` `<@banner /` | yes |
+ * | after closed string | `<#include "lib.ftl" /` | yes |
+ * | anything else | unquoted `lib/`, `./`, exprs, strings, … | **no** |
+ *
+ * Only two allow shapes — never “best-effort” guess on identifiers or `=`.
  */
 function isSelfCloseSlashIntent(innerBeforeSlash: string): boolean {
+  const lex = scanTagInnerLexical(innerBeforeSlash);
+  // Still inside a literal or nesting — `/` is data or an expression, not `/>`.
+  if (lex.inString || lex.parenDepth > 0 || lex.bracketDepth > 0) {
+    return false;
+  }
+
   const trimmed = innerBeforeSlash.trim();
+  // `<#assign /` / `<@banner /` — slash is the first tag trailer.
   if (trimmed === "") {
     return true;
   }
-  // Assignment / update expression in progress: `/` after a value-like token
-  // is almost always division (or path), not self-close.
-  if (/(=|\+=|-=|\*=|\/=|%=)/.test(trimmed)) {
-    // Operand then optional space then end → binary `/`
-    if (/[\w)\]"']\s*$/.test(innerBeforeSlash)) {
-      return false;
+
+  // `<#include "x" /` / `<#assign x = "a" /` — trailer after a completed string.
+  // Not `<#include lib/` (unquoted path) and not `loadText("./`.
+  if (/(["'])(?:\\.|[^\\])*?\1\s*$/.test(innerBeforeSlash)) {
+    return true;
+  }
+
+  return false;
+}
+
+/** String / paren / bracket nesting at the end of an open-tag body. */
+function scanTagInnerLexical(inner: string): {
+  inString: boolean;
+  parenDepth: number;
+  bracketDepth: number;
+} {
+  let inStr: '"' | "'" | null = null;
+  let paren = 0;
+  let bracket = 0;
+  for (let p = 0; p < inner.length; p++) {
+    const ch = inner[p]!;
+    if (inStr) {
+      if (ch === "\\" && p + 1 < inner.length) {
+        p++;
+        continue;
+      }
+      if (ch === inStr) {
+        inStr = null;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inStr = ch;
+      continue;
+    }
+    if (ch === "(") {
+      paren++;
+      continue;
+    }
+    if (ch === ")" && paren > 0) {
+      paren--;
+      continue;
+    }
+    if (ch === "[") {
+      bracket++;
+      continue;
+    }
+    if (ch === "]" && bracket > 0) {
+      bracket--;
     }
   }
-  return true;
+  return {
+    inString: inStr !== null,
+    parenDepth: paren,
+    bracketDepth: bracket,
+  };
 }
 
 /** Apply a CloseEdit to a string (for tests). */
