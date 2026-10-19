@@ -6,7 +6,18 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "${workspaceFolder}/tests/fixtures/navigation",
+        "${workspaceFolder}/tests/fixtures",
+        "--extensionDevelopmentPath=${workspaceFolder}/extension"
+      ],
+      "outFiles": ["${workspaceFolder}/extension/out/**/*.js"],
+      "preLaunchTask": "npm: compile - extension"
+    },
+    {
+      "name": "Run Extension (ftldoc fixture)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "${workspaceFolder}/tests/fixtures/ftldoc",
         "--extensionDevelopmentPath=${workspaceFolder}/extension"
       ],
       "outFiles": ["${workspaceFolder}/extension/out/**/*.js"],

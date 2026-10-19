@@ -1,6 +1,7 @@
 import { DIRECTIVES } from "./catalog";
-import { findCommentDelimiterIssues, skipFtlComment } from "./comments";
+import { findCommentDelimiterIssues, ftlCommentRanges, skipFtlComment } from "./comments";
 import { buildLineMap, offsetToPos } from "./lineMap";
+import { findNameOccurrences } from "./references";
 import {
   findMatchingBrace,
   isFtlCommentStart,
@@ -9,6 +10,7 @@ import {
   skipCommentAt,
   skipString,
 } from "./scan";
+import { findDefinitions, indexFtl } from "./symbols";
 
 export type FtlDiagnostic = {
   offset: number;
@@ -18,6 +20,57 @@ export type FtlDiagnostic = {
 };
 
 const KNOWN_DIRECTIVES = new Set(DIRECTIVES);
+
+/**
+ * Warn when a name that resolves to an ftldoc-`@deprecated` symbol is used
+ * (not on the declaration name span itself). Respects `#local` scope via
+ * `findDefinitions(…, atOffset)`.
+ */
+export function findDeprecatedUsageIssues(text: string): FtlDiagnostic[] {
+  const index = indexFtl(text);
+  const deprecated = index.symbols.filter(
+    (s) => s.doc?.deprecated !== undefined
+  );
+  if (deprecated.length === 0) {
+    return [];
+  }
+
+  const comments = ftlCommentRanges(text);
+  const declOffsets = new Set(index.symbols.map((s) => s.nameOffset));
+  const names = new Set(deprecated.map((s) => s.name));
+  const seen = new Set<string>();
+  const diags: FtlDiagnostic[] = [];
+
+  for (const name of names) {
+    for (const hit of findNameOccurrences(text, name, comments)) {
+      if (declOffsets.has(hit.startOffset)) {
+        continue;
+      }
+      const defs = findDefinitions(index, name, hit.startOffset);
+      const preferred = defs[0];
+      if (!preferred || preferred.doc?.deprecated === undefined) {
+        continue;
+      }
+      const key = `${hit.startOffset}:${hit.endOffset}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      const dep = preferred.doc.deprecated.trim();
+      diags.push({
+        offset: hit.startOffset,
+        length: hit.endOffset - hit.startOffset,
+        message: dep
+          ? `Deprecated: ${dep}`
+          : `'${preferred.name}' is deprecated`,
+        severity: "warning",
+      });
+    }
+  }
+
+  diags.sort((a, b) => a.offset - b.offset);
+  return diags;
+}
 
 /**
  * Lightweight FreeMarker checks (not a full parser).
@@ -121,6 +174,7 @@ export function validateFtl(text: string): FtlDiagnostic[] {
 
   out.push(...findDirectiveIssues(text));
   out.push(...findHashLiteralCommaIssues(text));
+  out.push(...findDeprecatedUsageIssues(text));
 
   return out;
 }

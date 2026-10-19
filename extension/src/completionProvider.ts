@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { buildCompletions, completionContext } from "./catalog";
+import { isInFtlComment } from "./comments";
 import { sharedDocCache } from "./docCache";
 import { readFsPath } from "./vscodeIo";
 
@@ -12,6 +13,11 @@ export class FtlCompletionProvider
   ): Promise<vscode.CompletionItem[]> {
     const text = document.getText();
     const offset = document.offsetAt(position);
+    // `.` / `#` / `?` are trigger chars — do not open the suggest widget inside
+    // FTL comments (e.g. typing a period in ftldoc prose).
+    if (isInFtlComment(text, offset)) {
+      return [];
+    }
     const before = text.slice(0, offset);
     const ctx = completionContext(before);
     const cached = await sharedDocCache.getWithImports(

@@ -101,8 +101,13 @@ export function autoCloseAfterSlash(
     };
   }
 
-  // Case 1: self-close slash inside an open directive (not yet closed)
-  const open = before.match(/([<\[])([#@])([a-zA-Z_][\w\.]*)\b[^>\]]*$/);
+  // Case 1: self-close slash inside an open directive (not yet closed).
+  // Do not treat `/` as self-close when it looks like division / a binary
+  // operator inside an assignment expression, e.g.
+  //   `<#local idxCursor = startBit /`  → user typing `startBit / n`
+  // Innermost open only — an unclosed outer tag must not swallow a nested
+  // `<#assign /` (would otherwise self-close `#function`).
+  const open = matchInnermostOpenBeforeSlash(before);
   if (open) {
     if (/\/[>\]]$/.test(before)) {
       return undefined;
@@ -111,7 +116,14 @@ export function autoCloseAfterSlash(
     if (after === ">" || after === "]") {
       return undefined;
     }
-    const end = open[1] === "[" ? "]" : ">";
+    const inner = open.inner;
+    if (!inner.endsWith("/")) {
+      return undefined;
+    }
+    if (!isSelfCloseSlashIntent(inner.slice(0, -1))) {
+      return undefined;
+    }
+    const end = open.openBracket === "[" ? "]" : ">";
     return {
       insertAt: offset,
       insertText: end,
@@ -120,6 +132,86 @@ export function autoCloseAfterSlash(
   }
 
   return undefined;
+}
+
+/**
+ * Last `<#` / `<@` / `[#` / `[@` whose tag body (no closer yet) reaches `before`'s
+ * end. Rejects matches that would span a nested tag open.
+ */
+function matchInnermostOpenBeforeSlash(before: string):
+  | { openBracket: "<" | "["; inner: string }
+  | undefined {
+  const re = /([<\[])([#@])([a-zA-Z_][\w.]*)\b/g;
+  let best:
+    | { openBracket: "<" | "["; inner: string }
+    | undefined;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(before)) !== null) {
+    const openBracket = m[1] as "<" | "[";
+    const innerStart = m.index + m[0].length;
+    const inner = before.slice(innerStart);
+    const closeBracket = openBracket === "<" ? ">" : "]";
+    if (inner.includes(closeBracket)) {
+      continue;
+    }
+    // Nested tag open inside this "inner" → not a single tag.
+    if (openBracket === "<" && hasNestedAngleTagOpen(inner)) {
+      continue;
+    }
+    if (openBracket === "[" && hasNestedSquareTagOpen(inner)) {
+      continue;
+    }
+    best = { openBracket, inner };
+  }
+  return best;
+}
+
+function hasNestedAngleTagOpen(inner: string): boolean {
+  for (let p = 0; p < inner.length; p++) {
+    if (inner[p] === "<" && looksLikeAngleTagOpen(inner, p)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function hasNestedSquareTagOpen(inner: string): boolean {
+  for (let p = 0; p < inner.length; p++) {
+    if (inner[p] === "[" && looksLikeSquareTagOpen(inner, p)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** `<#` / `<@` / `</` / HTML `<Name` — not comparison `x < y`. */
+function looksLikeAngleTagOpen(text: string, p: number): boolean {
+  if (text[p] !== "<") {
+    return false;
+  }
+  if (
+    text.startsWith("</#", p) ||
+    text.startsWith("</@", p) ||
+    text.startsWith("<#", p) ||
+    text.startsWith("<@", p)
+  ) {
+    return true;
+  }
+  if (text.startsWith("</", p) && /[a-zA-Z]/.test(text[p + 2] ?? "")) {
+    return true;
+  }
+  return /[a-zA-Z]/.test(text[p + 1] ?? "");
+}
+
+function looksLikeSquareTagOpen(text: string, p: number): boolean {
+  if (text[p] !== "[") {
+    return false;
+  }
+  return (
+    text.startsWith("[#", p) ||
+    text.startsWith("[@", p) ||
+    text.startsWith("[/", p)
+  );
 }
 
 function closeTokenFor(open: OpenSite, openBracket: "<" | "["): string {
@@ -202,25 +294,61 @@ function applyFtlTag(
   stack.push({ name: key, indent, offset: index, kind: "ftl" });
 }
 
+/** Square-bracket FTL only (`[` mode). Angle tags use `pushAngleTags`. */
 function pushFtlTags(
   textBefore: string,
   openBracket: "<" | "[",
   stack: OpenSite[]
 ): void {
-  const closeBracket = openBracket === "<" ? ">" : "]";
-  const re = new RegExp(
-    `${escapeRe(openBracket)}(/)?([#@])([a-zA-Z_][\\w.]*)\\b([^${escapeRe(closeBracket)}]*)(${escapeRe(closeBracket)})`,
-    "g"
-  );
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(textBefore)) !== null) {
+  if (openBracket !== "[") {
+    return;
+  }
+  // Scan so an unclosed `[#function` cannot swallow a nested `[#assign]`.
+  let i = 0;
+  while (i < textBefore.length) {
+    const start = textBefore.indexOf("[", i);
+    if (start === -1) {
+      break;
+    }
+    let p = start + 1;
+    if (p >= textBefore.length) {
+      break;
+    }
+    let isClose = false;
+    if (textBefore[p] === "/") {
+      isClose = true;
+      p++;
+    }
+    if (textBefore[p] !== "#" && textBefore[p] !== "@") {
+      i = start + 1;
+      continue;
+    }
+    const sigil = textBefore[p]!;
+    p++;
+    if (!/[a-zA-Z_]/.test(textBefore[p] ?? "")) {
+      i = start + 1;
+      continue;
+    }
+    const nameStart = p;
+    p++;
+    while (p < textBefore.length && /[\w.]/.test(textBefore[p]!)) {
+      p++;
+    }
+    const name = textBefore.slice(nameStart, p);
+    const innerStart = p;
+    const end = scanSquareTagEnd(textBefore, p);
+    if (end === -1) {
+      i = start + 1;
+      continue;
+    }
     applyFtlTag(stack, textBefore, {
-      index: m.index,
-      isClose: m[1] === "/",
-      sigil: m[2]!,
-      name: m[3]!,
-      inner: m[4] ?? "",
+      index: start,
+      isClose,
+      sigil,
+      name,
+      inner: textBefore.slice(innerStart, end),
     });
+    i = end + 1;
   }
 }
 
@@ -280,7 +408,9 @@ function pushAngleTags(textBefore: string, stack: OpenSite[]): void {
       const innerStart = p;
       const end = scanAngleTagEnd(textBefore, p);
       if (end === -1) {
-        break;
+        // Incomplete open (EOF or nested tag) — do not swallow nested tags.
+        i = start + 1;
+        continue;
       }
       applyFtlTag(stack, textBefore, {
         index: start,
@@ -307,7 +437,8 @@ function pushAngleTags(textBefore: string, stack: OpenSite[]): void {
     const innerStart = p;
     const end = scanAngleTagEnd(textBefore, p);
     if (end === -1) {
-      break;
+      i = start + 1;
+      continue;
     }
     const inner = textBefore.slice(innerStart, end);
     i = end + 1;
@@ -362,6 +493,11 @@ function scanAngleTagEnd(text: string, from: number): number {
     if (ch === ")" && paren > 0) {
       paren--;
       continue;
+    }
+    // Unclosed outer tag must not consume a nested tag's `>`.
+    // Allow comparison `x < y` ( `<` not followed by tag-start shape).
+    if (paren === 0 && ch === "<" && looksLikeAngleTagOpen(text, p)) {
+      return -1;
     }
     if (ch === ">" && paren === 0) {
       return p;
@@ -496,11 +632,20 @@ function findTagStartEndingAt(
         from = idx + 1;
         continue;
       }
+      // Ignore comparison `x < y` and other non-tag `<`.
+      if (!looksLikeAngleTagOpen(text, idx)) {
+        from = idx + 1;
+        continue;
+      }
       const end = scanAngleTagEnd(text, namePos);
       if (end === offset - 1) {
         found = idx;
       }
     } else {
+      if (!looksLikeSquareTagOpen(text, idx)) {
+        from = idx + 1;
+        continue;
+      }
       const end = scanSquareTagEnd(text, namePos);
       if (end === offset - 1) {
         found = idx;
@@ -513,6 +658,7 @@ function findTagStartEndingAt(
 
 function scanSquareTagEnd(text: string, from: number): number {
   let inStr: '"' | "'" | null = null;
+  let paren = 0;
   for (let p = from; p < text.length; p++) {
     const ch = text[p]!;
     if (inStr) {
@@ -529,7 +675,18 @@ function scanSquareTagEnd(text: string, from: number): number {
       inStr = ch;
       continue;
     }
-    if (ch === "]") {
+    if (ch === "(") {
+      paren++;
+      continue;
+    }
+    if (ch === ")" && paren > 0) {
+      paren--;
+      continue;
+    }
+    if (paren === 0 && ch === "[" && looksLikeSquareTagOpen(text, p)) {
+      return -1;
+    }
+    if (ch === "]" && paren === 0) {
       return p;
     }
   }
@@ -658,6 +815,13 @@ function parsePairableOpenTag(
     if (/\/\s*$/.test(rest)) {
       return undefined;
     }
+    // Guard: never pair a tag whose body swallowed a nested tag.
+    if (
+      (openBracket === "<" && hasNestedAngleTagOpen(rest)) ||
+      (openBracket === "[" && hasNestedSquareTagOpen(rest))
+    ) {
+      return undefined;
+    }
     if (sigil === "#" && MID_BLOCK.has(name)) {
       return undefined;
     }
@@ -677,6 +841,9 @@ function parsePairableOpenTag(
   }
   const rest = html[2] ?? "";
   if (/\/\s*$/.test(rest)) {
+    return undefined;
+  }
+  if (hasNestedAngleTagOpen(rest)) {
     return undefined;
   }
   return { openBracket: "<", name, kind: "html" };
@@ -705,6 +872,29 @@ function isBlockOpenForClose(
     return false;
   }
   return shouldPairClose(sigil, name, inner);
+}
+
+/**
+ * Whether `/` after `inner` (tag text after the directive name, excluding the
+ * trailing `/`) should auto-insert `>` / `]`.
+ *
+ * - `<#assign /` / `<#include "x" /` → yes
+ * - `<#local x = startBit /` (operand then `/`) → no (likely division)
+ */
+function isSelfCloseSlashIntent(innerBeforeSlash: string): boolean {
+  const trimmed = innerBeforeSlash.trim();
+  if (trimmed === "") {
+    return true;
+  }
+  // Assignment / update expression in progress: `/` after a value-like token
+  // is almost always division (or path), not self-close.
+  if (/(=|\+=|-=|\*=|\/=|%=)/.test(trimmed)) {
+    // Operand then optional space then end → binary `/`
+    if (/[\w)\]"']\s*$/.test(innerBeforeSlash)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /** Apply a CloseEdit to a string (for tests). */

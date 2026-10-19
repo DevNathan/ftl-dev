@@ -53,13 +53,18 @@ export class FtlHoverProvider implements vscode.HoverProvider {
         const imp = index.pathRefs.find(
           (p) => p.kind === "import" && p.asName === ns
         );
-        return new vscode.Hover(symbolHover(id.text, hit.kind, imp?.path));
+        return new vscode.Hover(
+          symbolHover(id.text, hit.kind, imp?.path, hit.doc)
+        );
       }
     }
 
-    const local = findDefinitions(index, id.text);
+    const local = findDefinitions(index, id.text, offset);
     if (local[0]) {
-      return new vscode.Hover(symbolHover(local[0].name, local[0].kind));
+      const hit = local[0];
+      return new vscode.Hover(
+        symbolHover(hit.name, hit.kind, undefined, hit.doc)
+      );
     }
 
     return undefined;

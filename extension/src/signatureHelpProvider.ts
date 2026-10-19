@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { isInFtlComment } from "./comments";
 import { sharedDocCache } from "./docCache";
 import { signatureHelpAt } from "./signatureHelp";
 import { readFsPath } from "./vscodeIo";
@@ -14,6 +15,9 @@ export class FtlSignatureHelpProvider
   ): Promise<vscode.SignatureHelp | undefined> {
     const text = document.getText();
     const offset = document.offsetAt(position);
+    if (isInFtlComment(text, offset)) {
+      return undefined;
+    }
     const cached = await sharedDocCache.getWithImports(
       document.uri.toString(),
       document.version,

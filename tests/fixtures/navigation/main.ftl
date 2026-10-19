@@ -1,4 +1,3 @@
-<#--
 <#-- navigation fixture: main template -->
 <#import "lib.ftl" as lib>
 <#include "header.ftl">
@@ -66,4 +65,3 @@ ${lib.helper()}
 <#recover>
 
 </#attempt>
--->

@@ -34,7 +34,10 @@
             "0": { "name": "punctuation.definition.comment.end.freemarker" }
           },
           "applyEndPatternLast": true,
-          "patterns": [{ "include": "#comment" }]
+          "patterns": [
+            { "include": "#comment" },
+            { "include": "#ftldoc-tag" }
+          ]
         },
         {
           "name": "comment.block.freemarker",
@@ -47,7 +50,26 @@
             "0": { "name": "punctuation.definition.comment.end.freemarker" }
           },
           "applyEndPatternLast": true,
-          "patterns": [{ "include": "#comment" }]
+          "patterns": [
+            { "include": "#comment" },
+            { "include": "#ftldoc-tag" }
+          ]
+        }
+      ]
+    },
+    "ftldoc-tag": {
+      "comment": "ftldoc tags inside FTL comments (@param name, @ignore, @return(s), @deprecated, @see, @since, @stop); nested #comment include stays first in comment patterns.",
+      "patterns": [
+        {
+          "match": "(?i)(@param)\\s+(\\S+)",
+          "captures": {
+            "1": { "name": "keyword.other.documentation.ftldoc.freemarker" },
+            "2": { "name": "variable.parameter.ftldoc.freemarker" }
+          }
+        },
+        {
+          "match": "(?i)@(?:ignore|returns?|deprecated|see|since|stop)\\b",
+          "name": "keyword.other.documentation.ftldoc.freemarker"
         }
       ]
     },

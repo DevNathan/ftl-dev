@@ -1,4 +1,6 @@
 import { ftlCommentRanges, offsetInFtlComment } from "./comments";
+import { FtlDoc, leadingFtlDoc } from "./ftldoc";
+import { matchDirectiveHead, skipCommentAt, isFtlCommentStart } from "./scan";
 
 export {
   buildLineMap,
@@ -6,6 +8,8 @@ export {
   offsetToPos,
   type LineMap,
 } from "./lineMap";
+
+export type { FtlDoc } from "./ftldoc";
 
 export type SymbolKind = "assign" | "macro" | "function" | "local" | "global";
 
@@ -26,6 +30,14 @@ export interface FtlSymbol {
   nameLength: number;
   /** Present for `macro` / `function` when the open tag lists parameters. */
   params?: FtlParam[];
+  /** Leading ftldoc (absent when `@ignore` or no comment). */
+  doc?: FtlDoc;
+  /**
+   * Half-open [scopeStart, scopeEnd) for `#macro` / `#function` bodies, and for
+   * `#local` the enclosing definition body. Locals are only visible inside.
+   */
+  scopeStart?: number;
+  scopeEnd?: number;
 }
 
 export interface FtlPathRef {
@@ -63,6 +75,10 @@ export function indexFtl(text: string): FtlIndex {
     const name = m[2]!;
     const nameOffset = m.index + m[0].lastIndexOf(name);
     const sym: FtlSymbol = { name, kind, nameOffset, nameLength: name.length };
+    const doc = leadingFtlDoc(text, m.index, comments);
+    if (doc) {
+      sym.doc = doc;
+    }
     if (kind === "macro" || kind === "function") {
       const openBracket = text[m.index] === "[" ? "[" : "<";
       const closeBracket = openBracket === "[" ? "]" : ">";
@@ -74,9 +90,51 @@ export function indexFtl(text: string): FtlIndex {
         if (params.length) {
           sym.params = params;
         }
+        const selfClose = /\/\s*$/.test(text.slice(afterName, tagEnd));
+        if (!selfClose) {
+          const bodyStart = tagEnd + 1;
+          const bodyEnd = findDefinitionBodyEnd(
+            text,
+            bodyStart,
+            kind,
+            openBracket
+          );
+          if (bodyEnd !== -1) {
+            sym.scopeStart = bodyStart;
+            sym.scopeEnd = bodyEnd;
+          }
+        }
       }
     }
     symbols.push(sym);
+  }
+
+  // Attach enclosing macro/function scope to #local symbols.
+  const owners = symbols.filter(
+    (s) =>
+      (s.kind === "macro" || s.kind === "function") &&
+      s.scopeStart !== undefined &&
+      s.scopeEnd !== undefined
+  );
+  for (const sym of symbols) {
+    if (sym.kind !== "local") {
+      continue;
+    }
+    let best: FtlSymbol | undefined;
+    for (const own of owners) {
+      if (
+        sym.nameOffset >= own.scopeStart! &&
+        sym.nameOffset < own.scopeEnd! &&
+        (!best ||
+          own.scopeEnd! - own.scopeStart! < best.scopeEnd! - best.scopeStart!)
+      ) {
+        best = own;
+      }
+    }
+    if (best) {
+      sym.scopeStart = best.scopeStart;
+      sym.scopeEnd = best.scopeEnd;
+    }
   }
 
   PATH_REF.lastIndex = 0;
@@ -178,13 +236,102 @@ export function identifierAt(
   };
 }
 
+/**
+ * Find declarations for `name`.
+ * When `atOffset` is set, `#local` symbols are only returned if the offset
+ * lies inside their enclosing macro/function body; unscoped locals are omitted.
+ */
 export function findDefinitions(
   index: FtlIndex,
-  name: string
+  name: string,
+  atOffset?: number
 ): FtlSymbol[] {
   const parts = name.split(".");
   const simple = parts[parts.length - 1]!;
-  return index.symbols.filter((s) => s.name === simple || s.name === name);
+  const hits = index.symbols.filter((s) => s.name === simple || s.name === name);
+  if (atOffset === undefined) {
+    return hits;
+  }
+  const filtered = hits.filter((s) => {
+    if (s.kind !== "local") {
+      return true;
+    }
+    if (s.scopeStart === undefined || s.scopeEnd === undefined) {
+      return false;
+    }
+    return atOffset >= s.scopeStart && atOffset < s.scopeEnd;
+  });
+  // Prefer locals over same-named assign/global when in scope.
+  const locals = filtered.filter((s) => s.kind === "local");
+  if (locals.length > 0) {
+    return [...locals, ...filtered.filter((s) => s.kind !== "local")];
+  }
+  return filtered;
+}
+
+/**
+ * End offset of `</#name>` / `[/#name]` matching the open at `bodyStart`
+ * (exclusive start of body). Nested same-name opens are tracked.
+ */
+function findDefinitionBodyEnd(
+  text: string,
+  bodyStart: number,
+  name: "macro" | "function",
+  bracket: "<" | "["
+): number {
+  let i = bodyStart;
+  let depth = 1;
+  let inString: '"' | "'" | null = null;
+  while (i < text.length) {
+    if (!inString && isFtlCommentStart(text, i)) {
+      i = skipCommentAt(text, i);
+      continue;
+    }
+    if (inString) {
+      if (text[i] === "\\" && i + 1 < text.length) {
+        i += 2;
+        continue;
+      }
+      if (text[i] === inString) {
+        inString = null;
+      }
+      i++;
+      continue;
+    }
+    if (text[i] === '"' || text[i] === "'") {
+      inString = text[i] as '"' | "'";
+      i++;
+      continue;
+    }
+    const head = matchDirectiveHead(text, i);
+    if (
+      head &&
+      head.bracket === bracket &&
+      head.sigil === "#" &&
+      head.name === name
+    ) {
+      if (head.isClose) {
+        depth--;
+        if (depth === 0) {
+          return i; // start of closing tag (body ends here)
+        }
+      } else {
+        // Nested open of same kind (invalid FTL, still track)
+        const closeCh = bracket === "[" ? "]" : ">";
+        const tagEnd = scanDirectiveTagEnd(text, i + head.length, closeCh);
+        if (tagEnd !== -1) {
+          const selfClose = /\/\s*$/.test(text.slice(i + head.length, tagEnd));
+          if (!selfClose) {
+            depth++;
+          }
+          i = tagEnd + 1;
+          continue;
+        }
+      }
+    }
+    i++;
+  }
+  return -1;
 }
 
 /** Index of closing `>` / `]` for a directive open tag, or -1. */
