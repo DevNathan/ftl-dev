@@ -346,4 +346,125 @@ test("apostrophe inside FTL comment is not an unclosed string / comment", () => 
   );
 });
 
+function deprecatedDiags(text: string) {
+  return validateFtl(text).filter(
+    (d) =>
+      d.severity === "warning" &&
+      (d.message.startsWith("Deprecated:") || d.message.includes("is deprecated"))
+  );
+}
+
+// --- 0018 @deprecated usage warnings ---
+
+test("deprecated function use warns with message; declaration name does not (AC1, AC3, AC7)", () => {
+  const text = `<#--
+  @deprecated use sayHi
+-->
+<#function legacy(name)>
+  <#return name>
+</#function>
+
+\${legacy("old")}
+`;
+  const diags = deprecatedDiags(text);
+  assert.strictEqual(diags.length, 1, diags.map((d) => d.message).join("; "));
+  assert.strictEqual(diags[0]!.severity, "warning");
+  assert.ok(diags[0]!.message.includes("use sayHi"));
+  const useAt = text.indexOf('${legacy("old")}');
+  assert.ok(useAt >= 0);
+  assert.strictEqual(diags[0]!.offset, text.indexOf("legacy", useAt));
+  const declName = text.indexOf("legacy", text.indexOf("<#function"));
+  assert.ok(!diags.some((d) => d.offset === declName));
+});
+
+test("empty @deprecated still warns on use (AC2, AC7)", () => {
+  const text = `<#--
+  @deprecated
+-->
+<#assign legacy = "x">
+\${legacy}
+`;
+  const diags = deprecatedDiags(text);
+  assert.strictEqual(diags.length, 1);
+  assert.strictEqual(diags[0]!.severity, "warning");
+  assert.ok(diags[0]!.message.length > 0);
+  assert.ok(diags[0]!.message.includes("deprecated"));
+  assert.strictEqual(diags[0]!.offset, text.lastIndexOf("legacy"));
+});
+
+test("deprecated name inside FTL comment does not warn (AC4)", () => {
+  const text = `<#--
+  @deprecated gone
+-->
+<#function legacy()>
+  <#return 1>
+</#function>
+<#-- legacy -->
+`;
+  assert.strictEqual(deprecatedDiags(text).length, 0);
+});
+
+test("deprecated #local warns in body only (AC5)", () => {
+  const text = `<#function f>
+  <#--
+    @deprecated local-only
+  -->
+  <#local x = 1>
+  \${x}
+</#function>
+\${x}
+`;
+  const diags = deprecatedDiags(text);
+  assert.strictEqual(diags.length, 1, diags.map((d) => d.message).join("; "));
+  assert.ok(diags[0]!.message.includes("local-only"));
+  const bodyUse = text.indexOf("${x}");
+  assert.strictEqual(diags[0]!.offset, bodyUse + 2);
+  const outsideUse = text.lastIndexOf("${x}");
+  assert.notStrictEqual(bodyUse, outsideUse);
+  assert.ok(!diags.some((d) => d.offset === outsideUse + 2));
+});
+
+test("non-deprecated #local shadows deprecated outer (AC6)", () => {
+  const text = `<#--
+  @deprecated outer-x
+-->
+<#assign x = 0>
+<#function f>
+  <#local x = 1>
+  \${x}
+</#function>
+\${x}
+`;
+  const diags = deprecatedDiags(text);
+  assert.strictEqual(diags.length, 1, diags.map((d) => d.message).join("; "));
+  assert.ok(diags[0]!.message.includes("outer-x"));
+  const outsideUse = text.lastIndexOf("${x}");
+  assert.strictEqual(diags[0]!.offset, outsideUse + 2);
+  const bodyUse = text.indexOf("${x}");
+  assert.ok(!diags.some((d) => d.offset === bodyUse + 2));
+});
+
+test("deprecated macro and global uses warn (AC1)", () => {
+  const macroText = `<#--
+  @deprecated use box2
+-->
+<#macro box>
+</#macro>
+<@box />
+`;
+  const macroDiags = deprecatedDiags(macroText);
+  assert.strictEqual(macroDiags.length, 1);
+  assert.ok(macroDiags[0]!.message.includes("use box2"));
+
+  const globalText = `<#--
+  @deprecated prefer y
+-->
+<#global g = 1>
+\${g}
+`;
+  const globalDiags = deprecatedDiags(globalText);
+  assert.strictEqual(globalDiags.length, 1);
+  assert.ok(globalDiags[0]!.message.includes("prefer y"));
+});
+
 console.log("All diagnostics unit tests passed.");

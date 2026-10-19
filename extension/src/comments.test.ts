@@ -4,6 +4,7 @@ import {
   findFtlCommentEnd,
   findUnclosedCommentOpens,
   ftlCommentRanges,
+  isInFtlComment,
   skipFtlComment,
 } from "./comments";
 
@@ -16,6 +17,15 @@ function test(name: string, fn: () => void): void {
     throw e;
   }
 }
+
+test("isInFtlComment true at period inside ftldoc prose", () => {
+  const text = `<#-- Prefer say instead. -->\n<#function say>`;
+  const dot = text.indexOf(".");
+  assert.ok(dot > 0);
+  assert.ok(isInFtlComment(text, dot));
+  assert.ok(isInFtlComment(text, dot + 1));
+  assert.ok(!isInFtlComment(text, text.indexOf("function")));
+});
 
 test("simple comment end", () => {
   const text = "<#-- hi -->code";

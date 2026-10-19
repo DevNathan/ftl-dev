@@ -1,4 +1,5 @@
 import { BUILTINS, DIRECTIVES } from "./catalog";
+import { FtlDoc, formatFtlDocMarkdown } from "./ftldoc";
 import { getBuiltinRef, getDirectiveRef } from "./reference/freemarkerRef";
 
 /** Markdown hover / completion docs for a directive (`#name`). */
@@ -28,8 +29,8 @@ export function builtinHover(name: string): string | undefined {
 export function symbolHover(
   name: string,
   kind: string,
-  fromImport?: string
+  fromImport?: string,
+  doc?: FtlDoc
 ): string {
-  const where = fromImport ? ` (from \`${fromImport}\`)` : "";
-  return `\`${name}\` — ${kind}${where}`;
+  return formatFtlDocMarkdown(name, kind, doc, fromImport);
 }

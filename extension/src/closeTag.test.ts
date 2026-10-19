@@ -26,6 +26,23 @@ test("self-close: <#assign / → insert >", () => {
   assert.strictEqual(applyCloseEdit(text, edit!), "<#assign />");
 });
 
+test("no self-close when / is division after assign expression", () => {
+  const text = "<#local idxCursor = startBit /";
+  assert.strictEqual(autoCloseAfterSlash(text, text.length), undefined);
+});
+
+test("no self-close when / follows number in expression", () => {
+  const text = "<#assign x = 10/";
+  assert.strictEqual(autoCloseAfterSlash(text, text.length), undefined);
+});
+
+test("self-close still works after include string", () => {
+  const text = '<#include "lib.ftl" /';
+  const edit = autoCloseAfterSlash(text, text.length);
+  assert.ok(edit);
+  assert.strictEqual(applyCloseEdit(text, edit!), '<#include "lib.ftl" />');
+});
+
 test("no auto >: when / typed before existing > in <#assign  >", () => {
   const text = "<#assign  />";
   const offset = "<#assign  /".length;
@@ -280,6 +297,81 @@ test("typing > when already paired does nothing", () => {
 test("typing > inside (x > y) does not pair early", () => {
   const text = "<#if (x >";
   assert.strictEqual(autoClosePairOnCloser(text, text.length), undefined);
+});
+
+test("</ after assign inside unclosed function closes assign not function", () => {
+  const text = "<#function test cache\n\n  <#assign>\n</";
+  const edit = autoCloseAfterSlash(text, text.length);
+  assert.ok(edit);
+  const out = applyCloseEdit(text, edit!);
+  assert.ok(out.includes("</#assign>"), out);
+  assert.ok(!out.includes("</#function>"), out);
+});
+
+test("</ after assign inside unclosed macro closes assign not macro", () => {
+  const text = "<#macro m\n  <#assign>\n</";
+  const edit = autoCloseAfterSlash(text, text.length);
+  const out = applyCloseEdit(text, edit!);
+  assert.ok(out.includes("</#assign>"), out);
+  assert.ok(!out.includes("</#macro>"), out);
+});
+
+test("</ after local inside unclosed list closes local not list", () => {
+  const text = "<#list items as i\n  <#local x>\n</";
+  const edit = autoCloseAfterSlash(text, text.length);
+  const out = applyCloseEdit(text, edit!);
+  assert.ok(out.includes("</#local>"), out);
+  assert.ok(!out.includes("</#list>"), out);
+});
+
+test("</ after span inside unclosed div closes span not div", () => {
+  const text = "<div\n  <span>\n</";
+  const edit = autoCloseAfterSlash(text, text.length);
+  const out = applyCloseEdit(text, edit!);
+  assert.ok(out.includes("</span>"), out);
+  assert.ok(!out.includes("</div>"), out);
+});
+
+test("typing > on assign inside unclosed function does not insert </#function>", () => {
+  const text = "<#function test cache\n\n  <#assign>";
+  const edit = autoClosePairOnCloser(text, text.length);
+  assert.ok(edit);
+  const out = applyCloseEdit(text, edit!);
+  assert.ok(out.includes("</#assign>"), out);
+  assert.ok(!out.includes("</#function>"), out);
+});
+
+test("self-close / on nested assign does not close outer function", () => {
+  const text = "<#function test cache\n\n  <#assign /";
+  const edit = autoCloseAfterSlash(text, text.length);
+  assert.ok(edit);
+  assert.strictEqual(edit!.insertText, ">");
+  const out = applyCloseEdit(text, edit!);
+  assert.ok(out.endsWith("<#assign />"), out);
+  assert.ok(!out.includes("function />"), out);
+});
+
+test("square: </ after assign inside unclosed function closes assign", () => {
+  const text = "[#function test cache\n\n  [#assign]\n[/";
+  const edit = autoCloseAfterSlash(text, text.length);
+  assert.ok(edit);
+  const out = applyCloseEdit(text, edit!);
+  assert.ok(out.includes("[/#assign]"), out);
+  assert.ok(!out.includes("[/#function]"), out);
+});
+
+test("multiline function without nested tags still pairs on >", () => {
+  const text = "<#function test\n  a\n  b>";
+  const edit = autoClosePairOnCloser(text, text.length);
+  assert.ok(edit);
+  assert.strictEqual(edit!.insertText, "</#function>");
+});
+
+test("<#if x < y> comparison does not abort tag scan", () => {
+  const text = "<#if x < y>";
+  const edit = autoClosePairOnCloser(text, text.length);
+  assert.ok(edit);
+  assert.strictEqual(edit!.insertText, "</#if>");
 });
 
 console.log("All closeTag unit tests passed.");

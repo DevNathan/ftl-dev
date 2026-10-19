@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-19
+
+### Added
+
+- **ftldoc**: JavaDoc-like docs from a leading FTL comment (`<#-- … -->` / `[#-- … --]`) with whitespace-only between comment end and `#function` / `#macro` / `#assign` / `#local` / `#global`. Tags: free-text summary, `@param`, `@return` / `@returns`, `@deprecated`, `@see`, `@since`, `@stop` (FreeMarker `#stop`, not Java `@throws`). Leading `@ignore` (case-insensitive) skips documentation. Hover shows Markdown from the attached doc; `#local` docs and Go-to-definition resolve only inside the enclosing `#function` / `#macro` body
+- **ftldoc** TextMate tag highlight inside FTL comments
+- Warn on use of `@deprecated` ftldoc symbols (warning on identifier uses; not on the declaration name)
+
+### Fixed
+
+- An unclosed outer tag (e.g. `<#function test cache` without `>`) no longer swallows a nested tag’s closer — `</` / `>` / self-close `/` on an inner `<#assign>` no longer invents `</#function>` (same for `#macro` / `#list` / `#if` / HTML / square-bracket FTL)
+- Typing `/` for division inside an open `#assign` / `#local` expression (e.g. `<#local x = startBit /`) no longer auto-inserts `>` as a self-closing tag
+- Typing `.` (or other completion / signature triggers) inside an FTL comment no longer opens the suggest or parameter-hint popup
+
 ## [0.1.0] - 2026-10-15
 
 ### Changed

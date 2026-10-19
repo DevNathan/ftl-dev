@@ -31,7 +31,7 @@ export class FtlDefinitionProvider implements vscode.DefinitionProvider {
     );
     const index = cached.index;
     const map = lineMapFor(text);
-    const local = findDefinitions(index, id.text);
+    const local = findDefinitions(index, id.text, offset);
     if (local.length > 0) {
       return local.map((s) =>
         locationFromOffsets(

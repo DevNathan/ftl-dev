@@ -79,6 +79,11 @@ export function ftlCommentRanges(text: string): Array<[number, number]> {
   return ranges;
 }
 
+/** True if `offset` lies inside a top-level FTL comment (builds ranges). */
+export function isInFtlComment(text: string, offset: number): boolean {
+  return offsetInFtlComment(offset, ftlCommentRanges(text));
+}
+
 /** True if `offset` lies inside a top-level FTL comment range. */
 export function offsetInFtlComment(
   offset: number,
