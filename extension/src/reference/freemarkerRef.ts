@@ -1140,10 +1140,197 @@ export const DIRECTIVE_REF: Record<string, RefDoc> = {
   ),
 };
 
+function specialVarDoc(
+  name: string,
+  detail: string,
+  body: string,
+  usage?: string
+): RefDoc {
+  const usageLine = usage ?? `.${name}`;
+  return {
+    detail,
+    documentation: [
+      `**\`.${name}\`** — ${detail}`,
+      "",
+      "```ftl",
+      usageLine,
+      "```",
+      "",
+      body,
+      "",
+      `[FreeMarker Manual](${MANUAL}/ref_specvar.html)`,
+    ].join("\n"),
+  };
+}
+
+/** Special variables (`.name`) — keyed by name without the leading dot. */
+export const SPECIAL_VAR_REF: Record<string, RefDoc> = {
+  args: specialVarDoc(
+    "args",
+    "All arguments of the current macro/function call.",
+    "Only valid inside `#macro` / `#function`. Hash for macros; sequence for functions.",
+    ".args"
+  ),
+  auto_esc: specialVarDoc(
+    "auto_esc",
+    "Whether auto-escaping is on at this place.",
+    "Boolean; reflects output-format auto-escaping (not the deprecated `#escape`).",
+    ".auto_esc"
+  ),
+  caller_template_name: specialVarDoc(
+    "caller_template_name",
+    "Template name that called the current macro/function.",
+    "Empty string if the caller is nameless. Error outside macro/function calls.",
+    ".caller_template_name"
+  ),
+  current_template_name: specialVarDoc(
+    "current_template_name",
+    "Name of the template where this reference occurs.",
+    "May be missing for on-the-fly templates.",
+    ".current_template_name"
+  ),
+  data_model: specialVarDoc(
+    "data_model",
+    "Direct access to the data-model hash.",
+    "Variables created with `#global` are not visible here.",
+    ".data_model"
+  ),
+  error: specialVarDoc(
+    "error",
+    "Error message of the failure being recovered.",
+    "Only available inside `#recover` (after `#attempt`).",
+    "<#recover>\n  ${.error}\n</#attempt>"
+  ),
+  get_optional_template: specialVarDoc(
+    "get_optional_template",
+    "Load an optional template without failing if missing.",
+    "Method: returns a hash with `exists`, `include`, `import`.",
+    ".get_optional_template('maybe.ftl')"
+  ),
+  globals: specialVarDoc(
+    "globals",
+    "Globally accessible variables (data-model + `#global`).",
+    "`#assign` / `#macro` names are not globals.",
+    ".globals"
+  ),
+  incompatible_improvements: specialVarDoc(
+    "incompatible_improvements",
+    "Current `incompatible_improvements` setting (string).",
+    "Configuration version gate for FreeMarker behavior changes.",
+    ".incompatible_improvements"
+  ),
+  lang: specialVarDoc(
+    "lang",
+    "Language part of the current locale.",
+    "E.g. if `.locale` is `en_US`, then `.lang` is `en`.",
+    ".lang"
+  ),
+  locale: specialVarDoc(
+    "locale",
+    "Current locale setting as a string.",
+    "E.g. `en_US`. See also `.locale_object`.",
+    ".locale"
+  ),
+  locale_object: specialVarDoc(
+    "locale_object",
+    "Current locale as a `java.util.Locale` object.",
+    "Prefer this when passing locale into Java methods.",
+    ".locale_object"
+  ),
+  locals: specialVarDoc(
+    "locals",
+    "Local variables (`#local` and macro parameters).",
+    "Hash of the current local scope.",
+    ".locals"
+  ),
+  main: specialVarDoc(
+    "main",
+    "Main namespace hash.",
+    "Data-model globals are not visible through this hash.",
+    ".main"
+  ),
+  main_template_name: specialVarDoc(
+    "main_template_name",
+    "Name of the top-level template being processed.",
+    "The template for which `Template.process` was called.",
+    ".main_template_name"
+  ),
+  namespace: specialVarDoc(
+    "namespace",
+    "Current namespace hash.",
+    "Data-model globals are not visible through this hash.",
+    ".namespace"
+  ),
+  node: specialVarDoc(
+    "node",
+    "Current node in visitor/XML processing.",
+    "Also known historically as `.current_node`.",
+    ".node"
+  ),
+  now: specialVarDoc(
+    "now",
+    "Current date-time.",
+    "Use `?date` / `?time` / `?datetime` as needed.",
+    "${.now}"
+  ),
+  output_encoding: specialVarDoc(
+    "output_encoding",
+    "Current output charset name.",
+    "Absent if the host did not specify an output charset.",
+    ".output_encoding"
+  ),
+  output_format: specialVarDoc(
+    "output_format",
+    "Name of the output format at this place.",
+    "E.g. `HTML`, `XML`, `plainText`, `undefined`.",
+    ".output_format"
+  ),
+  pass: specialVarDoc(
+    "pass",
+    "No-op macro (no parameters).",
+    "Often used as a no-op node handler in XML processing.",
+    "<@.pass />"
+  ),
+  template_name: specialVarDoc(
+    "template_name",
+    "Deprecated template name (prefer `current_template_name`).",
+    "Confusing under macros/`#nested`; avoid in new code.",
+    ".template_name"
+  ),
+  time_zone: specialVarDoc(
+    "time_zone",
+    "Current `time_zone` setting (ID string).",
+    "E.g. `GMT+01:00` or `America/Los_Angeles`.",
+    ".time_zone"
+  ),
+  url_escaping_charset: specialVarDoc(
+    "url_escaping_charset",
+    "Charset for URL escaping, if set.",
+    "When missing, `?url` may fall back to `.output_encoding`.",
+    ".url_escaping_charset"
+  ),
+  vars: specialVarDoc(
+    "vars",
+    "Artificial parent hash for top-level variables.",
+    "`.vars.foo` equals `foo`; useful for `.vars[dynamicName]`.",
+    '.vars["strange name!"]'
+  ),
+  version: specialVarDoc(
+    "version",
+    "FreeMarker version string.",
+    "E.g. `2.3.32`.",
+    ".version"
+  ),
+};
+
 export function getBuiltinRef(name: string): RefDoc | undefined {
   return BUILTIN_REF[name];
 }
 
 export function getDirectiveRef(name: string): RefDoc | undefined {
   return DIRECTIVE_REF[name];
+}
+
+export function getSpecialVarRef(name: string): RefDoc | undefined {
+  return SPECIAL_VAR_REF[name];
 }

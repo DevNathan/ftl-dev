@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-19
+
+### Added
+
+- Completion for FreeMarker special variables (`.error`, `.now`, `.vars`, …); `.error` is offered only inside `#recover`
+
+### Fixed
+
+- FTL comments force Comment token type and exclude bracket-pair scopes (`[]` `{}` `()` and other code scopes stay muted); auto-close pairs disabled inside comments/strings
+
 ## [0.2.1] - 2026-10-19
 
 ### Fixed

@@ -1,4 +1,8 @@
-import { getBuiltinRef, getDirectiveRef } from "./reference/freemarkerRef";
+import {
+  getBuiltinRef,
+  getDirectiveRef,
+  getSpecialVarRef,
+} from "./reference/freemarkerRef";
 
 /** Built-in FreeMarker directive names (angle/square `#` form). */
 export const DIRECTIVES: readonly string[] = [
@@ -43,6 +47,39 @@ export const DIRECTIVES: readonly string[] = [
   "t",
   "transform",
   "visit",
+];
+
+/**
+ * FreeMarker special variables (`.name` syntax).
+ * @see https://freemarker.apache.org/docs/ref_specvar.html
+ */
+export const SPECIAL_VARS: readonly string[] = [
+  "args",
+  "auto_esc",
+  "caller_template_name",
+  "current_template_name",
+  "data_model",
+  "error",
+  "get_optional_template",
+  "globals",
+  "incompatible_improvements",
+  "lang",
+  "locale",
+  "locale_object",
+  "locals",
+  "main",
+  "main_template_name",
+  "namespace",
+  "node",
+  "now",
+  "output_encoding",
+  "output_format",
+  "pass",
+  "template_name",
+  "time_zone",
+  "url_escaping_charset",
+  "vars",
+  "version",
 ];
 
 /** Common `?builtin` names (not exhaustive). */
@@ -185,6 +222,7 @@ export interface SymbolCompletionEntry {
 export type CompletionContext =
   | { type: "directive"; prefix: string; trigger: "<#" | "[#" }
   | { type: "builtin"; prefix: string }
+  | { type: "special"; prefix: string; inRecover: boolean }
   | { type: "ns"; ns: string; prefix: string }
   | { type: "general"; prefix: string };
 
@@ -201,6 +239,16 @@ export function completionContext(before: string): CompletionContext {
     return { type: "directive", prefix: dir[2] ?? "", trigger };
   }
 
+  // `.error` / `.now` — not `ns.member` (no identifier immediately before `.`).
+  const special = before.match(/(?:^|[^a-zA-Z0-9_])\.([a-zA-Z_][\w]*)?$/);
+  if (special) {
+    return {
+      type: "special",
+      prefix: special[1] ?? "",
+      inRecover: isInRecoverBody(before),
+    };
+  }
+
   const ns = before.match(/([a-zA-Z_][\w]*)\.([a-zA-Z_][\w]*)?$/);
   if (ns) {
     return { type: "ns", ns: ns[1]!, prefix: ns[2] ?? "" };
@@ -208,6 +256,31 @@ export function completionContext(before: string): CompletionContext {
 
   const general = before.match(/([a-zA-Z_][\w]*)$/);
   return { type: "general", prefix: general?.[1] ?? "" };
+}
+
+/**
+ * True when the cursor is in a `#recover` section of an open `#attempt`
+ * (where `.error` is defined).
+ */
+export function isInRecoverBody(before: string): boolean {
+  const re = /([<\[]\/?)#([a-zA-Z_][\w]*)\b/g;
+  const stack: { recover: boolean }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(before)) !== null) {
+    const isClose = m[1]!.includes("/");
+    const name = m[2]!;
+    if (name === "attempt") {
+      if (isClose) {
+        stack.pop();
+      } else {
+        stack.push({ recover: false });
+      }
+    } else if (name === "recover" && !isClose && stack.length > 0) {
+      stack[stack.length - 1]!.recover = true;
+    }
+  }
+  const top = stack[stack.length - 1];
+  return top !== undefined && top.recover;
 }
 
 function filterPrefix(names: readonly string[], prefix: string): string[] {
@@ -250,6 +323,24 @@ export function buildCompletions(
         label,
         kind: "builtin" as const,
         detail: ref?.detail ?? "FreeMarker built-in",
+        documentation: ref?.documentation,
+        insertText: label,
+      };
+    });
+  }
+
+  if (ctx.type === "special") {
+    let names = filterPrefix(SPECIAL_VARS, ctx.prefix);
+    // `.error` exists only inside `#recover`.
+    if (!ctx.inRecover) {
+      names = names.filter((n) => n !== "error");
+    }
+    return names.map((label) => {
+      const ref = getSpecialVarRef(label);
+      return {
+        label,
+        kind: "symbol" as const,
+        detail: ref?.detail ?? "FreeMarker special variable",
         documentation: ref?.documentation,
         insertText: label,
       };

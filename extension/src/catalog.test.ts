@@ -2,6 +2,7 @@ import * as assert from "assert";
 import {
   buildCompletions,
   completionContext,
+  isInRecoverBody,
 } from "./catalog";
 
 function test(name: string, fn: () => void): void {
@@ -26,6 +27,61 @@ test("detects directive context after <#", () => {
 test("detects builtin context after ?", () => {
   const ctx = completionContext("${x?ha");
   assert.deepStrictEqual(ctx, { type: "builtin", prefix: "ha" });
+});
+
+test("detects special variable context after bare .", () => {
+  const ctx = completionContext('log("x" + .err');
+  assert.deepStrictEqual(ctx, {
+    type: "special",
+    prefix: "err",
+    inRecover: false,
+  });
+});
+
+test("ns.member is not treated as special variable", () => {
+  const ctx = completionContext("ob.load");
+  assert.deepStrictEqual(ctx, { type: "ns", ns: "ob", prefix: "load" });
+});
+
+test("isInRecoverBody true inside #recover", () => {
+  const before =
+    '<#attempt>\n  x\n<#recover>\n  <#assign r = ob.log("e: " + .';
+  assert.strictEqual(isInRecoverBody(before), true);
+  const ctx = completionContext(before);
+  assert.strictEqual(ctx.type, "special");
+  if (ctx.type === "special") {
+    assert.strictEqual(ctx.inRecover, true);
+  }
+});
+
+test("isInRecoverBody false in #attempt before #recover", () => {
+  const before = "<#attempt>\n  <#assign x = .";
+  assert.strictEqual(isInRecoverBody(before), false);
+});
+
+test(".error offered in recover; hidden outside", () => {
+  const inRec = buildCompletions({
+    type: "special",
+    prefix: "err",
+    inRecover: true,
+  });
+  assert.ok(inRec.some((c) => c.label === "error"));
+
+  const outRec = buildCompletions({
+    type: "special",
+    prefix: "err",
+    inRecover: false,
+  });
+  assert.ok(!outRec.some((c) => c.label === "error"));
+});
+
+test("special .now always available", () => {
+  const items = buildCompletions({
+    type: "special",
+    prefix: "no",
+    inRecover: false,
+  });
+  assert.ok(items.some((c) => c.label === "now"));
 });
 
 test("directive completions filter by prefix", () => {

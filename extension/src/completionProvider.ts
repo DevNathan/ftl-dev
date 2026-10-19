@@ -90,6 +90,7 @@ export class FtlCompletionProvider
       const prefixLen =
         ctx.type === "directive" ||
         ctx.type === "builtin" ||
+        ctx.type === "special" ||
         ctx.type === "general" ||
         ctx.type === "ns"
           ? ctx.prefix.length
