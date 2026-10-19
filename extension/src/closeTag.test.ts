@@ -43,6 +43,43 @@ test("self-close still works after include string", () => {
   assert.strictEqual(applyCloseEdit(text, edit!), '<#include "lib.ftl" />');
 });
 
+test("no self-close when / is inside a string (path ./)", () => {
+  const text = '<#assign whiteListSql = ob.loadText("./';
+  assert.strictEqual(autoCloseAfterSlash(text, text.length), undefined);
+});
+
+test("no self-close when / is inside a string mid-path", () => {
+  const text = '<#assign x = loadText("a/b/';
+  assert.strictEqual(autoCloseAfterSlash(text, text.length), undefined);
+});
+
+test("no self-close for ../ outside string after =", () => {
+  const text = "<#assign x = ../";
+  assert.strictEqual(autoCloseAfterSlash(text, text.length), undefined);
+});
+
+test("no self-close inside unclosed paren call", () => {
+  const text = "<#assign x = foo(/";
+  assert.strictEqual(autoCloseAfterSlash(text, text.length), undefined);
+});
+
+test("no self-close after assign expression without closed-string trailer", () => {
+  const text = "<#assign x = 1 /";
+  assert.strictEqual(autoCloseAfterSlash(text, text.length), undefined);
+});
+
+test("self-close after assign to closed string", () => {
+  const text = '<#assign x = "a" /';
+  const edit = autoCloseAfterSlash(text, text.length);
+  assert.ok(edit);
+  assert.strictEqual(applyCloseEdit(text, edit!), '<#assign x = "a" />');
+});
+
+test("no self-close for URL-like string https://", () => {
+  const text = '<#assign u = "https://';
+  assert.strictEqual(autoCloseAfterSlash(text, text.length), undefined);
+});
+
 test("no auto >: when / typed before existing > in <#assign  >", () => {
   const text = "<#assign  />";
   const offset = "<#assign  /".length;
