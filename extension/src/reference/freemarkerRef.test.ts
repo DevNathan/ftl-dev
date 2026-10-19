@@ -3,6 +3,7 @@ import { buildCompletions } from "../catalog";
 import { builtinHover, directiveHover } from "../docs";
 import {
   BUILTIN_REF,
+  SPECIAL_VAR_REF,
   DIRECTIVE_REF,
   getBuiltinRef,
   getDirectiveRef,
@@ -62,6 +63,12 @@ test("every catalog BUILTIN/DIRECTIVE name has a ref entry", () => {
   for (const name of ["if", "list", "macro", "import", "assign"]) {
     assert.ok(DIRECTIVE_REF[name], `missing directive ref: ${name}`);
   }
+});
+
+test("special variable refs include error and now", () => {
+  assert.ok(SPECIAL_VAR_REF.error);
+  assert.ok(SPECIAL_VAR_REF.now);
+  assert.ok(SPECIAL_VAR_REF.error!.documentation.includes("recover"));
 });
 
 console.log("All reference unit tests passed.");
