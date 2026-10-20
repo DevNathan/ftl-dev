@@ -71,6 +71,8 @@ export interface SemanticTokenSpan {
 export interface BuildSemanticTokenOptions {
   /** Symbols loaded from `#import "…" as ns` (see collectImportSymbols). */
   importedByNs?: Map<string, FtlSymbol[]>;
+  /** Reuse cached comment ranges when available. */
+  comments?: Array<[number, number]>;
 }
 
 function tokenTypeIndex(t: FtlSemanticTokenType): number {
@@ -154,7 +156,7 @@ export function buildSemanticTokenSpansFromIndex(
   const declOffsets = new Set<number>();
   const map = buildLineMap(text);
   // Only for use-scans (step 3–4); index already excludes comment decls.
-  const comments = ftlCommentRanges(text);
+  const comments = options.comments ?? ftlCommentRanges(text);
 
   const localByName = new Map<string, FtlSymbol>();
   for (const sym of index.symbols) {
@@ -237,32 +239,35 @@ export function buildSemanticTokenSpansFromIndex(
     }
   }
 
-  // 4) In-file uses of local symbol / namespace names (cheap identifier scan)
-  const ident = /[a-zA-Z_][\w]*/g;
-  let im: RegExpExecArray | null;
-  while ((im = ident.exec(text)) !== null) {
-    const name = im[0];
-    const offset = im.index;
-    if (declOffsets.has(offset) || offsetInFtlComment(offset, comments)) {
-      continue;
-    }
+  // 4) In-file uses of local symbol / namespace names.
+  // Skip the full-document ident scan when there is nothing to color.
+  if (localByName.size > 0 || nsNames.size > 0) {
+    const ident = /[a-zA-Z_][\w]*/g;
+    let im: RegExpExecArray | null;
+    while ((im = ident.exec(text)) !== null) {
+      const name = im[0];
+      const offset = im.index;
+      if (declOffsets.has(offset) || offsetInFtlComment(offset, comments)) {
+        continue;
+      }
 
-    if (nsNames.has(name)) {
-      addSpan(text, map, offset, name.length, "namespace", spans, seen);
-      continue;
-    }
+      if (nsNames.has(name)) {
+        addSpan(text, map, offset, name.length, "namespace", spans, seen);
+        continue;
+      }
 
-    const local = localByName.get(name);
-    if (local) {
-      addSpan(
-        text,
-        map,
-        offset,
-        name.length,
-        kindToTokenType(local.kind),
-        spans,
-        seen
-      );
+      const local = localByName.get(name);
+      if (local) {
+        addSpan(
+          text,
+          map,
+          offset,
+          name.length,
+          kindToTokenType(local.kind),
+          spans,
+          seen
+        );
+      }
     }
   }
 

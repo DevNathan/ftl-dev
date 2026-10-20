@@ -1,13 +1,13 @@
 # Requirements status (vision vs shipped)
 
-- Date: 2026-10-15
+- Date: 2026-10-20
 - Against: [vision.md](vision.md), [ADR 0001](../decisions/0001-codeoss-language-stack.md), [ADR 0002](../decisions/0002-undeclared-vs-datamodel.md), [ADR 0003](../decisions/0003-comparison-operator-presentation.md)
-- Extension: `0.0.15` — plans **0001–0014** completed (**0015** planned only, not implemented); Signature Help; nested FTL comments (incl. comments inside directives / hash literals — plan 0014); Vim plugin tree + docs ([matrix](vim-neovim-matrix.md)); comparison presentation opt-in (default off; not in Vim port)
+- Extension: `0.4.0` — plans **0001–0015** completed (macro/function nesting and `#local` scope diagnostics — plan **0015**); Wave 2 **Context Analyzer** shipped (plan **0021**, behavior-preserving); same-file **Rename Symbol** (F2) (plan **0022**); **Workspace Symbol** (Ctrl+T) (plan **0023**); directive named-param completion + attribute-name highlight (plan **0024**); camelCase aliases + boolean `true`/`false` value-slot completions (plan **0026**); per-param one-liner completion docs + unknown named-param warnings for `#ftl`/`#setting`/`#include` (plan **0027**; closes **0026** AC13); Signature Help for `#function` / `#macro` plus expanded builtin `?name(…)` catalog (plans **0028** / **0032b**); opt-in **`strictVariables`** + `dataModel` allowlist (ADR 0002 layer B MVP — plan **0029**); project file `.ftl-data-model.json` `{ roots }` + optional `templates` path/prefix/glob (plans **0031** / **0032b**); Hover on known `#ftl`/`#setting`/`#include` named-param LHS + clause-keyword Hover `as`/`in`/`using` + locale/charset/format value catalogs (plans **0030** / **0032a**); LSP Hover parity + vim `ftlNamedParam` highlight; VS Code→LanguageClient CLOSED deferred-with-trigger (plan **0032c** / ADR 0005); nested FTL comments (incl. comments inside directives / hash literals — plan 0014); Vim plugin tree + docs ([matrix](vim-neovim-matrix.md)); comparison presentation opt-in (default off; not in Vim port)
 - Verification: `cd extension && npm test` (grammar + unit) passing
 
 ## Verdict
 
-**Vision core + Wave 1 IDE polish are shipped** (semantic tokens, outline, references, diagnostics phase 2). Comparison operator presentation (`gte`→`>=`) adds IntelliJ/MyBatis-style display. Still not full C/Java-class: no Rename, no LSP, no Java bean enrichment, layer B undeclared names deferred.
+**Vision core + Wave 1 IDE polish are shipped** (semantic tokens, outline, references, same-file rename, workspace symbol search, diagnostics phase 2). Comparison operator presentation (`gte`→`>=`) adds IntelliJ/MyBatis-style display. Layer B undeclared-root warnings ship as **opt-in** (`ftl-dev.strictVariables` + `ftl-dev.dataModel` and/or workspace-folder `.ftl-data-model.json` with flat `roots` and optional path-scoped `templates`). Still not full C/Java-class: no Java bean enrichment. Optional stdio LSP lives under `server/` for Vim/Neovim; VS Code stays in-process until ADR 0005 triggers.
 
 | Vision / ADR item | Status | Evidence |
 |-------------------|--------|----------|
@@ -16,22 +16,20 @@
 | Go to definition | **Done** | `FtlDefinitionProvider` |
 | Document outline | **Done** | `FtlDocumentSymbolProvider` |
 | Find all references | **Done** | `FtlReferenceProvider` (same-file + `ns.sym`) |
+| Rename symbol (same-file) | **Done** | `renameSymbolAt` + `FtlRenameProvider` (plan 0022) |
 | Import / include paths | **Done** | DocumentLink + definition |
-| Completions + Apache docs | **Done** | catalog + `freemarkerRef.ts` |
+| Completions + Apache docs / Hover | **Done** | catalog (`completionContext` / `buildCompletions`) + **CompletionEngine** + pluggable providers (directive/builtin/special/ns/general/directiveParam); Wave 1 provider split (plan 0020); Wave 2 **Context Analyzer** — shared cursor probes in `extension/src/context/` (plan 0021); directive named params `#ftl`/`#setting`/`#include` + clause keywords (plan 0024); camelCase aliases + boolean value-slot `true`/`false` (plan 0026); per-param one-liner `documentation` from `DIRECTIVE_PARAM_DOCS` (plan 0027; closes 0026 AC13); Hover on known named-param LHS + clause `as`/`in`/`using` reuses `paramDocumentation` (plans **0030** / **0032a**); locale/charset/`*_format`/`output_format` value catalogs (plan **0032a**); `freemarkerRef.ts` |
 | Directive auto-close / FTL indent | **Done** | closeTag + indentRules |
-| Diagnostics layer A | **Done** (phase 1–2+) | empty `${}`, duplicate else, unknown directive, `#list`/`as`, hash-literal commas (comments ignored), comment delimiters, … |
+| Diagnostics (layer A + opt-in B) | **Done** (A always-on; B opt-in) | Layer A: empty `${}`, duplicate else, unknown directive, `#list`/`as`, hash-literal commas (comments ignored), comment delimiters, nested `#macro`/`#function`, `#local` outside macro/function body (plan 0015), unknown named-param warnings on `#ftl`/`#setting`/`#include` (plan 0027), …; Layer B: undeclared-**root** warnings when `ftl-dev.strictVariables` is on + `ftl-dev.dataModel` and/or `.ftl-data-model.json` `{ roots }` (+ optional `templates`) (plans **0029** / **0031** / **0032b** / ADR 0002) |
 | Comparison op presentation | **Done** (opt-in) | decorations + `comparisonDisplay.ts` (ADR 0003); default **off** (minimap) |
-| Signature Help (`#function` / `#macro`) | **Done** | `signatureHelp.ts` + provider; not builtins |
+| Signature Help (`#function` / `#macro` / builtin `?name(…)`) | **Done** | `signatureHelp.ts` + `builtinSignatures.ts` + provider; builtin catalog covers most arg-taking names in `BUILTINS` incl. camelCase aliases (plans **0028** / **0032b**) — not a full Apache / Java overload dump |
 | Nested FTL comments + delimiter diagnostics | **Done** | TextMate `comment.block` (also inside directives/`${}`; plan 0014) + `comments.ts` / diagnostics |
-| Vim / Neovim syntax + shared LSP scaffold | **Done** (scaffold) | [`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim) (separate git), [`server/`](../../server/), ADR 0005 |
-| Undeclared / data-model (B) | **Deferred** | ADR 0002 |
-| Rename / workspace symbols | **Not started** | — |
-| LSP / Java enrichment | **Not started / non-goal** | — |
+| Vim / Neovim syntax + shared LSP scaffold | **Done** | [`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim) (separate git; named-param LHS syntax highlight — plan **0032c**), [`server/`](../../server/) stdio LSP (Hover matches VS Code probe order incl. named-param — **0032c**), ADR 0005 |
+| Undeclared / data-model (B) | **Done (opt-in)** | `ftl-dev.strictVariables` (default **false**) + `ftl-dev.dataModel` allowlist **and/or** workspace-folder root `.ftl-data-model.json` (`{ "roots": string[] }` + optional `templates` path prefix / simple glob → roots); `strictVariables.ts` / `dataModelFile.ts` / diagnostics provider (plans **0029** / **0031** / **0032b** / ADR 0002) |
+| Workspace symbol search | **Done** | `searchWorkspaceSymbols` + `FtlWorkspaceSymbolProvider` (plan 0023) |
+| LSP extraction (VS Code → LanguageClient) | **Deferred (trigger)** | Server scaffold + multi-provider wire-up **Done** for Vim/Neovim clients; VS Code stays in-process until ADR 0005 triggers (packaging / single-fix path / server feature parity plan). Not an open core gap — plan **0032c** |
+| Java enrichment | **Non-goal** | — |
 
 ## Gaps / next candidates
 
-1. **RenameProvider** (builds on references)
-2. **Workspace Symbol** search
-3. Optional **`strictVariables`** (ADR 0002)
-4. Builtin / `?built_in(…)` signature help
-5. **LSP** extraction when needed
+_(none — prior leftovers closed by plans **0032a** / **0032b** / **0032c**. Explicit non-goals remain: full Apache/Java Signature Help overload dump; Java bean enrichment; infinite locale/IANA catalogs. VS Code → LanguageClient stays deferred-with-trigger per ADR 0005.)_

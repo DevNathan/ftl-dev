@@ -56,8 +56,10 @@ ${lib.helper()}
 </#if>
 
 <#list [1,2,3] as i>
-
+  
 </#list>
+
+<#setting number_format="computer" />
 
 <#attempt>
   

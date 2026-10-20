@@ -89,12 +89,18 @@ export function offsetInFtlComment(
   offset: number,
   comments: Array<[number, number]>
 ): boolean {
-  for (const [start, end] of comments) {
-    if (offset >= start && offset < end) {
-      return true;
-    }
+  // Ranges are sorted non-overlapping — binary search.
+  let lo = 0;
+  let hi = comments.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const [start, end] = comments[mid]!;
     if (offset < start) {
-      return false;
+      hi = mid - 1;
+    } else if (offset >= end) {
+      lo = mid + 1;
+    } else {
+      return true;
     }
   }
   return false;

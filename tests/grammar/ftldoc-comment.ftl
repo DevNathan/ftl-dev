@@ -3,8 +3,8 @@
 //   ^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
 //          ^^^ comment.block.freemarker variable.parameter.ftldoc.freemarker
 <#--
-  @ignore something
-//^^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
+  @nodoc something
+//^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
   @return value
 //^^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
   @returns value
@@ -18,11 +18,11 @@
   @stop if missing
 //^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
 -->
-<#-- @IGNORE @Returns @Param bar -->
-//   ^^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
-//           ^^^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
-//                    ^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
-//                           ^^^ comment.block.freemarker variable.parameter.ftldoc.freemarker
+<#-- @NODOC @Returns @Param bar -->
+//   ^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
+//          ^^^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
+//                   ^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
+//                          ^^^ comment.block.freemarker variable.parameter.ftldoc.freemarker
 [#-- @param x y --]
 //   ^^^^^^ comment.block.freemarker keyword.other.documentation.ftldoc.freemarker
 //          ^ comment.block.freemarker variable.parameter.ftldoc.freemarker

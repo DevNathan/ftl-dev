@@ -1,6 +1,8 @@
 import { DIRECTIVES } from "./catalog";
 import { findCommentDelimiterIssues, ftlCommentRanges, skipFtlComment } from "./comments";
+import { namedParamsWithAliases } from "./directiveParams";
 import { buildLineMap, offsetToPos } from "./lineMap";
+import { scanNamedParamLhs } from "./namedParamLhs";
 import { findNameOccurrences } from "./references";
 import {
   findMatchingBrace,
@@ -10,7 +12,14 @@ import {
   skipCommentAt,
   skipString,
 } from "./scan";
+import { findUndeclaredIdentifierIssues } from "./strictVariables";
 import { findDefinitions, indexFtl } from "./symbols";
+
+/** Directives that support named `name=` params with a catalog. */
+const NAMED_PARAM_DIRECTIVES = new Set(["ftl", "setting", "include"]);
+
+/** Clause keywords — never reported as unknown named params. */
+const CLAUSE_KEYWORD_DENY = new Set(["as", "in", "using"]);
 
 export type FtlDiagnostic = {
   offset: number;
@@ -26,8 +35,10 @@ const KNOWN_DIRECTIVES = new Set(DIRECTIVES);
  * (not on the declaration name span itself). Respects `#local` scope via
  * `findDefinitions(…, atOffset)`.
  */
-export function findDeprecatedUsageIssues(text: string): FtlDiagnostic[] {
-  const index = indexFtl(text);
+export function findDeprecatedUsageIssues(
+  text: string,
+  index: ReturnType<typeof indexFtl> = indexFtl(text)
+): FtlDiagnostic[] {
   const deprecated = index.symbols.filter(
     (s) => s.doc?.deprecated !== undefined
   );
@@ -76,7 +87,19 @@ export function findDeprecatedUsageIssues(text: string): FtlDiagnostic[] {
  * Lightweight FreeMarker checks (not a full parser).
  * Catches common mistakes like `${boo?}` (dangling built-in operator).
  */
-export function validateFtl(text: string): FtlDiagnostic[] {
+export type ValidateFtlOptions = {
+  /** Reuse a cached index (avoids a second `indexFtl` for deprecated-usage). */
+  index?: ReturnType<typeof indexFtl>;
+  /** Opt-in undeclared-root warnings (ADR 0002 layer B). Default false. */
+  strictVariables?: boolean;
+  /** Host-injected top-level names when strictVariables is on. */
+  dataModel?: readonly string[];
+};
+
+export function validateFtl(
+  text: string,
+  options: ValidateFtlOptions = {}
+): FtlDiagnostic[] {
   const out: FtlDiagnostic[] = [];
   let inString: '"' | "'" | null = null;
   let i = 0;
@@ -173,8 +196,17 @@ export function validateFtl(text: string): FtlDiagnostic[] {
   }
 
   out.push(...findDirectiveIssues(text));
+  out.push(...findUnknownDirectiveParamIssues(text));
   out.push(...findHashLiteralCommaIssues(text));
-  out.push(...findDeprecatedUsageIssues(text));
+  const index = options.index ?? indexFtl(text);
+  out.push(...findDeprecatedUsageIssues(text, index));
+  out.push(
+    ...findUndeclaredIdentifierIssues(text, {
+      strictVariables: options.strictVariables,
+      dataModel: options.dataModel,
+      index,
+    })
+  );
 
   return out;
 }
@@ -206,8 +238,50 @@ type DirTok = {
   selfClose: boolean;
   /** Inner text between name and close bracket */
   inner: string;
+  /** Absolute offset of `inner` in the full document. */
+  innerStart: number;
   bracket: "<" | "[";
 };
+
+/**
+ * Warn on unknown `name=` LHS for `#ftl` / `#setting` / `#include`.
+ * String-, comment-, and nesting-aware; never flags values or clause keywords.
+ */
+export function findUnknownDirectiveParamIssues(text: string): FtlDiagnostic[] {
+  const diags: FtlDiagnostic[] = [];
+  for (const tok of scanDirectives(text)) {
+    if (tok.sigil !== "#" || tok.kind === "close") {
+      continue;
+    }
+    if (!NAMED_PARAM_DIRECTIVES.has(tok.name)) {
+      continue;
+    }
+    const known = new Set(namedParamsWithAliases(tok.name));
+    for (const hit of scanNamedParamLhs(tok.inner)) {
+      if (CLAUSE_KEYWORD_DENY.has(hit.name)) {
+        continue;
+      }
+      if (known.has(hit.name)) {
+        continue;
+      }
+      diags.push({
+        offset: tok.innerStart + hit.relOffset,
+        length: hit.name.length,
+        message: unknownParamMessage(tok.name, hit.name),
+        severity: "warning",
+      });
+    }
+  }
+  diags.sort((a, b) => a.offset - b.offset);
+  return diags;
+}
+
+function unknownParamMessage(directive: string, name: string): string {
+  if (directive === "setting") {
+    return `Unknown setting name '${name}'.`;
+  }
+  return `Unknown parameter '${name}' for '#${directive}'.`;
+}
 
 function findDirectiveIssues(text: string): FtlDiagnostic[] {
   const diags: FtlDiagnostic[] = [];
@@ -314,11 +388,33 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
       });
     }
 
+    if (tok.name === "local" && macroFunctionDepth(stack) === 0) {
+      diags.push({
+        offset: tok.offset,
+        length: tok.length,
+        message:
+          `'#local' is only valid inside a '#macro' or '#function' definition.`,
+        severity: "error",
+      });
+    }
+
     if (tok.selfClose || tok.kind === "empty") {
       continue;
     }
 
     if (isBlockDirectiveOpen(tok)) {
+      if (
+        (tok.name === "macro" || tok.name === "function") &&
+        macroFunctionDepth(stack) >= 1
+      ) {
+        diags.push({
+          offset: tok.offset,
+          length: tok.length,
+          message:
+            "Macro or function definitions can't be nested into each other.",
+          severity: "error",
+        });
+      }
       stack.push(tok);
     }
   }
@@ -346,6 +442,17 @@ function isBlockDirectiveOpen(tok: DirTok): boolean {
   // `<#assign x>` / `<#assign x in ns>` / bare `<#assign>` (still paired with `</#assign>`).
   const inner = tok.inner.replace(/\/\s*$/, "").trim();
   return !/(=|\+\+|--|\+=|-=|\*=|\/=|%=)/.test(inner);
+}
+
+/** Open `#macro` / `#function` blocks on the directive stack (ignores `@` calls). */
+function macroFunctionDepth(stack: DirTok[]): number {
+  let depth = 0;
+  for (const t of stack) {
+    if (t.name === "macro" || t.name === "function") {
+      depth++;
+    }
+  }
+  return depth;
 }
 
 /** Nearest enclosing open on the stack with the given name (top → bottom). */
@@ -649,6 +756,7 @@ function scanDirectives(text: string): DirTok[] {
       kind: isClose ? "close" : "open",
       selfClose,
       inner,
+      innerStart,
       bracket,
     });
   }

@@ -1,4 +1,8 @@
 import {
+  builtinSignatureOf,
+  formatBuiltinSignatureLabel,
+} from "./builtinSignatures";
+import {
   formatSignatureLabel,
   FtlIndex,
   FtlParam,
@@ -21,12 +25,18 @@ export type SymbolLookup = {
 
 /**
  * Compute signature help at `offset`, or undefined if not inside a known call.
+ * Builtin `?name(…)` takes precedence: when detected, only the catalog applies
+ * (hit or silence) — never resolve `name` as a user `#function`.
  */
 export function signatureHelpAt(
   text: string,
   offset: number,
   lookup: SymbolLookup
 ): SignatureHelpResult | undefined {
+  const builtinSite = findBuiltinCall(text, offset);
+  if (builtinSite) {
+    return buildBuiltinHelp(builtinSite.name, builtinSite.activeParameter);
+  }
   return (
     functionCallHelp(text, offset, lookup) ??
     macroCallHelp(text, offset, lookup)
@@ -88,6 +98,51 @@ function buildHelp(
         ? undefined
         : `${name} takes ${list.length} parameter${list.length === 1 ? "" : "s"}.`,
   };
+}
+
+function buildBuiltinHelp(
+  name: string,
+  activeParameter: number
+): SignatureHelpResult | undefined {
+  const sig = builtinSignatureOf(name);
+  if (!sig) {
+    return undefined;
+  }
+  const parameters = sig.parameters.map((label) => ({ label }));
+  const max = Math.max(0, parameters.length - 1);
+  const active = parameters.length === 0 ? 0 : Math.min(activeParameter, max);
+  return {
+    label: formatBuiltinSignatureLabel(name, sig.parameters),
+    parameters,
+    activeParameter: active,
+    documentation: sig.documentation,
+  };
+}
+
+/**
+ * Caret inside `?name(…)` argument list — requires `?` immediately before the name.
+ */
+export function findBuiltinCall(
+  text: string,
+  offset: number
+): { name: string; activeParameter: number } | undefined {
+  const openParen = findEnclosingParen(text, offset);
+  if (openParen < 0) {
+    return undefined;
+  }
+  let nameEnd = openParen;
+  while (nameEnd > 0 && /\s/.test(text[nameEnd - 1]!)) {
+    nameEnd--;
+  }
+  const id = identifierAt(text, nameEnd);
+  if (!id || id.end !== nameEnd || id.text.length === 0) {
+    return undefined;
+  }
+  if (id.start === 0 || text[id.start - 1] !== "?") {
+    return undefined;
+  }
+  const activeParameter = countCommaArgs(text, openParen + 1, offset);
+  return { name: id.text, activeParameter };
 }
 
 function formatParamLabel(p: FtlParam): string {

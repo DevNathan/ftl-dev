@@ -2,7 +2,7 @@
   "name": "ftl-dev",
   "displayName": "FreeMarker (ftl-dev)",
   "description": "FreeMarker (.ftl) language support for CodeOSS — scripting-oriented tooling",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "nathan-0910",
   "license": "Apache-2.0",
   "icon": "icons/freemarker-icon.png",
@@ -90,6 +90,19 @@
           "type": "boolean",
           "default": false,
           "description": "Show alphabetic comparison operators (lt, lte, gt, gte) as <, <=, >, >= in the editor. Off by default (editor decorations can distort the minimap). Place the caret on a token to reveal the source text when enabled."
+        },
+        "ftl-dev.strictVariables": {
+          "type": "boolean",
+          "default": false,
+          "description": "Warn on undeclared root identifiers in FTL expressions (ADR 0002 layer B). Off by default — enable only when the team maintains in-file declarations and/or ftl-dev.dataModel allowlist. Does not perform Java bean / type checking."
+        },
+        "ftl-dev.dataModel": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Host-injected top-level FreeMarker data-model names (e.g. userService, request). Used when ftl-dev.strictVariables is enabled to silence known roots. Merged with roots from workspace-folder `.ftl-data-model.json` when present."
         }
       }
     },
@@ -104,7 +117,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test:grammar": "vscode-tmgrammar-test -g syntaxes/freemarker.tmLanguage.json -g syntaxes/test-support/text.html.basic.tmLanguage.json \"../tests/grammar/*.ftl\"",
-    "test:unit": "npm run compile && node out/symbols.test.js && node out/lineMap.test.js && node out/scan.test.js && node out/ftldoc.test.js && node out/catalog.test.js && node out/closeTag.test.js && node out/closeTag.adversarial.test.js && node out/hoverImport.test.js && node out/diagnostics.test.js && node out/reference/freemarkerRef.test.js && node out/indentRules.test.js && node out/indentAlign.test.js && node out/outline.test.js && node out/references.test.js && node out/semanticTokens.test.js && node out/comparisonDisplay.test.js && node out/signatureHelp.test.js && node out/comments.test.js && node out/commentMute.test.js",
+    "test:unit": "npm run compile && node out/symbols.test.js && node out/lineMap.test.js && node out/scan.test.js && node out/ftldoc.test.js && node out/catalog.test.js && node out/closeTag.test.js && node out/closeTag.adversarial.test.js && node out/hoverImport.test.js && node out/namedParamHover.test.js && node out/diagnostics.test.js && node out/strictVariables.test.js && node out/dataModelFile.test.js && node out/reference/freemarkerRef.test.js && node out/indentRules.test.js && node out/indentAlign.test.js && node out/outline.test.js && node out/references.test.js && node out/semanticTokens.test.js && node out/comparisonDisplay.test.js && node out/signatureHelp.test.js && node out/comments.test.js && node out/commentMute.test.js",
     "test": "npm run test:grammar && npm run test:unit",
     "package": "npm run compile && npx --yes @vscode/vsce package --no-dependencies",
     "publish:ovsx": "npm run package && npx --yes ovsx publish *.vsix"

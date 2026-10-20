@@ -1,24 +1,10 @@
 import * as vscode from "vscode";
 import { sharedDocCache } from "./docCache";
-import { OutlineSymbol, buildOutline } from "./outline";
+import { OutlineSymbol, buildOutlineFromIndex } from "./outline";
 import { findReferencesAt } from "./references";
-import { SymbolKind } from "./symbols";
+import { symbolKindToVscode } from "./symbolKindVscode";
 import { lineMapFor, rangeFromOffsets } from "./vscodeRanges";
 import { offsetToPos } from "./lineMap";
-
-function symbolKindToVscode(kind: SymbolKind): vscode.SymbolKind {
-  switch (kind) {
-    case "macro":
-      return vscode.SymbolKind.Method;
-    case "function":
-      return vscode.SymbolKind.Function;
-    case "assign":
-    case "local":
-    case "global":
-    default:
-      return vscode.SymbolKind.Variable;
-  }
-}
 
 function toDocumentSymbol(
   text: string,
@@ -55,9 +41,15 @@ export class FtlDocumentSymbolProvider
     document: vscode.TextDocument
   ): vscode.DocumentSymbol[] {
     const text = document.getText();
-    sharedDocCache.get(document.uri.toString(), document.version, text);
+    const cached = sharedDocCache.get(
+      document.uri.toString(),
+      document.version,
+      text
+    );
     const map = lineMapFor(text);
-    return buildOutline(text).map((e) => toDocumentSymbol(text, e, map));
+    return buildOutlineFromIndex(cached.index).map((e) =>
+      toDocumentSymbol(text, e, map)
+    );
   }
 }
 
@@ -69,8 +61,15 @@ export class FtlReferenceProvider implements vscode.ReferenceProvider {
   ): vscode.Location[] | undefined {
     const text = document.getText();
     const offset = document.offsetAt(position);
+    const cached = sharedDocCache.get(
+      document.uri.toString(),
+      document.version,
+      text
+    );
     const hits = findReferencesAt(text, offset, {
       includeDeclaration: context.includeDeclaration,
+      index: cached.index,
+      comments: cached.comments,
     });
     if (!hits) {
       return undefined;

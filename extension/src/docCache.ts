@@ -3,6 +3,7 @@
  * Invalidate on version change or explicit delete.
  */
 
+import { ftlCommentRanges } from "./comments";
 import { collectImportSymbols, FileReader } from "./imports";
 import { FtlIndex, FtlSymbol, indexFtl } from "./symbols";
 
@@ -10,6 +11,8 @@ export type DocCacheEntry = {
   version: number;
   text: string;
   index: FtlIndex;
+  /** Top-level FTL comment ranges for the cached text. */
+  comments: Array<[number, number]>;
   importByNs?: Map<string, FtlSymbol[]>;
   importQualified?: string[];
 };
@@ -26,6 +29,7 @@ export class FtlDocCache {
       version,
       text,
       index: indexFtl(text),
+      comments: ftlCommentRanges(text),
     };
     this.byUri.set(uri, entry);
     return entry;

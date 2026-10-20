@@ -1,7 +1,14 @@
 import * as vscode from "vscode";
 import { sharedDocCache } from "./docCache";
+import { paramDocumentation } from "./directiveParams";
 import { builtinHover, directiveHover, symbolHover } from "./docs";
-import { builtinAt, directiveAt } from "./hoverTokens";
+import {
+  builtinAt,
+  clauseKeywordAt,
+  directiveAt,
+  namedParamAt,
+} from "./hoverTokens";
+
 import { findDefinitions, identifierAt } from "./symbols";
 import { readFsPath } from "./vscodeIo";
 
@@ -28,6 +35,15 @@ export class FtlHoverProvider implements vscode.HoverProvider {
       const md = directiveHover(directive);
       if (md) {
         return new vscode.Hover(new vscode.MarkdownString(md));
+      }
+    }
+
+    // Known #ftl / #setting / #include named-param LHS, or clause as/in/using
+    const param = namedParamAt(text, offset) ?? clauseKeywordAt(text, offset);
+    if (param) {
+      const blurb = paramDocumentation(param.name);
+      if (blurb) {
+        return new vscode.Hover(new vscode.MarkdownString(blurb));
       }
     }
 

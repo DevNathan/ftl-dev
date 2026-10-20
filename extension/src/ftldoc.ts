@@ -4,7 +4,7 @@
  *
  * Attachment rules (product):
  * 1. Only whitespace may sit between comment end and the declaration.
- * 2. After trim, leading `@ignore` (case-insensitive) → no documentation.
+ * 2. After trim, leading `@nodoc` (case-insensitive) → no documentation.
  * 3. Tags: summary, `@param`, `@return`/`@returns`, `@deprecated`,
  *    `@see`, `@since`, `@stop` (FreeMarker `#stop`, not Java `@throws`).
  * 4. Applies to `#function` / `#macro` / `#assign` / `#local` / `#global`
@@ -76,7 +76,7 @@ function stripCommentDelimiters(
   if (!angle && !square) {
     return undefined;
   }
-  // Prefer closed end; unclosed → still allow body to EOF for ignore checks.
+  // Prefer closed end; unclosed → still allow body to EOF for nodoc checks.
   const closed = findFtlCommentEnd(text, start);
   const closeTok = angle ? "-->" : "--]";
   const openTok = angle ? "<#--" : "[#--";
@@ -86,10 +86,10 @@ function stripCommentDelimiters(
 }
 
 /**
- * Parse ftldoc body. Returns `undefined` when `@ignore` leads the trimmed text,
+ * Parse ftldoc body. Returns `undefined` when `@nodoc` leads the trimmed text,
  * or when the body is empty / whitespace-only with no tags.
  *
- * Mid-body `@ignore` is not the leading-ignore rule: that tag line is skipped
+ * Mid-body `@nodoc` is not the leading-nodoc rule: that tag line is skipped
  * and does not discard the rest of the documentation.
  *
  * Free-text summary is only collected **before** the first `@` tag line
@@ -100,8 +100,8 @@ export function parseFtlDoc(body: string): FtlDoc | undefined {
   if (!trimmed) {
     return undefined;
   }
-  // First token after trim is @ignore (case-insensitive word boundary).
-  if (/^@ignore\b/i.test(trimmed)) {
+  // First token after trim is @nodoc (case-insensitive word boundary).
+  if (/^@nodoc\b/i.test(trimmed)) {
     return undefined;
   }
 
@@ -122,8 +122,8 @@ export function parseFtlDoc(body: string): FtlDoc | undefined {
       inTags = true;
       const name = tag[1]!.toLowerCase();
       const rest = tag[2]!.trim();
-      if (name === "ignore") {
-        // Mid-doc @ignore is not the "leading ignore" rule; skip the tag line.
+      if (name === "nodoc") {
+        // Mid-doc @nodoc is not the "leading nodoc" rule; skip the tag line.
         continue;
       }
       if (name === "param") {
