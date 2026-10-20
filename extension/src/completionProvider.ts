@@ -60,6 +60,8 @@ export class FtlCompletionProvider
       directive: vscode.CompletionItemKind.Keyword,
       builtin: vscode.CompletionItemKind.Method,
       symbol: vscode.CompletionItemKind.Variable,
+      property: vscode.CompletionItemKind.Property,
+      constant: vscode.CompletionItemKind.Constant,
     };
 
     return buildCompletions(ctx, symbols).map((c) => {
@@ -92,7 +94,8 @@ export class FtlCompletionProvider
         ctx.type === "builtin" ||
         ctx.type === "special" ||
         ctx.type === "general" ||
-        ctx.type === "ns"
+        ctx.type === "ns" ||
+        ctx.type === "directiveParam"
           ? ctx.prefix.length
           : 0;
       if (prefixLen > 0) {

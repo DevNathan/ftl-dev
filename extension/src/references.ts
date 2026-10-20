@@ -1,6 +1,113 @@
 import { ftlCommentRanges, offsetInFtlComment } from "./comments";
 import { escapeRe } from "./scan";
-import { FtlIndex, identifierAt, indexFtl } from "./symbols";
+import {
+  FtlIndex,
+  identifierAt,
+  indexFtl,
+  SymbolKind,
+} from "./symbols";
+
+const RENAMEABLE_KINDS = new Set<SymbolKind>([
+  "assign",
+  "macro",
+  "function",
+  "local",
+  "global",
+]);
+
+export interface RenameEdit {
+  startOffset: number;
+  endOffset: number;
+  newText: string;
+}
+
+export interface RenameSymbolOptions {
+  /** Reuse a cached index when available. */
+  index?: FtlIndex;
+  /** Reuse cached FTL comment ranges when available. */
+  comments?: Array<[number, number]>;
+}
+
+const FTL_IDENTIFIER_PART = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+function isValidFtlIdentifierName(name: string): boolean {
+  if (!name) {
+    return false;
+  }
+  const parts = name.split(".");
+  return parts.every((p) => FTL_IDENTIFIER_PART.test(p));
+}
+
+function hasRenameableDeclaration(
+  index: FtlIndex,
+  simpleName: string
+): boolean {
+  for (const s of index.symbols) {
+    if (s.name === simpleName && RENAMEABLE_KINDS.has(s.kind)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Replacement text for one reference hit, preserving import namespace prefix. */
+export function replacementTextForHit(
+  hitText: string,
+  newName: string
+): string {
+  const newSimple = newName.split(".").pop()!;
+  const dot = hitText.lastIndexOf(".");
+  if (dot >= 0) {
+    return hitText.slice(0, dot + 1) + newSimple;
+  }
+  return newSimple;
+}
+
+/**
+ * Build same-file text edits to rename the symbol at `offset` to `newName`.
+ * Occurrences match `findReferencesAt` with `includeDeclaration: true`.
+ */
+export function renameSymbolAt(
+  text: string,
+  offset: number,
+  newName: string,
+  options: RenameSymbolOptions = {}
+): RenameEdit[] | undefined {
+  const id = identifierAt(text, offset);
+  if (!id) {
+    return undefined;
+  }
+  if (!isValidFtlIdentifierName(newName)) {
+    return undefined;
+  }
+
+  const index = options.index ?? indexFtl(text);
+  const comments = options.comments ?? ftlCommentRanges(text);
+  const simple = id.text.split(".").pop()!;
+  if (!hasRenameableDeclaration(index, simple)) {
+    return undefined;
+  }
+
+  const hits = findReferencesAt(text, offset, {
+    includeDeclaration: true,
+    index,
+    comments,
+  });
+  if (!hits || hits.length === 0) {
+    return undefined;
+  }
+
+  const edits: RenameEdit[] = hits.map((h) => {
+    const hitText = text.slice(h.startOffset, h.endOffset);
+    return {
+      startOffset: h.startOffset,
+      endOffset: h.endOffset,
+      newText: replacementTextForHit(hitText, newName),
+    };
+  });
+  edits.sort((a, b) => b.startOffset - a.startOffset);
+  return edits;
+}
 
 export interface ReferenceHit {
   startOffset: number;
@@ -10,6 +117,10 @@ export interface ReferenceHit {
 export interface FindReferencesOptions {
   /** When false, skip hits that land on a declaration name (default true). */
   includeDeclaration?: boolean;
+  /** Reuse a cached index when available. */
+  index?: FtlIndex;
+  /** Reuse cached FTL comment ranges when available. */
+  comments?: Array<[number, number]>;
 }
 
 /**
@@ -78,8 +189,8 @@ export function findReferencesInText(
   options: FindReferencesOptions = {}
 ): ReferenceHit[] {
   const includeDeclaration = options.includeDeclaration !== false;
-  const index = indexFtl(text);
-  const comments = ftlCommentRanges(text);
+  const index = options.index ?? indexFtl(text);
+  const comments = options.comments ?? ftlCommentRanges(text);
   const parts = symbolName.split(".");
   const simple = parts[parts.length - 1]!;
   const names = new Set<string>();

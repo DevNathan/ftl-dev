@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { ComparisonOp, findComparisonOps } from "./comparisonDisplay";
-import { offsetToLineCharacter } from "./symbols";
+import { buildLineMap, offsetToPos } from "./lineMap";
 
 const SETTING_KEY = "comparisonOperatorPresentation";
 const SETTING_SECTION = "ftl-dev";
@@ -25,9 +25,12 @@ function createDecorationType(
   });
 }
 
-function rangeForOp(text: string, op: ComparisonOp): vscode.Range {
-  const start = offsetToLineCharacter(text, op.offset);
-  const end = offsetToLineCharacter(text, op.offset + op.length);
+function rangeForOp(
+  map: ReturnType<typeof buildLineMap>,
+  op: ComparisonOp
+): vscode.Range {
+  const start = offsetToPos(map, op.offset);
+  const end = offsetToPos(map, op.offset + op.length);
   return new vscode.Range(
     start.line,
     start.character,
@@ -89,7 +92,8 @@ export function registerComparisonDisplay(
 ): void {
   /** Created only while the setting is on; disposed when off. */
   let types: Map<string, vscode.TextEditorDecorationType> | undefined;
-
+  /** Editor/document listeners — only while enabled. */
+  let live: vscode.Disposable[] = [];
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   const ensureTypes = (): Map<string, vscode.TextEditorDecorationType> => {
@@ -130,6 +134,7 @@ export function registerComparisonDisplay(
 
     const typeMap = ensureTypes();
     const text = editor.document.getText();
+    const map = buildLineMap(text);
     const ops = findComparisonOps(text);
     const buckets = new Map<string, vscode.DecorationOptions[]>();
     for (const display of typeMap.keys()) {
@@ -137,7 +142,7 @@ export function registerComparisonDisplay(
     }
 
     for (const op of ops) {
-      const range = rangeForOp(text, op);
+      const range = rangeForOp(map, op);
       if (overlapsSelection(range, editor.selections)) {
         continue;
       }
@@ -175,39 +180,65 @@ export function registerComparisonDisplay(
     }
   };
 
-  context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor((e) => refreshEditor(e)),
-    vscode.window.onDidChangeVisibleTextEditors(() => refreshVisible()),
-    vscode.window.onDidChangeTextEditorSelection((e) => {
-      if (e.textEditor.document.languageId === "freemarker") {
-        refreshEditor(e.textEditor);
-      }
-    }),
-    vscode.workspace.onDidChangeTextDocument((e) => {
-      if (e.document.languageId !== "freemarker") {
-        return;
-      }
-      for (const editor of vscode.window.visibleTextEditors) {
-        if (editor.document === e.document) {
-          scheduleRefresh(editor);
+  const detachLive = (): void => {
+    for (const d of live) {
+      d.dispose();
+    }
+    live = [];
+    if (timer) {
+      clearTimeout(timer);
+      timer = undefined;
+    }
+    disposeTypes();
+  };
+
+  const attachLive = (): void => {
+    if (live.length > 0) {
+      return;
+    }
+    live = [
+      vscode.window.onDidChangeActiveTextEditor((e) => refreshEditor(e)),
+      vscode.window.onDidChangeVisibleTextEditors(() => refreshVisible()),
+      vscode.window.onDidChangeTextEditorSelection((e) => {
+        if (e.textEditor.document.languageId === "freemarker") {
+          refreshEditor(e.textEditor);
         }
-      }
-    }),
+      }),
+      vscode.workspace.onDidChangeTextDocument((e) => {
+        if (e.document.languageId !== "freemarker") {
+          return;
+        }
+        for (const editor of vscode.window.visibleTextEditors) {
+          if (editor.document === e.document) {
+            scheduleRefresh(editor);
+          }
+        }
+      }),
+    ];
+  };
+
+  const syncFromSetting = (): void => {
+    if (isEnabled()) {
+      attachLive();
+      refreshVisible();
+    } else {
+      detachLive();
+    }
+  };
+
+  context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration(FULL_SETTING_KEY)) {
-        refreshVisible();
+        syncFromSetting();
       }
     }),
     {
       dispose: () => {
-        if (timer) {
-          clearTimeout(timer);
-        }
-        disposeTypes();
+        detachLive();
       },
     }
   );
 
   warnDuplicateFtlDevExtensions();
-  refreshVisible();
+  syncFromSetting();
 }

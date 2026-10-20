@@ -57,7 +57,7 @@
 <#assign title = "ftl-dev ftldoc demo" />
 
 <#--
-@ignore
+@nodoc
 Throwaway: side-effect call only — Hover on `r` must NOT show this comment.
 -->
 <#assign r = say("side-effect") />
@@ -98,7 +98,7 @@ Throwaway: side-effect call only — Hover on `r` must NOT show this comment.
   <#-- OUTSIDE scopedDemo: Hover `tmp` should not pick up the #local doc -->
   <p>outside: tmp is not in scope here</p>
 
-  <#-- Hover `r`: only `r — assign` (no @ignore body) -->
+  <#-- Hover `r`: only `r — assign` (no @nodoc body) -->
   <p>discarded: ${r}</p>
 </body>
 </html>

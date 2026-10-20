@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-20
+
+### Added
+
+- Clause-keyword Hover for `as` / `in` / `using` (same `paramDocumentation` one-liners as completions); small static value catalogs for locale / charset / `*_format` / `output_format` named-param value slots on `#ftl` / `#setting` (plan 0032a; closes 0030 AC10)
+- Expanded builtin Signature Help for most arg-taking `?name(…)` entries in the catalog (incl. camelCase aliases e.g. `endsWith` → `ends_with`); still silent for zero-arg / uncataloged; not a full Apache / Java overload dump (plan 0032b)
+- Optional `templates` map on workspace-folder `.ftl-data-model.json`: path prefix or simple `*` / `**` glob → extra allowlist roots for matching `.ftl` paths, merged with flat `roots` when `strictVariables` is on (plan 0032b / ADR 0002)
+- LSP server Hover probe order matches VS Code (`builtin` → `directive` → `namedParam` → symbol); vim syntax highlights known `#ftl` / `#setting` / `#include` named-param LHS as `ftlNamedParam` (parity with TextMate); full VS Code → LanguageClient extraction CLOSED as deferred-with-trigger (ADR 0005 / plan 0032c)
+- When `ftl-dev.strictVariables` is on, workspace-folder root `.ftl-data-model.json` (`{ "roots": string[] }` plus optional `templates`) merges with setting `ftl-dev.dataModel` into the undeclared-root allowlist; invalid/missing file contributes no roots (Output warning); no walk-up (plan 0031 / ADR 0002; `templates` in plan 0032b)
+- Hover on known `#ftl` / `#setting` / `#include` named-param LHS (snake or camel) reuses the same `paramDocumentation` one-liners as completions (plan 0030; clause Hover in plan 0032a)
+- Opt-in undeclared-root warnings via `ftl-dev.strictVariables` (default **off**) plus host allowlist `ftl-dev.dataModel` (`string[]`); ADR 0002 layer B MVP — roots only, no Java bean / type checking (plan 0029 / ADR 0002; project file merge in plan 0031)
+- Signature Help for built-in calls `?name(…)` (e.g. `replace`, `substring`, `then`, `join`, and later catalog expand in plan 0032b); silence for uncataloged / zero-arg builtins; does not override `#function` / `#macro` help for non-`?` calls (plan 0028)
+- Per-param one-liner `documentation` on named-param (and clause keyword) completions for `#ftl` / `#setting` / `#include`, plus warning diagnostics for unknown `name=` left-hand identifiers on those directives (plan 0027; closes 0026 AC13)
+- Directive named-param camelCase aliases (e.g. `stripWhitespace`, `numberFormat`, `ignoreMissing`) in completion and TextMate `#directive-named-param`, plus `true` / `false` value completions after `=` for boolean-like `#ftl` / `#setting` / `#include` params (plan 0026)
+- Directive named-param completion inside open `#ftl` / `#setting` / `#include` tags, plus clause keywords `as` / `in` / `using` where applicable; TextMate highlight of known `name=` params as `entity.other.attribute-name.freemarker` (plan 0024)
+- Quoted-string `${…}` interpolations get distinct TextMate scopes (`meta.interpolation.freemarker`) for highlighting
+- Workspace Symbol (Ctrl+T / Go to Symbol in Workspace): search declaration names from `indexFtl` across open FreeMarker buffers plus a capped workspace `findFiles` scan (`searchWorkspaceSymbols` + `FtlWorkspaceSymbolProvider`) (plan 0023)
+- Rename Symbol (F2): same-file rename for `#assign`, `#macro`, `#function`, `#local`, and `#global` names; edit set matches Find All References (`renameSymbolAt` + `FtlRenameProvider`) (plan 0022)
+- Layer-A diagnostics: error when `#macro` / `#function` definitions nest inside another macro or function body; error when `#local` is used outside a `#macro` or `#function` definition (angle and square short forms included; user-macro `<@…>` call bodies do not count as nested definitions) (plan 0015)
+
+### Changed
+
+- **Breaking:** ftldoc suppress tag renamed `@ignore` → `@nodoc` (case-insensitive). Leading `@nodoc` skips documentation attachment; `@ignore` is no longer special-cased (plan 0025)
+- Performance: keep shared document index across keystrokes (no eager cache delete); outline/references/diagnostics reuse cache; semantic tokens reuse comment ranges and skip empty use-scans; comparison-operator listeners attach only when the setting is on
+- Completions: refactor `buildCompletions` into **CompletionEngine** + pluggable **CompletionProviders** (directive, builtin, special, ns, general); behavior-preserving; public `completionContext` / `buildCompletions` API unchanged (plan 0020)
+- Context Analyzer: consolidate cursor probing (`completionContext`, `builtinAt` / `directiveAt`, `identifierAt`) under `extension/src/context/`; `catalog`, `hoverTokens`, and `symbols` thin re-exports; behavior-preserving (plan 0021)
+
 ## [0.3.0] - 2026-10-19
 
 ### Added

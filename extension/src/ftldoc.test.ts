@@ -68,17 +68,29 @@ test("parseFtlDoc see since stop tags", () => {
   assert.ok(md.includes("1.2.0"));
 });
 
-// --- AC3 ---
-test("@ignore at start yields no doc (AC3)", () => {
-  assert.strictEqual(parseFtlDoc("@ignore\nside effect"), undefined);
-  assert.strictEqual(parseFtlDoc("  @IGNORE trash\n"), undefined);
+// --- AC1 (suppress) ---
+test("@nodoc at start yields no doc (AC1)", () => {
+  assert.strictEqual(parseFtlDoc("@nodoc\nside effect"), undefined);
+  assert.strictEqual(parseFtlDoc("  @NODOC trash\n"), undefined);
 });
 
-test("mid-body @ignore does not wipe doc", () => {
-  const doc = parseFtlDoc("Keep me.\n@ignore\n@param a x");
+// --- AC2 ---
+test("mid-body @nodoc does not wipe doc (AC2)", () => {
+  const doc = parseFtlDoc("Keep me.\n@nodoc\n@param a x");
   assert.ok(doc);
   assert.ok(doc!.summary.includes("Keep me"));
   assert.strictEqual(doc!.params[0]?.name, "a");
+});
+
+// --- AC3 (hard cut: @ignore is not the suppress tag) ---
+test("leading @ignore is not the nodoc short-circuit (AC3)", () => {
+  // Unknown leading @ignore + following known tags → doc still builds (unlike @nodoc).
+  const doc = parseFtlDoc("@ignore\n@param a x");
+  assert.ok(doc);
+  assert.strictEqual(doc!.params[0]?.name, "a");
+  // Free text after a leading unknown @tag is discarded (inTags); empty → undefined,
+  // but that is not the @nodoc short-circuit.
+  assert.strictEqual(parseFtlDoc("@ignore\nside effect"), undefined);
 });
 
 // --- AC1 ---
@@ -152,10 +164,10 @@ test("non-whitespace between comment and decl → no doc (AC2)", () => {
   assert.strictEqual(f!.doc, undefined);
 });
 
-// --- AC3 (index) ---
-test("@ignore assign has no doc (AC3)", () => {
+// --- AC1 (index) ---
+test("@nodoc assign has no doc (AC1)", () => {
   const text = `<#--
-@ignore
+@nodoc
 discard
 -->
 <#assign r = ob.log() />
@@ -165,7 +177,7 @@ discard
   assert.strictEqual(r!.doc, undefined);
 });
 
-test("assign without ignore keeps summary", () => {
+test("assign without nodoc keeps summary", () => {
   const text = `<#-- title for page -->
 <#assign title = "x" />
 `;

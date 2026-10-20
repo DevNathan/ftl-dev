@@ -467,4 +467,249 @@ test("deprecated macro and global uses warn (AC1)", () => {
   assert.ok(globalDiags[0]!.message.includes("prefer y"));
 });
 
+function nestingDiags(text: string) {
+  return validateFtl(text).filter((d) =>
+    d.message.includes("can't be nested")
+  );
+}
+
+function localScopeDiags(text: string) {
+  return validateFtl(text).filter((d) =>
+    d.message.includes("only valid inside a '#macro'")
+  );
+}
+
+function assertDiagOnToken(
+  diags: ReturnType<typeof validateFtl>,
+  text: string,
+  needle: string
+) {
+  const offset = text.indexOf(needle);
+  assert.ok(offset >= 0, `needle not found: ${needle}`);
+  const hit = diags.find((d) => d.offset === offset && d.length === needle.length);
+  assert.ok(hit, `expected diagnostic on ${JSON.stringify(needle)}`);
+  assert.strictEqual(hit!.severity, "error");
+  return hit!;
+}
+
+test("AC1: nested #macro — error on inner open only", () => {
+  const text = "<#macro a><#macro b></#macro></#macro>";
+  const diags = nestingDiags(text);
+  assert.strictEqual(diags.length, 1);
+  assertDiagOnToken(diags, text, "<#macro b>");
+});
+
+test("AC2: nested #function and mixed macro/function — error on inner open", () => {
+  const fnFn = "<#function a()><#function b()></#function></#function>";
+  assert.strictEqual(nestingDiags(fnFn).length, 1);
+  assertDiagOnToken(nestingDiags(fnFn), fnFn, "<#function b()>");
+
+  const macroFn = "<#macro a><#function b()></#function></#macro>";
+  assert.strictEqual(nestingDiags(macroFn).length, 1);
+  assertDiagOnToken(nestingDiags(macroFn), macroFn, "<#function b()>");
+
+  const fnMacro = "<#function a()><#macro b></#macro></#function>";
+  assert.strictEqual(nestingDiags(fnMacro).length, 1);
+  assertDiagOnToken(nestingDiags(fnMacro), fnMacro, "<#macro b>");
+});
+
+test("AC3: top-level macro and macro inside #if — no nesting error", () => {
+  assert.strictEqual(nestingDiags("<#macro m></#macro>").length, 0);
+  assert.strictEqual(
+    nestingDiags("<#if true><#macro m></#macro></#if>").length,
+    0
+  );
+});
+
+test("AC4: #macro inside user-macro call — no nesting error", () => {
+  const text = "<@wrap><#macro m></#macro></@wrap>";
+  assert.strictEqual(nestingDiags(text).length, 0);
+});
+
+test("AC5: top-level angle short #local — error on open", () => {
+  const text = "<#local x = 1 />";
+  const diags = localScopeDiags(text);
+  assert.strictEqual(diags.length, 1);
+  assertDiagOnToken(diags, text, "<#local x = 1 />");
+});
+
+test("AC6: top-level square short #local — error on open", () => {
+  const text = "[#local x = 1 /]";
+  const diags = localScopeDiags(text);
+  assert.strictEqual(diags.length, 1);
+  assertDiagOnToken(diags, text, "[#local x = 1 /]");
+});
+
+test("AC7: #local inside macro and function — no scope error", () => {
+  assert.strictEqual(
+    localScopeDiags("<#macro m><#local x = 1 /></#macro>").length,
+    0
+  );
+  assert.strictEqual(
+    localScopeDiags("<#function f()><#local x = 1 /></#function>").length,
+    0
+  );
+});
+
+test("AC8: #local in #list at template level errors; inside macro ok", () => {
+  const top = "<#list items as i><#local x = 1 /></#list>";
+  const topDiags = localScopeDiags(top);
+  assert.strictEqual(topDiags.length, 1);
+  assertDiagOnToken(topDiags, top, "<#local x = 1 />");
+
+  const inMacro =
+    "<#macro m><#list items as i><#local x = 1 /></#list></#macro>";
+  assert.strictEqual(localScopeDiags(inMacro).length, 0);
+});
+
+// --- 0027 unknown named-param diagnostics ---
+
+function unknownParamDiags(text: string) {
+  return validateFtl(text).filter(
+    (d) =>
+      d.message.includes("Unknown parameter") ||
+      d.message.includes("Unknown setting name")
+  );
+}
+
+function assertWarnOnIdent(
+  diags: ReturnType<typeof validateFtl>,
+  text: string,
+  needle: string
+) {
+  const offset = text.indexOf(needle);
+  assert.ok(offset >= 0, `needle not found: ${needle}`);
+  const hit = diags.find(
+    (d) => d.offset === offset && d.length === needle.length
+  );
+  assert.ok(hit, `expected warning on ${JSON.stringify(needle)}`);
+  assert.strictEqual(hit!.severity, "warning");
+  return hit!;
+}
+
+test("0027 AC6: unknown #ftl param encodingg warns", () => {
+  const text = '<#ftl encodingg="UTF-8">';
+  const diags = unknownParamDiags(text);
+  assert.strictEqual(diags.length, 1);
+  const hit = assertWarnOnIdent(diags, text, "encodingg");
+  assert.ok(hit.message.includes("encodingg"));
+  assert.ok(hit.message.includes("#ftl") || hit.message.includes("parameter"));
+});
+
+test("0027 AC7: unknown #setting local (typo for locale) warns", () => {
+  const text = '<#setting local="en_US">';
+  const diags = unknownParamDiags(text);
+  assert.strictEqual(diags.length, 1);
+  const hit = assertWarnOnIdent(diags, text, "local");
+  assert.ok(hit.message.includes("local"));
+  assert.ok(hit.message.includes("setting"));
+});
+
+test("0027 AC8: unknown include parse_missing warns; ignore_missing/ignoreMissing ok", () => {
+  const bad = '<#include "a.ftl" parse_missing=true>';
+  const badDiags = unknownParamDiags(bad);
+  assert.strictEqual(badDiags.length, 1);
+  assertWarnOnIdent(badDiags, bad, "parse_missing");
+
+  assert.strictEqual(
+    unknownParamDiags('<#include "a.ftl" ignore_missing=true>').length,
+    0
+  );
+  assert.strictEqual(
+    unknownParamDiags('<#include "a.ftl" ignoreMissing=true>').length,
+    0
+  );
+});
+
+test("0027 AC9: known snake and camel LHSs do not warn", () => {
+  assert.strictEqual(
+    unknownParamDiags("<#ftl strip_whitespace=true>").length,
+    0
+  );
+  assert.strictEqual(
+    unknownParamDiags("<#ftl stripWhitespace=true>").length,
+    0
+  );
+  assert.strictEqual(
+    unknownParamDiags('<#setting numberFormat="0.0">').length,
+    0
+  );
+  assert.strictEqual(
+    unknownParamDiags('<#ftl output_format="HTML">').length,
+    0
+  );
+});
+
+test("0027 AC10: values after = are not flagged as unknown params", () => {
+  const text = '<#ftl encoding="UTF-8" strip_whitespace=true>';
+  assert.strictEqual(unknownParamDiags(text).length, 0);
+  // Identifier-looking value without being a name= LHS
+  const withExpr = "<#setting locale=bogusName>";
+  assert.strictEqual(unknownParamDiags(withExpr).length, 0);
+});
+
+test("0027 AC11: identifier only inside quoted string is not flagged", () => {
+  const text = '<#ftl encoding="bogus_param=1">';
+  assert.strictEqual(unknownParamDiags(text).length, 0);
+});
+
+test("0027 AC12: nested = inside {} / () / [] not flagged", () => {
+  assert.strictEqual(
+    unknownParamDiags('<#ftl ns_prefixes={"x"=1}>').length,
+    0
+  );
+  assert.strictEqual(
+    unknownParamDiags("<#ftl attributes=(bogus=1)>").length,
+    0
+  );
+  assert.strictEqual(
+    unknownParamDiags("<#ftl attributes=[bogus=1]>").length,
+    0
+  );
+});
+
+test("0027 AC13: param-like text only inside FTL comment is not flagged", () => {
+  const text = "<#ftl encoding=\"UTF-8\" <#-- encodingg=1 --> >";
+  assert.strictEqual(unknownParamDiags(text).length, 0);
+});
+
+test("0027 AC14: clause keywords as/in/using never reported as unknown params", () => {
+  // Synthetic as= on a named-param directive must still not warn (deny-list).
+  assert.strictEqual(unknownParamDiags("<#ftl as=1>").length, 0);
+  assert.strictEqual(unknownParamDiags("<#ftl in=1>").length, 0);
+  assert.strictEqual(unknownParamDiags("<#ftl using=1>").length, 0);
+});
+
+test("0027 AC15: square syntax [#setting bogus=1] warns", () => {
+  const text = "[#setting bogus=1]";
+  const diags = unknownParamDiags(text);
+  assert.strictEqual(diags.length, 1);
+  assertWarnOnIdent(diags, text, "bogus");
+});
+
+test("0027 AC16: unknown-param severity is warning not error", () => {
+  const diags = unknownParamDiags('<#ftl encodingg="UTF-8">');
+  assert.ok(diags.length >= 1);
+  assert.ok(diags.every((d) => d.severity === "warning"));
+});
+
+test("0027 AC17: unknown-directive and structure regressions still work", () => {
+  const unknown = validateFtl("<#notARealDirective x>\n</#notARealDirective>");
+  assert.ok(unknown.some((d) => d.message.includes("Unknown directive")));
+  assert.ok(unknown.every((d) => !d.message.includes("Unknown parameter")));
+
+  const unclosed = validateFtl("<#if x>\nhello");
+  assert.ok(unclosed.some((d) => d.message.includes("Unclosed")));
+
+  // Clean fixture shapes stay free of unknown-param noise
+  assert.strictEqual(
+    unknownParamDiags('<#ftl encoding="UTF-8">').length,
+    0
+  );
+  assert.strictEqual(
+    unknownParamDiags('<#include "a.ftl">').length,
+    0
+  );
+});
+
 console.log("All diagnostics unit tests passed.");

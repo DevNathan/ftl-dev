@@ -30,6 +30,13 @@ import {
   completionContext,
 } from "../../extension/src/catalog";
 import { validateFtl } from "../../extension/src/diagnostics";
+import { paramDocumentation } from "../../extension/src/directiveParams";
+import { builtinHover, directiveHover } from "../../extension/src/docs";
+import {
+  builtinAt,
+  directiveAt,
+  namedParamAt,
+} from "../../extension/src/context/hoverAtCursor";
 import { collectImportSymbols } from "../../extension/src/imports";
 import { buildOutlineFromIndex } from "../../extension/src/outline";
 import { findReferencesAt } from "../../extension/src/references";
@@ -215,6 +222,32 @@ export function startFtlLanguageServer(connection: Connection): void {
     }
     const text = doc.getText();
     const offset = posToOffset(doc, params.position);
+
+    // Match VS Code FtlHoverProvider order: builtin → directive → named-param → symbol
+    const builtin = builtinAt(text, offset);
+    if (builtin) {
+      const md = builtinHover(builtin);
+      if (md) {
+        return { contents: { kind: MarkupKind.Markdown, value: md } };
+      }
+    }
+
+    const directive = directiveAt(text, offset);
+    if (directive) {
+      const md = directiveHover(directive);
+      if (md) {
+        return { contents: { kind: MarkupKind.Markdown, value: md } };
+      }
+    }
+
+    const param = namedParamAt(text, offset);
+    if (param) {
+      const blurb = paramDocumentation(param.name);
+      if (blurb) {
+        return { contents: { kind: MarkupKind.Markdown, value: blurb } };
+      }
+    }
+
     const id = identifierAt(text, offset);
     if (!id) {
       return undefined;

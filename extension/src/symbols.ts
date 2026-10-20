@@ -30,7 +30,7 @@ export interface FtlSymbol {
   nameLength: number;
   /** Present for `macro` / `function` when the open tag lists parameters. */
   params?: FtlParam[];
-  /** Leading ftldoc (absent when `@ignore` or no comment). */
+  /** Leading ftldoc (absent when `@nodoc` or no comment). */
   doc?: FtlDoc;
   /**
    * Half-open [scopeStart, scopeEnd) for `#macro` / `#function` bodies, and for
@@ -403,6 +403,13 @@ function scanDirectiveTagEnd(
 export function parseParamList(inner: string): FtlParam[] {
   const params: FtlParam[] = [];
   let i = 0;
+  // Allow parenthesized lists (`(x y)` / `(x, y)`) used in tests and some templates.
+  {
+    const trimmed = inner.trim().replace(/\/\s*$/, "");
+    if (trimmed.startsWith("(") && trimmed.endsWith(")")) {
+      inner = trimmed.slice(1, -1);
+    }
+  }
   while (i < inner.length) {
     while (i < inner.length && /\s/.test(inner[i]!)) {
       i++;

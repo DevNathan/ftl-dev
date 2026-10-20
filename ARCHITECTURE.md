@@ -33,6 +33,8 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 - **TextMate**: directives, interpolations, strings, comments, baseline expression scopes.
 - **Semantic tokens** (service): distinguish hash keys, call targets, imported macros, known properties when resolvable.
 - **Symbol / link model**: assigns, macros, functions, locals; `#import` / `#include` (and path forms) as document links and definition targets.
+- **Completions (catalog)**: `completionContext(before)` classifies cursor context; a thin **CompletionEngine** walks pluggable **CompletionProviders** (directive, builtin, special, ns, general). `buildCompletions` delegates to the engine. Stable exports for the in-process host ([`completionProvider.ts`](extension/src/completionProvider.ts)) and the [`server/`](server/) LSP scaffold.
+- **Context Analyzer** ([`extension/src/context/`](extension/src/context/)): shared cursor probing for completion, hover, and signature help — `completionContext` / `isInRecoverBody`, `builtinAt` / `directiveAt`, `identifierAt`. [`catalog.ts`](extension/src/catalog.ts), [`hoverTokens.ts`](extension/src/hoverTokens.ts), and [`symbols.ts`](extension/src/symbols.ts) are thin re-exports; FTL comment gating stays in [`comments.ts`](extension/src/comments.ts) (provider pre-check, outside Analyzer).
 - **Parser implementation**: undecided (follow-up ADR).
 
 ## Editor integration
@@ -42,6 +44,8 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 | Lexical highlight | TextMate grammar contribution |
 | Rich highlight | Semantic tokens provider / LSP |
 | Go to definition | `DefinitionProvider` / LSP `textDocument/definition` |
+| Rename symbol (same-file) | `RenameProvider` (`renameSymbolAt` reuses reference hits) / LSP `textDocument/rename` |
+| Workspace symbol (Ctrl+T) | `WorkspaceSymbolProvider` (`searchWorkspaceSymbols` over open buffers + capped `findFiles`; provider-only registration) |
 | Open import / path | `DocumentLinkProvider` + definition (new editor tab) |
 | Completions | `CompletionItemProvider` / LSP completion |
 | Directive auto-close | `autoClosingPairs` + snippets / on-type edits |

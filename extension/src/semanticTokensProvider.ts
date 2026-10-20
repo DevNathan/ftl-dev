@@ -25,6 +25,7 @@ export class FtlSemanticTokensProvider
     );
     const spans = buildSemanticTokenSpansFromIndex(text, cached.index, {
       importedByNs: cached.importByNs,
+      comments: cached.comments,
     });
     const data = encodeSemanticTokenSpans(spans, { alreadySorted: true });
     return new vscode.SemanticTokens(data);
