@@ -20,4 +20,8 @@ jobs:
           cache: npm
           cache-dependency-path: extension/package-lock.json
       - run: npm ci
+      - name: Forbidden-terms guard (list from secret; skipped when absent)
+        env:
+          FTL_DEV_FORBIDDEN_TERMS: ${{ secrets.FTL_DEV_FORBIDDEN_TERMS }}
+        run: npm run check:terms
       - run: npm test
