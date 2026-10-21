@@ -49,19 +49,11 @@ function isForbiddenScope(scope: string): boolean {
 async function tokenizeLines(lines: string[]): Promise<
   { text: string; scopes: string[] }[][]
 > {
-  const vsctm = require(path.join(
-    __dirname,
-    "../node_modules/.pnpm/vscode-textmate@7.0.4/node_modules/vscode-textmate"
-  ));
-  const oniguruma = require(path.join(
-    __dirname,
-    "../node_modules/.pnpm/vscode-oniguruma@1.7.0/node_modules/vscode-oniguruma"
-  ));
-  const onigRoot = path.join(
-    __dirname,
-    "../node_modules/.pnpm/vscode-oniguruma@1.7.0/node_modules/vscode-oniguruma"
-  );
-  const wasm = fs.readFileSync(path.join(onigRoot, "release/onig.wasm")).buffer;
+  const vsctm = require("vscode-textmate");
+  const oniguruma = require("vscode-oniguruma");
+  const wasm = fs.readFileSync(
+    require.resolve("vscode-oniguruma/release/onig.wasm")
+  ).buffer;
   await oniguruma.loadWASM(wasm);
   const registry = new vsctm.Registry({
     onigLib: {

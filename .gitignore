@@ -5,3 +5,5 @@ extension/*.vsix
 .DS_Store
 *.log
 test.ftl
+pnpm-lock.yaml
+yarn.lock

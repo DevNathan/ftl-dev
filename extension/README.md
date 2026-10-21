@@ -27,6 +27,7 @@ If the well is dry, dig your own. This extension aims for:
 - Go-to / navigate definitions, imports, and paths
 - Completions
 - Directive closing · FTL-aware indent
+- Linked editing of open/close tag names (`<#if>` ↔ `</#if>`, `<@m>` ↔ `</@m>`)
 - Diagnostics · semantic tokens · outline · find references
 - (Optional) comparison-operator presentation (`lt` / `gt` etc. shown as symbols)
 

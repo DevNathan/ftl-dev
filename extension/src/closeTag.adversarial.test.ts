@@ -12,45 +12,90 @@ import {
 
 type SlashExpect = "deny" | "allow>" | "allow]";
 
+/**
+ * Plan 0034 case table (row ids match the plan). `|` marks the cursor right
+ * after the typed `/` when text follows it; otherwise the cursor is at the end.
+ */
 const slashCases: { name: string; text: string; expect: SlashExpect }[] = [
-  { name: "bare assign", text: "<#assign /", expect: "allow>" },
-  { name: "bare local", text: "<#local /", expect: "allow>" },
-  { name: "bare user macro", text: "<@banner /", expect: "allow>" },
-  { name: "include string", text: '<#include "lib.ftl" /', expect: "allow>" },
-  { name: "include single quotes", text: "<#include 'lib.ftl' /", expect: "allow>" },
-  { name: "assign closed string", text: '<#assign x = "a" /', expect: "allow>" },
-  { name: "empty string trailer", text: '<#assign x = "" /', expect: "allow>" },
-  { name: "string with slashes then trailer", text: '<#assign x = "a/b" /', expect: "allow>" },
-  { name: "square bare", text: "[#assign /", expect: "allow]" },
-  { name: "square include", text: '[#include "lib.ftl" /', expect: "allow]" },
-
-  { name: "user repro loadText ./", text: '<#assign whiteListSql = ob.loadText("./', expect: "deny" },
-  { name: "path mid string", text: '<#assign x = loadText("a/b/', expect: "deny" },
-  { name: "https unfinished", text: '<#assign u = "https://', expect: "deny" },
-  { name: "single-quoted path", text: "<#assign x = './", expect: "deny" },
-  { name: "escaped quote still in string", text: '<#assign x = "a\\"b/', expect: "deny" },
-  { name: "html comment-like in string", text: '<#assign x = "<!-- /', expect: "deny" },
-  { name: "raw ../ after =", text: "<#assign x = ../", expect: "deny" },
-  { name: "raw ./ after =", text: "<#assign x = ./", expect: "deny" },
-  { name: "unquoted include path segment", text: "<#include lib/", expect: "deny" },
-  { name: "unquoted include deeper", text: "<#include path/to/", expect: "deny" },
-  { name: "user macro with arg then slash", text: "<@banner foo /", expect: "deny" },
-  { name: "division ident", text: "<#local i = startBit /", expect: "deny" },
-  { name: "division number", text: "<#assign x = 10/", expect: "deny" },
-  { name: "division spaced", text: "<#assign x = 10 /", expect: "deny" },
-  { name: "call open paren", text: "<#assign x = foo(/", expect: "deny" },
-  {
-    name: "call closed still =",
-    text: '<#assign x = ob.loadText("foo") /',
-    expect: "deny",
-  },
-  { name: "list open bracket", text: "<#assign x = [1,/", expect: "deny" },
-  { name: "compound +=", text: "<#assign x += y /", expect: "deny" },
-  { name: "hash access", text: "<#assign x = a.b /", expect: "deny" },
-  { name: "macro named unfinished string", text: '<@box title="./', expect: "deny" },
-  { name: "macro named = value", text: "<@box w=10/", expect: "deny" },
-  { name: "nested string in unclosed function", text: '<#function f\n  <#assign x = "./', expect: "deny" },
-  { name: "nested bare assign in unclosed function", text: "<#function f\n  <#assign /", expect: "allow>" },
+  { name: "A1", text: "<#assign /", expect: "allow>" },
+  { name: "A2", text: "<#local /", expect: "allow>" },
+  { name: "A3", text: "<@banner /", expect: "allow>" },
+  { name: "A4", text: "[#assign /", expect: "allow]" },
+  { name: "A5", text: "<#assign name /", expect: "allow>" },
+  { name: "A6", text: "<#local name /", expect: "allow>" },
+  { name: "A7", text: "<#global name /", expect: "allow>" },
+  { name: "A8", text: "[#assign name /", expect: "allow]" },
+  { name: "A9", text: "<#include \"lib.ftl\" /", expect: "allow>" },
+  { name: "A10", text: "<#include 'lib.ftl' /", expect: "allow>" },
+  { name: "A11", text: "<#assign x = \"a\" /", expect: "allow>" },
+  { name: "A12", text: "<#assign x = \"\" /", expect: "allow>" },
+  { name: "A13", text: "<#assign x = \"a/b\" /", expect: "allow>" },
+  { name: "A14", text: "[#include \"lib.ftl\" /", expect: "allow]" },
+  { name: "A15", text: "<@box title=\"x\" /", expect: "allow>" },
+  { name: "A16", text: "<@banner foo /", expect: "allow>" },
+  { name: "A17", text: "<#include tpl /", expect: "allow>" },
+  { name: "A18", text: "<#nested /", expect: "allow>" },
+  { name: "A19", text: "<#nested x /", expect: "allow>" },
+  { name: "A20", text: "<#return /", expect: "allow>" },
+  { name: "A21", text: "<#assign x++ /", expect: "allow>" },
+  { name: "A22", text: "<#function f\n  <#assign /", expect: "allow>" },
+  { name: "A23", text: "<#function f\n  <#assign name /", expect: "allow>" },
+  { name: "A24", text: "<#-- c --> <#assign /", expect: "allow>" },
+  { name: "C1", text: "<#assign num = 3 /|>", expect: "deny" },
+  { name: "C2", text: "<#assign num = 3 /| />", expect: "deny" },
+  { name: "C3", text: "<#assign x /|\n>", expect: "deny" },
+  { name: "C4", text: "<#assign x /|/>", expect: "deny" },
+  { name: "C5", text: "<#assign x /| y=\"a\">", expect: "deny" },
+  { name: "C6", text: "[#assign x /| ]", expect: "deny" },
+  { name: "C7", text: "<#assign  /|>", expect: "deny" },
+  { name: "C8", text: "<#assign x /|\n<div>", expect: "allow>" },
+  { name: "O1", text: "<#assign num = 3 /> /", expect: "deny" },
+  { name: "O2", text: "a / b", expect: "deny" },
+  { name: "O3", text: "<#-- <#assign /", expect: "deny" },
+  { name: "O4", text: "[#-- [#assign /", expect: "deny" },
+  { name: "B1", text: "<#function name /", expect: "deny" },
+  { name: "B2", text: "<#function /", expect: "deny" },
+  { name: "B3", text: "<#macro m /", expect: "deny" },
+  { name: "B4", text: "<#if x /", expect: "deny" },
+  { name: "B5", text: "<#if /", expect: "deny" },
+  { name: "B6", text: "<#list xs as x /", expect: "deny" },
+  { name: "B7", text: "<#else /", expect: "deny" },
+  { name: "B8", text: "<#items as x /", expect: "deny" },
+  { name: "B9", text: "<#sep /", expect: "deny" },
+  { name: "B10", text: "<#noparse /", expect: "deny" },
+  { name: "B11", text: "<#outputformat \"HTML\" /", expect: "deny" },
+  { name: "B12", text: "[#if /", expect: "deny" },
+  { name: "D1", text: "<#assign num = 3 /", expect: "deny" },
+  { name: "D2", text: "<#assign x = 10/", expect: "deny" },
+  { name: "D3", text: "<#assign x = 10 /", expect: "deny" },
+  { name: "D4", text: "<#local i = startBit /", expect: "deny" },
+  { name: "D5", text: "<#assign x = a.b /", expect: "deny" },
+  { name: "D6", text: "<#assign x += y /", expect: "deny" },
+  { name: "D7", text: "<#assign x = foo() /", expect: "deny" },
+  { name: "D8", text: "<#assign x = ob.loadText(\"foo\") /", expect: "deny" },
+  { name: "D9", text: "<#assign x = xs[0] /", expect: "deny" },
+  { name: "D10", text: "<#assign x = y?size /", expect: "deny" },
+  { name: "D11", text: "<#assign x = y!0 /", expect: "deny" },
+  { name: "D12", text: "<@box w=10/", expect: "deny" },
+  { name: "D13", text: "<@box w=10 /", expect: "deny" },
+  { name: "D14", text: "<#return total /", expect: "deny" },
+  { name: "D15", text: "<#assign x = /", expect: "deny" },
+  { name: "D16", text: "<#assign x = 1 /", expect: "deny" },
+  { name: "U1", text: "<#assign whiteListSql = ob.loadText(\"./", expect: "deny" },
+  { name: "U2", text: "<#assign x = loadText(\"a/b/", expect: "deny" },
+  { name: "U3", text: "<#assign u = \"https://", expect: "deny" },
+  { name: "U4", text: "<#assign x = './", expect: "deny" },
+  { name: "U5", text: "<#assign x = \"a\\\"b/", expect: "deny" },
+  { name: "U6", text: "<#assign x = \"<!-- /", expect: "deny" },
+  { name: "U7", text: "<#assign x = ../", expect: "deny" },
+  { name: "U8", text: "<#assign x = ./", expect: "deny" },
+  { name: "U9", text: "<#assign x = foo(/", expect: "deny" },
+  { name: "U10", text: "<#assign x = [1,/", expect: "deny" },
+  { name: "U11", text: "<@box title=\"./", expect: "deny" },
+  { name: "U12", text: "<#function f\n  <#assign x = \"./", expect: "deny" },
+  { name: "U13", text: "<#include lib/", expect: "deny" },
+  { name: "U14", text: "<#include path/to/", expect: "deny" },
+  { name: "U15", text: "<#import lib/", expect: "deny" },
 ];
 
 const pairDeny: { name: string; text: string }[] = [
@@ -84,8 +129,11 @@ function test(name: string, fn: () => void): void {
 }
 
 for (const c of slashCases) {
-  test(`slash: ${c.name}`, () => {
-    const edit = autoCloseAfterSlash(c.text, c.text.length);
+  const cursor = c.text.indexOf("|");
+  const text = cursor < 0 ? c.text : c.text.slice(0, cursor) + c.text.slice(cursor + 1);
+  const offset = cursor < 0 ? text.length : cursor;
+  test(`slash ${c.name}: ${JSON.stringify(c.text)} → ${c.expect}`, () => {
+    const edit = autoCloseAfterSlash(text, offset);
     if (c.expect === "deny") {
       assert.strictEqual(
         edit,
@@ -96,6 +144,8 @@ for (const c of slashCases) {
     }
     assert.ok(edit, `expected allow for ${JSON.stringify(c.text)}`);
     assert.strictEqual(edit!.insertText, c.expect === "allow>" ? ">" : "]");
+    assert.strictEqual(edit!.insertAt, offset);
+    assert.strictEqual(edit!.cursorAt, offset + 1);
   });
 }
 

@@ -8,6 +8,7 @@ import {
   FtlDocumentSymbolProvider,
   FtlReferenceProvider,
 } from "./outlineReferences";
+import { FtlLinkedEditingRangeProvider } from "./linkedEditingProvider";
 import { FtlRenameProvider } from "./renameProvider";
 import { FtlWorkspaceSymbolProvider } from "./workspaceSymbolProvider";
 import {
@@ -72,6 +73,10 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.languages.registerRenameProvider(
       FTL_SELECTOR,
       new FtlRenameProvider()
+    ),
+    vscode.languages.registerLinkedEditingRangeProvider(
+      FTL_SELECTOR,
+      new FtlLinkedEditingRangeProvider()
     ),
     vscode.languages.registerDocumentSemanticTokensProvider(
       FTL_SELECTOR,

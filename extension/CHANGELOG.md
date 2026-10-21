@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-21
+
+### Added
+
+- Linked editing of paired FTL tag names: with the cursor on the name of an open or close tag, typing edits both (`<#function>` / `</#function>`, `<#if>` / `</#if>`, capture `<#assign x>` / `</#assign>`, `<@m>` / `</@m>`, dotted `<@ns.box>`, and square `[#if]` / `[/#if]`). Mid-block tags (`#else`, `#sep`, …), self-closed tags, HTML tags, FTL comments and `#noparse` bodies are not linked. Enabled by default via the `[freemarker]` default `editor.linkedEditing: true`; turn it off with `"[freemarker]": { "editor.linkedEditing": false }` (a plain global `editor.linkedEditing: false` does not override the language default). `Ctrl+Shift+F2 (macOS: Cmd+Shift+F2)` (Start Linked Editing) still works when it is off. The pair stays linked while the name is fully deleted (`<# …>` / `</#>`, `[#…]` / `[/#]`, empty `<@ …>` / `</@>`), so a new name can be typed into either tag (plan 0036). VS Code only — not in the LSP server or Vim / Neovim (plans 0035, 0036)
+
+### Changed
+
+- Self-close `/` policy is now default-allow with precise denies, superseding the 0.2.1 allow-list: `/` inside an open FTL tag inserts `>` / `]` (e.g. `<#assign name />`, `<@m arg />`, `<#include "x" />`). No close when the tag is already closed (forward scan, so no `//>` or `/> />`); for body-required directives (`#function`, `#macro`, `#if`, `#list`, mid-block `#else`/`#sep`/…, plus `#outputformat`, `#noparse`); when `/` follows an operand in an expression (division, e.g. `<#assign num = 3 /`, `<@box w=10 /`); for unquoted `#include`/`#import` paths (`<#include lib/`); or inside strings/parens/FTL comments. Flipped: `<@banner foo /` now closes (plan 0034)
+- Build: `vscode-textmate` and `vscode-oniguruma` are explicit devDependencies (same resolved versions 7.0.4 / 1.7.0); npm is the only supported package manager — `pnpm-lock.yaml` / `yarn.lock` are git-ignored (plan 0033)
+- Repo: `.gitattributes` enforces LF line endings (CRLF only for `*.ps1` / `*.cmd` / `*.bat`; binaries untouched) (plan 0033)
+
+### Fixed
+
+- `commentMute` unit test no longer depends on pnpm store paths (`node_modules/.pnpm/...`); it resolves `vscode-textmate` / `vscode-oniguruma` (and `onig.wasm`) by package name, so `npm ci && npm test` passes (plan 0033)
+- Typing `>` right after an auto-inserted self-close `/>` (`/]` in square syntax) no longer produces `/>>`; the duplicate closer is swallowed (plan 0034)
+- Self-close `/` no longer fires inside an unterminated FTL comment (`<#-- <#assign /`), and no longer self-closes empty-body block directives such as `<#if /`, `<#function /`, `<#else /` (plan 0034)
+
 ## [0.4.0] - 2026-10-20
 
 ### Added
