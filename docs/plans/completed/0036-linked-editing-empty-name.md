@@ -188,7 +188,7 @@ Note M9: `<@ x>` (empty `@`) is pushed, then `<@a>`; `</@>` finds the topmost `@
 Same as plans 0033–0035. The user's folder has uncommitted changes and deletion is not allowed there, so tests run in the Cowork cloud container:
 
 1. Clone `https://github.com/DevNathan/ftl-dev` into the container.
-2. Stage the user's `vsix/.git/objects` (packs + loose objects) into the clone's `.git/objects/` and `git checkout 0579b27` (confirm with `git -C vsix rev-parse --short HEAD` in the user's folder = `0579b27`).
+2. Stage the user's `vsix/.git/objects` (packs + loose objects) into the clone's `.git/objects/` and `git checkout ab41a94` (confirm with `git -C vsix rev-parse --short HEAD` in the user's folder = `ab41a94`).
 3. Overlay every changed/untracked file listed by `git -C vsix status --short` (0033–0035 files and this plan's changes) from the user's folder.
 4. Run the commands below there. Do not run npm in the user's folder.
 
@@ -208,7 +208,7 @@ Manual smoke: AC11 (Extension Development Host, pending user).
 
 ## Results
 
-Completed 2026-10-21. Dev in `linkedEditing.ts` (`scanTags` empty open / empty `#` close heads, `matchTags` empty `@` pairing, word-pattern comment) + `linkedEditing.test.ts`; 검증QA in a clean cloud copy at local HEAD `0579b27` with all uncommitted user files overlaid (same QA environment as 0033–0035).
+Completed 2026-10-21. Dev in `linkedEditing.ts` (`scanTags` empty open / empty `#` close heads, `matchTags` empty `@` pairing, word-pattern comment) + `linkedEditing.test.ts`; 검증QA in a clean cloud copy at local HEAD `ab41a94` with all uncommitted user files overlaid (same QA environment as 0033–0035).
 
 **QA summary (검증QA):** `npm ci` = 0; `npm test` = 0 (605 ✓, 0 failures; linkedEditing suite 125 ✓); rename / workspaceSymbols / symbolKindVscode tests = 0; server `npx tsc -p .` = 0. Direct probe of `linkedTagNameRanges`: `<# name>\n\n</#>` with the cursor after `<#` → `[[2,2],[13,13]]`, after `</#` → same; `<#function name>…</#function>` from open / close → both name ranges; `<@box>x</@>` → none; `<# a>` alone → none; `<#-- c --></#>` → none. The VS Code host download is blocked by the sandbox egress proxy, so AC11 stays a manual smoke.
 

@@ -174,7 +174,7 @@ git -C vim  diff --stat; git -C vim  diff --ignore-cr-at-eol --stat   # identica
 
 ## Results
 
-개발 step (2026-10-21). QA environment = cloud container at local HEADs vsix `0579b27` / vim `b5325f2`, with the edited files overlaid (md5-identical to the user's folder).
+개발 step (2026-10-21). QA environment = cloud container at local HEADs vsix `ab41a94` / vim `93758f8`, with the edited files overlaid (md5-identical to the user's folder).
 
 - **AC1:** `package.json` devDependencies gained `vscode-oniguruma ^1.7.0` and `vscode-textmate ^7.0.4`. `vscode-tmgrammar-test ^0.1.3` is unchanged.
 - **AC2:** `npm install --package-lock-only` exited 0. Lock diff (+4/-2):
@@ -190,7 +190,7 @@ git -C vim  diff --stat; git -C vim  diff --ignore-cr-at-eol --stat   # identica
   - The bare imports (`vscode-languageserver`, `vscode-languageserver/node`, `vscode-languageserver-textdocument`, plus node built-ins) are all covered by `server/package.json`. Relative imports point to the shared `../../extension/src/*`.
   - Container: `npm ci` = 0, `npx tsc -p .` = 0.
 - **AC7:** container: `npm ci` = 0, `npm run compile` = 0, `node out/commentMute.test.js` passed, `npm test` = 0 (all unit tests pass).
-  - 검증QA (masterAI, clean cloud copy at local HEADs vsix `0579b27` / vim `b5325f2` with the changed files overlaid from the user's folder): `extension`: `npm ci` = 0, `npm test` = 0 (grammar all pass; all unit suites pass, incl. "All commentMute unit tests passed."); extra `node out/rename.test.js`, `node out/workspaceSymbols.test.js`, `node out/symbolKindVscode.test.js` = 0. `server`: `npm ci` = 0, `npx tsc -p .` = 0.
+  - 검증QA (masterAI, clean cloud copy at local HEADs vsix `ab41a94` / vim `93758f8` with the changed files overlaid from the user's folder): `extension`: `npm ci` = 0, `npm test` = 0 (grammar all pass; all unit suites pass, incl. "All commentMute unit tests passed."); extra `node out/rename.test.js`, `node out/workspaceSymbols.test.js`, `node out/symbolKindVscode.test.js` = 0. `server`: `npm ci` = 0, `npx tsc -p .` = 0.
 - **AC8:** the reinstall step is under "User action" above.
 - **AC9:** `vsix/.gitattributes` and `vim/.gitattributes` were created (identical, LF, all ten listed lines).
 - **AC10:** `git ls-files --eol` results:
@@ -205,7 +205,7 @@ git -C vim  diff --stat; git -C vim  diff --ignore-cr-at-eol --stat   # identica
   - `diff --cached --stat` is empty in both repos.
   - `diff --stat` and `diff --ignore-cr-at-eol --stat` are identical (vsix: 4 files, +13/-15; vim: empty).
 - **AC13:** `run.sh` (md5-identical to the user's copy) gets past `set -euo pipefail` with no `pipefail: invalid option` or `$'\r'` errors. Its only non-zero exit comes from pre-existing Vader failures (non-goal).
-  - 검증QA (clean cloud copy, `stty rows 60 cols 200` + `script -qec "bash test/run.sh" /dev/null`): prints "Coverage inventory: 100%" and "Syntax smoke passed"; Vader 73/90, the same count as at baseline HEAD `b5325f2` (pre-existing `indent_align` / `ftplugin` / `syntax` failures). Exit 1 comes from Vader only.
+  - 검증QA (clean cloud copy, `stty rows 60 cols 200` + `script -qec "bash test/run.sh" /dev/null`): prints "Coverage inventory: 100%" and "Syntax smoke passed"; Vader 73/90, the same count as at baseline HEAD `93758f8` (pre-existing `indent_align` / `ftplugin` / `syntax` failures). Exit 1 comes from Vader only.
   - Note on the earlier 개발 run: it used `script -qc` without `-e`, so its "exit 0" was the wrapper's status, not run.sh's. Its "56/90" came from Vader window cases hitting E36 because no terminal size was set. Superseded by the 검증QA run above.
   - User's device VM: `bash test/run.sh` now gets past `set -euo pipefail` (prints "Coverage inventory: 100%…").
 

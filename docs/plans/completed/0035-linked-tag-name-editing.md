@@ -199,7 +199,7 @@ Harness notation: `|` (written `\|` inside the table) is the cursor (removed bef
 Same as plans 0033 / 0034. The user's folder has uncommitted changes and deletion is not allowed there, so tests run in the Cowork cloud container:
 
 1. Clone `https://github.com/DevNathan/ftl-dev` into the container.
-2. Stage the user's `vsix/.git/objects` (packs + loose objects) into the clone's `.git/objects/` and `git checkout 0579b27` (confirm with `git -C vsix rev-parse HEAD` in the user's folder).
+2. Stage the user's `vsix/.git/objects` (packs + loose objects) into the clone's `.git/objects/` and `git checkout ab41a94` (confirm with `git -C vsix rev-parse HEAD` in the user's folder).
 3. Overlay every changed/untracked file listed by `git -C vsix status --short` (plan 0033/0034 files and this plan's changes) from the user's folder.
 4. Run the commands below there. Do not run npm in the user's folder.
 
@@ -220,7 +220,7 @@ Manual smoke: AC11 (Extension Development Host, pending user).
 
 ## Results
 
-Completed 2026-10-21. Dev in `linkedEditing.ts` (pure scanner) / `linkedEditingProvider.ts` (adapter) / `extension.ts` (one registration) / `package.json` (`[freemarker]` default + `test:unit` entry) + `linkedEditing.test.ts`; 검증QA in a clean cloud copy at local HEAD `0579b27` with all uncommitted user files overlaid (same QA environment as 0033 / 0034).
+Completed 2026-10-21. Dev in `linkedEditing.ts` (pure scanner) / `linkedEditingProvider.ts` (adapter) / `extension.ts` (one registration) / `package.json` (`[freemarker]` default + `test:unit` entry) + `linkedEditing.test.ts`; 검증QA in a clean cloud copy at local HEAD `ab41a94` with all uncommitted user files overlaid (same QA environment as 0033 / 0034).
 
 **QA summary (검증QA):** `npm ci` = 0; `npm test` = 0 (552 ✓, 0 failures; `linkedEditing.test.js` runs inside `test:unit`); rename / workspaceSymbols / symbolKindVscode tests = 0; server `npx tsc -p .` = 0. An automated VS Code host test was attempted but the VS Code download (`update.code.visualstudio.com`) is blocked by the sandbox egress proxy, so AC11 stays a manual smoke.
 

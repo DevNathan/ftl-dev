@@ -4,7 +4,7 @@ Status: **completed** 2026-10-21 (AC9 manual EDH smoke pending user)
 Started: 2026-10-21  
 Repo: `vsix/` only. The `vim/` repo is **not** touched (parity is a follow-up, see Non-goals).
 
-Related: plan-less fix in 0.2.1 (`6d55cee`, CHANGELOG `[0.2.1]`: "Self-close `/` → `>` allow-list only"), [`closeTag.ts`](../../../extension/src/closeTag.ts), [`autoClose.ts`](../../../extension/src/autoClose.ts).
+Related: plan-less fix in 0.2.1 (`6fc0dd6`, CHANGELOG `[0.2.1]`: "Self-close `/` → `>` allow-list only"), [`closeTag.ts`](../../../extension/src/closeTag.ts), [`autoClose.ts`](../../../extension/src/autoClose.ts).
 
 ---
 
@@ -269,7 +269,7 @@ Manual smoke (Extension Development Host, optional but recommended):
 
 ## Results
 
-Completed 2026-10-21. Dev in `closeTag.ts` / `autoClose.ts` + tests; 검증QA in a clean cloud copy at local HEAD `0579b27` with the user's working-tree files overlaid (same QA environment as 0033).
+Completed 2026-10-21. Dev in `closeTag.ts` / `autoClose.ts` + tests; 검증QA in a clean cloud copy at local HEAD `ab41a94` with the user's working-tree files overlaid (same QA environment as 0033).
 
 **QA summary (검증QA):** `npm ci` = 0; `npm test` = 0 (480 ✓, 0 failures; all 18 unit suites "All … passed"); rename / workspaceSymbols / symbolKindVscode tests = 0; server `npx tsc -p .` = 0. `closeTag.adversarial.test.ts` has 95 `name:` rows (≥ case table).
 
