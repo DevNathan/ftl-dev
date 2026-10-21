@@ -43,6 +43,7 @@ CodeOSS FreeMarker tooling for **FTL as a scripting / application-logic language
 - Prefer updating an existing plan/ADR over scattering notes.
 - Do not invent architecture beyond what docs record; propose a decision doc when a choice must stick.
 - **Never** add Vim runtime files here; never sync/subtree into `ftl-dev.vim` from this repo.
+- Never commit in-house/customer identifiers; run `npm --prefix extension run check:terms` before committing (term list lives outside the repo, see plan 0037).
 
 ## Language
 
