@@ -5,6 +5,9 @@ import {
   autoClosePairOnCloser,
   autoClosePairOnEnter,
   CloseEdit,
+  isDuplicateCloser,
+  SelfCloseMark,
+  selfCloseMarkFor,
 } from "./closeTag";
 
 type AutoEdit = CloseEdit & {
@@ -17,18 +20,38 @@ type AutoEdit = CloseEdit & {
  * `#else`, …) / close-tag indent to the opener; single-char `>` / `]` also
  * HTML-style pair after an open tag.
  * Enter — fallback pair+indent when open was pasted without a closer.
+ *
+ * Duplicate-closer guard (plan 0034 AC9): after a self-close `/` → `/>`, a `>`
+ * (`]`) typed as the very next change right after our closer is removed, so
+ * the line reads `/>` instead of `/>>`. Decision is `isDuplicateCloser`.
  */
 export function registerAutoClose(context: vscode.ExtensionContext): void {
   let applying = false;
+  /**
+   * Set after a successful self-close insert; consumed or cleared by the next
+   * change to that document. Fast-typing race: a change that arrives while
+   * `applying` is true is ignored by the listener (as for every auto-edit).
+   * If that happens between our `/` edit request and its completion, the
+   * version gap makes `selfCloseMarkFor` return undefined, so no mark is set
+   * and the miss is accepted (user may see `/>>`, the pre-0034 behavior)
+   * instead of guessing where the in-flight `>` landed.
+   */
+  let mark: SelfCloseMark | undefined;
 
-  const runEdit = (doc: vscode.TextDocument, edit: AutoEdit): void => {
+  const runEdit = (
+    doc: vscode.TextDocument,
+    edit: AutoEdit,
+    onApplied?: (ok: boolean) => void
+  ): void => {
     applying = true;
     void (async () => {
+      let ok = false;
       try {
-        await applyEdit(doc, edit);
+        ok = await applyEdit(doc, edit);
       } finally {
         applying = false;
       }
+      onApplied?.(ok);
     })();
   };
 
@@ -40,6 +63,33 @@ export function registerAutoClose(context: vscode.ExtensionContext): void {
       if (e.document.languageId !== "freemarker") {
         return;
       }
+      const doc = e.document;
+      // Duplicate-closer guard runs before every other branch. Any change to
+      // the marked document consumes the mark (one use; no stale state).
+      const pending = mark;
+      if (pending && pending.uri === doc.uri.toString()) {
+        mark = undefined;
+        if (e.contentChanges.length === 1) {
+          const c = e.contentChanges[0]!;
+          const at = doc.offsetAt(c.range.start);
+          if (
+            isDuplicateCloser(pending, {
+              uri: doc.uri.toString(),
+              version: doc.version,
+              offset: at,
+              text: c.text,
+              rangeLength: c.rangeLength,
+            })
+          ) {
+            // Delete the typed duplicate; caret stays right after our closer.
+            runEdit(doc, {
+              replace: { start: at, end: at + 1, text: "" },
+              cursorAt: at,
+            });
+            return;
+          }
+        }
+      }
       if (e.contentChanges.length !== 1) {
         return;
       }
@@ -48,7 +98,6 @@ export function registerAutoClose(context: vscode.ExtensionContext): void {
         return;
       }
       const ch = change.text;
-      const doc = e.document;
       const offset = doc.offsetAt(change.range.start) + ch.length;
 
       if (/^\r?\n[ \t]*$/.test(ch)) {
@@ -70,7 +119,13 @@ export function registerAutoClose(context: vscode.ExtensionContext): void {
       if (ch === "/") {
         const edit = autoCloseAfterSlash(doc.getText(), offset);
         if (edit) {
-          runEdit(doc, edit);
+          const uri = doc.uri.toString();
+          const versionBefore = doc.version;
+          runEdit(doc, edit, (ok) => {
+            mark = ok
+              ? selfCloseMarkFor(edit, uri, versionBefore, doc.version)
+              : undefined;
+          });
         }
         return;
       }
@@ -103,10 +158,10 @@ function indentUnitOf(editor: vscode.TextEditor): string {
 async function applyEdit(
   doc: vscode.TextDocument,
   edit: AutoEdit
-): Promise<void> {
+): Promise<boolean> {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.document !== doc) {
-    return;
+    return false;
   }
 
   const ok = await editor.edit(
@@ -129,4 +184,5 @@ async function applyEdit(
     const pos = doc.positionAt(edit.cursorAt);
     editor.selection = new vscode.Selection(pos, pos);
   }
+  return ok;
 }

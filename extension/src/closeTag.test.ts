@@ -6,6 +6,10 @@ import {
   autoClosePairOnEnter,
   findUnclosedDirectiveName,
   findUnclosedDirectiveOpen,
+  isDuplicateCloser,
+  SelfCloseMark,
+  selfCloseMarkFor,
+  tagClosedAfter,
 } from "./closeTag";
 
 function test(name: string, fn: () => void): void {
@@ -409,6 +413,139 @@ test("<#if x < y> comparison does not abort tag scan", () => {
   const edit = autoClosePairOnCloser(text, text.length);
   assert.ok(edit);
   assert.strictEqual(edit!.insertText, "</#if>");
+});
+
+// --- plan 0034: forward scan (tagClosedAfter) ---
+
+function closedAt(marked: string, bracket: "<" | "[" = "<"): boolean {
+  const i = marked.indexOf("|");
+  const text = marked.slice(0, i) + marked.slice(i + 1);
+  return tagClosedAfter(text, i, bracket);
+}
+
+test("tagClosedAfter: closer reached directly / after space / after newline", () => {
+  assert.strictEqual(closedAt("<#assign x /|>"), true);
+  assert.strictEqual(closedAt("<#assign x /| />"), true);
+  assert.strictEqual(closedAt("<#assign x /|\n>"), true);
+  assert.strictEqual(closedAt('<#assign x /| y="a">'), true);
+});
+
+test("tagClosedAfter: EOF → not closed", () => {
+  assert.strictEqual(closedAt("<#assign x /|"), false);
+  assert.strictEqual(closedAt("<#assign x /|   \n  "), false);
+});
+
+test("tagClosedAfter: new tag open first → not closed", () => {
+  assert.strictEqual(closedAt("<#assign x /|\n<div>"), false);
+  assert.strictEqual(closedAt("<#assign x /|\n<#if y>"), false);
+  assert.strictEqual(closedAt("<#assign x /|\n<@m/>"), false);
+  assert.strictEqual(closedAt("<#assign x /|\n</#if>"), false);
+});
+
+test("tagClosedAfter: > inside a string is skipped", () => {
+  assert.strictEqual(closedAt('<#assign x /| "a>b"'), false);
+  assert.strictEqual(closedAt('<#assign x /| "a>b">'), true);
+  assert.strictEqual(closedAt("<#assign x /| 'a\\'>'"), false);
+});
+
+test("tagClosedAfter: > inside (a > b) / [..] / {..} is skipped", () => {
+  assert.strictEqual(closedAt("<#assign x /| (a > b)"), false);
+  assert.strictEqual(closedAt("<#assign x /| (a > b)>"), true);
+  assert.strictEqual(closedAt("<#assign x /| {'k': a > b}"), false);
+  assert.strictEqual(closedAt("<#assign x /| [a > b]"), false);
+});
+
+test("tagClosedAfter: > inside an FTL comment is skipped", () => {
+  assert.strictEqual(closedAt("<#assign x /| <#-- a > b -->"), false);
+  assert.strictEqual(closedAt("<#assign x /| <#-- a > b --> >"), true);
+  assert.strictEqual(closedAt("<#assign x /| <#-- unclosed >"), false);
+});
+
+test("tagClosedAfter: bare < comparison is plain text", () => {
+  assert.strictEqual(closedAt("<#assign x /| a < b >"), true);
+});
+
+test("tagClosedAfter: square mode", () => {
+  assert.strictEqual(closedAt("[#assign x /| ]", "["), true);
+  assert.strictEqual(closedAt("[#assign x /| xs[0] ]", "["), true);
+  assert.strictEqual(closedAt("[#assign x /| xs[0]", "["), false);
+  assert.strictEqual(closedAt("[#assign x /|\n[#if y]", "["), false);
+  assert.strictEqual(closedAt("[#assign x /| >", "["), false);
+});
+
+test("self-close: nested capture-name assign closes inner only (A23)", () => {
+  const text = "<#function f\n  <#assign name /";
+  const edit = autoCloseAfterSlash(text, text.length);
+  assert.ok(edit);
+  const out = applyCloseEdit(text, edit!);
+  assert.ok(out.endsWith("<#assign name />"), out);
+  assert.ok(!out.includes("function />"), out);
+});
+
+// --- plan 0034: duplicate-closer guard ---
+
+const MARK: SelfCloseMark = {
+  uri: "file:///a.ftl",
+  version: 8,
+  offset: 16,
+  closer: ">",
+};
+const typed = (over: Partial<Parameters<typeof isDuplicateCloser>[1]> = {}) => ({
+  uri: "file:///a.ftl",
+  version: 9,
+  offset: 16,
+  text: ">",
+  rangeLength: 0,
+  ...over,
+});
+
+test("selfCloseMarkFor: offset is right after inserted closer", () => {
+  const text = "<#assign name /";
+  const edit = autoCloseAfterSlash(text, text.length)!;
+  const mark = selfCloseMarkFor(edit, "file:///a.ftl", 7, 8);
+  assert.deepStrictEqual(mark, MARK);
+  assert.strictEqual(mark!.offset, edit.cursorAt);
+  // `]` in square mode
+  const sq = autoCloseAfterSlash("[#assign /", 10)!;
+  assert.strictEqual(selfCloseMarkFor(sq, "u", 1, 2)!.closer, "]");
+});
+
+test("selfCloseMarkFor: version gap (change while applying) → no mark", () => {
+  const edit = autoCloseAfterSlash("<#assign /", 10)!;
+  assert.strictEqual(selfCloseMarkFor(edit, "u", 7, 9), undefined);
+  assert.strictEqual(selfCloseMarkFor(edit, "u", 7, 7), undefined);
+});
+
+test("selfCloseMarkFor: non self-close edits → no mark", () => {
+  const close = autoCloseAfterSlash("<#if x>\n</", 10)!;
+  assert.ok(close.replace);
+  assert.strictEqual(selfCloseMarkFor(close, "u", 1, 2), undefined);
+  assert.strictEqual(
+    selfCloseMarkFor({ insertAt: 3, insertText: "</#if>" }, "u", 1, 2),
+    undefined
+  );
+});
+
+test("isDuplicateCloser: match", () => {
+  assert.strictEqual(isDuplicateCloser(MARK, typed()), true);
+});
+
+test("isDuplicateCloser: no mark / wrong version / offset / char / uri / range", () => {
+  assert.strictEqual(isDuplicateCloser(undefined, typed()), false);
+  assert.strictEqual(isDuplicateCloser(MARK, typed({ version: 10 })), false);
+  assert.strictEqual(isDuplicateCloser(MARK, typed({ version: 8 })), false);
+  assert.strictEqual(isDuplicateCloser(MARK, typed({ offset: 15 })), false);
+  assert.strictEqual(isDuplicateCloser(MARK, typed({ offset: 17 })), false);
+  assert.strictEqual(isDuplicateCloser(MARK, typed({ text: "]" })), false);
+  assert.strictEqual(isDuplicateCloser(MARK, typed({ text: ">>" })), false);
+  assert.strictEqual(isDuplicateCloser(MARK, typed({ uri: "file:///b.ftl" })), false);
+  assert.strictEqual(isDuplicateCloser(MARK, typed({ rangeLength: 1 })), false);
+});
+
+test("isDuplicateCloser: square closer", () => {
+  const sq: SelfCloseMark = { ...MARK, closer: "]" };
+  assert.strictEqual(isDuplicateCloser(sq, typed({ text: "]" })), true);
+  assert.strictEqual(isDuplicateCloser(sq, typed({ text: ">" })), false);
 });
 
 console.log("All closeTag unit tests passed.");

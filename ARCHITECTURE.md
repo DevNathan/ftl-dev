@@ -45,6 +45,7 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 | Rich highlight | Semantic tokens provider / LSP |
 | Go to definition | `DefinitionProvider` / LSP `textDocument/definition` |
 | Rename symbol (same-file) | `RenameProvider` (`renameSymbolAt` reuses reference hits) / LSP `textDocument/rename` |
+| Linked tag-name editing (`<#if>`/`</#if>`) | `LinkedEditingRangeProvider` (`linkedEditing.ts` + `linkedEditingProvider.ts`; default on via `[freemarker]` `editor.linkedEditing`); not in LSP |
 | Workspace symbol (Ctrl+T) | `WorkspaceSymbolProvider` (`searchWorkspaceSymbols` over open buffers + capped `findFiles`; provider-only registration) |
 | Open import / path | `DocumentLinkProvider` + definition (new editor tab) |
 | Completions | `CompletionItemProvider` / LSP completion |

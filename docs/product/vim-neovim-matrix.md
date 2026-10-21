@@ -45,6 +45,7 @@ Without LSP, the rows above are **not** provided by the Vim runtime alone.
 | TextMate grammar file unchanged | **Impossible** | Different engine |
 | Java / data-model enrichment | **Deferred (all editors)** | ADR 0002 |
 | Rename / workspace symbols | **Not implemented (all editors)** | Future LSP |
+| Linked tag-name editing (`<#if>`/`</#if>`) | **VS Code only** | `LinkedEditingRangeProvider` (plan 0035); LSP `textDocument/linkedEditingRange` / Vim is a follow-up |
 
 ## Install
 
