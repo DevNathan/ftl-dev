@@ -48,11 +48,11 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 | Linked tag-name editing (`<#if>`/`</#if>`) | `LinkedEditingRangeProvider` (`linkedEditing.ts` + `linkedEditingProvider.ts`; default on via `[freemarker]` `editor.linkedEditing`); not in LSP |
 | Workspace symbol (Ctrl+T) | `WorkspaceSymbolProvider` (`searchWorkspaceSymbols` over open buffers + capped `findFiles`; provider-only registration) |
 | Open import / path | `DocumentLinkProvider` + definition (new editor tab) |
-| Completions | `CompletionItemProvider` / LSP completion |
+| Completions | `CompletionItemProvider` / LSP completion; user-symbol ftldoc as item documentation (`symbolCompletionEntries`, plan 0038) |
 | Directive auto-close | `autoClosingPairs` + snippets / on-type edits |
 | FTL indent (`if`/`elseif`/`else` aligned) | `indentationRules` / `onEnterRules` in `language-configuration.json` (patterns in `src/indentRules.ts`); auto-close aligns `</` indent with opener |
 | Comparison op presentation (`gte`→`>=`) | Text decorations ([ADR 0003](docs/decisions/0003-comparison-operator-presentation.md)); caret reveals source |
-| Parameter hints (`#function` / `#macro`) | `SignatureHelpProvider` (`signatureHelp.ts`) / LSP |
+| Parameter hints (`#function` / `#macro`) | `SignatureHelpProvider` (`signatureHelp.ts`) / LSP; ftldoc summary + per-parameter Markdown (plan 0038) |
 | Vim / Neovim highlight + indent | Separate repo [`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim) |
 | Shared language server | [`server/`](server/) stdio LSP (no comparison decorations) |
 

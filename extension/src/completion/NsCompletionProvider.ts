@@ -24,7 +24,14 @@ export class NsCompletionProvider implements CompletionProvider {
       if (!member.toLowerCase().startsWith(ctx.prefix.toLowerCase())) {
         continue;
       }
-      out.push(symbolCandidate(member, entry.asFunctionCall, `from ${ctx.ns}`));
+      out.push(
+        symbolCandidate(
+          member,
+          entry.asFunctionCall,
+          `from ${ctx.ns}`,
+          entry.documentation
+        )
+      );
     }
     return out;
   }

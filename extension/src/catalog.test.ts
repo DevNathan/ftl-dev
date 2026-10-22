@@ -20,6 +20,8 @@ import {
   LOCALE_VALUE_CATALOG,
   OUTPUT_FORMAT_VALUE_CATALOG,
 } from "./directiveParams";
+import { symbolCompletionEntries } from "./completion/helpers";
+import { indexFtl } from "./symbols";
 
 
 function test(name: string, fn: () => void): void {
@@ -712,6 +714,39 @@ test("0032a AC10: only ftl/setting/include have fixed name= catalogs", () => {
   const namedKeys = Object.keys(DIRECTIVE_NAMED_PARAMS).sort();
   assert.deepStrictEqual(namedKeys, ["ftl", "include", "setting"]);
   // No other-directive unknown-param diagnostics required.
+});
+
+// --- Plan 0038: ftldoc as completion documentation (G32) ---
+
+test("T26 general completion carries ftldoc for documented symbols (0038 AC10)", () => {
+  const text =
+    "<#--\nParses the request.\n@param payload raw\n-->\n<#function parseRequest payload>\n</#function>\n" +
+    "<#assign plain = 1>\n";
+  const entries = symbolCompletionEntries(indexFtl(text));
+  const items = buildCompletions({ type: "general", prefix: "p" }, entries);
+  const fn = items.find((i) => i.label === "parseRequest");
+  const plain = items.find((i) => i.label === "plain");
+  assert.ok(fn?.documentation?.includes("Parses the request."));
+  assert.ok(fn!.documentation!.includes("**Parameters**"));
+  assert.strictEqual(fn!.insertText, "parseRequest($0)");
+  assert.ok(plain);
+  assert.strictEqual(plain!.documentation, undefined);
+});
+
+test("T27 ns completion carries ftldoc of imported symbols (0038 AC10)", () => {
+  const main = '<#import "lib.ftl" as lib>\n';
+  const lib = indexFtl(
+    "<#-- Helps out. -->\n<#function helper>\n</#function>\n<#assign bare = 1>\n"
+  );
+  const entries = symbolCompletionEntries(
+    indexFtl(main),
+    new Map([["lib", lib.symbols]])
+  );
+  const items = buildCompletions({ type: "ns", ns: "lib", prefix: "" }, entries);
+  const helper = items.find((i) => i.label === "helper");
+  assert.ok(helper?.documentation?.includes("Helps out."), JSON.stringify(items));
+  assert.ok(helper!.documentation!.includes("(from `lib.ftl`)"));
+  assert.strictEqual(items.find((i) => i.label === "bare")?.documentation, undefined);
 });
 
 console.log("All catalog unit tests passed.");

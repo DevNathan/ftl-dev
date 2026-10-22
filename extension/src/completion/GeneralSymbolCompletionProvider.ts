@@ -29,7 +29,8 @@ export class GeneralSymbolCompletionProvider implements CompletionProvider {
         symbolCandidate(
           name,
           entry.asFunctionCall,
-          name.includes(".") ? "imported FTL symbol" : "FTL symbol"
+          name.includes(".") ? "imported FTL symbol" : "FTL symbol",
+          entry.documentation
         )
       );
     }

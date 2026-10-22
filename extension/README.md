@@ -29,6 +29,7 @@ If the well is dry, dig your own. This extension aims for:
 - Directive closing · FTL-aware indent
 - Linked editing of open/close tag names (`<#if>` ↔ `</#if>`, `<@m>` ↔ `</@m>`)
 - Diagnostics · semantic tokens · outline · find references
+- ftldoc doc comments (Javadoc / JSDoc style: `@param {type} [name=default]`, multi-line `@return`, `@example`, `@note`, custom `@tag`, `{@link}` / `{@code}`) in Hover, Signature Help and completion
 - (Optional) comparison-operator presentation (`lt` / `gt` etc. shown as symbols)
 
 ## Install

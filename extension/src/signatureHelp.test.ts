@@ -351,4 +351,51 @@ test("0032b AC3: endsWith camel resolves like ends_with", () => {
   assert.ok(camel!.label.startsWith("endsWith("));
 });
 
+// --- Plan 0038: ftldoc in Signature Help (D8) ---
+
+function helpAt(text: string, caret: number) {
+  return signatureHelpAt(text, caret, { local: indexFtl(text), byNs: new Map() });
+}
+
+test("T23 documented function: summary + per-parameter Markdown (0038 AC9)", () => {
+  const text =
+    "<#--\nParses the request.\n@param payload raw\n@param header\n  mapped\n-->\n" +
+    "<#function parseRequest payload header>\n</#function>\n${parseRequest(x, }";
+  const help = helpAt(text, text.lastIndexOf("x, ") + 3);
+  assert.ok(help);
+  assert.strictEqual(help!.label, "parseRequest(payload, header)");
+  assert.strictEqual(help!.activeParameter, 1);
+  assert.strictEqual(help!.documentationMarkdown, true);
+  assert.ok(help!.documentation!.includes("Parses the request."));
+  assert.strictEqual(help!.parameters[0]!.documentation, "raw");
+  assert.ok(help!.parameters[1]!.documentation!.includes("mapped"));
+});
+
+test("T24 undocumented function / builtin unchanged (0038 AC9)", () => {
+  const text = "<#function f a b>\n</#function>\n${f(1, }";
+  const help = helpAt(text, text.lastIndexOf("1, ") + 3);
+  assert.strictEqual(help!.documentation, "f takes 2 parameters.");
+  assert.ok(!help!.documentationMarkdown);
+  assert.ok(help!.parameters.every((p) => p.documentation === undefined));
+  const bText = "${x?then(";
+  const builtin = helpAt(bText, bText.length);
+  assert.ok(builtin);
+  assert.ok(!builtin!.documentationMarkdown);
+  assert.ok(builtin!.parameters.every((p) => p.documentation === undefined));
+});
+
+test("T25 declaration label wins; type / optional / default in param doc (0038 AC9)", () => {
+  const text =
+    '<#-- @param {string} [label="x"] d -->\n<#macro m label="y">\n</#macro>\n<@m ';
+  const help = helpAt(text, text.length);
+  assert.ok(help);
+  assert.strictEqual(help!.parameters[0]!.label, 'label="y"');
+  const doc = help!.parameters[0]!.documentation!;
+  assert.ok(doc.includes("`{string}`"), doc);
+  assert.ok(doc.includes('optional, default: `"x"`'), doc);
+  assert.ok(doc.includes("d"), doc);
+  // No summary / returns → generic signature documentation kept.
+  assert.strictEqual(help!.documentation, "m takes 1 parameter.");
+});
+
 console.log("All signatureHelp unit tests passed.");

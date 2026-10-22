@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { buildCompletions, completionContext } from "./catalog";
+import { symbolCompletionEntries } from "./completion/helpers";
 import { isInFtlComment } from "./comments";
 import { sharedDocCache } from "./docCache";
 import { readFsPath } from "./vscodeIo";
@@ -28,33 +29,9 @@ export class FtlCompletionProvider
       readFsPath
     );
     const index = cached.index;
-    const imported = {
-      byNs: cached.importByNs ?? new Map(),
-    };
-
-    // Prefer `asFunctionCall` when any decl of that name is a #function.
-    const byName = new Map<
-      string,
-      { name: string; asFunctionCall?: boolean }
-    >();
-    for (const s of index.symbols) {
-      const prev = byName.get(s.name);
-      byName.set(s.name, {
-        name: s.name,
-        asFunctionCall: s.kind === "function" || prev?.asFunctionCall,
-      });
-    }
-    for (const [ns, syms] of imported.byNs) {
-      for (const s of syms) {
-        const q = `${ns}.${s.name}`;
-        const prev = byName.get(q);
-        byName.set(q, {
-          name: q,
-          asFunctionCall: s.kind === "function" || prev?.asFunctionCall,
-        });
-      }
-    }
-    const symbols = [...byName.values()];
+    // One entry per name; `asFunctionCall` when any decl is a #function,
+    // ftldoc Markdown as documentation (plan 0038 G32).
+    const symbols = symbolCompletionEntries(index, cached.importByNs);
 
     const kindMap: Record<string, vscode.CompletionItemKind> = {
       directive: vscode.CompletionItemKind.Keyword,

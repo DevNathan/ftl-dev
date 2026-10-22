@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Added
+
+- ftldoc block tags span multiple lines: everything after a line-start `@tag` up to the next one belongs to it, and a description may start on the next line (`@param name` ⏎ indented text); applies to `@param`, `@return`/`@returns`, `@deprecated`, `@see`, `@since`, `@stop` and every other tag. Bodies are dedented; blank lines are paragraph breaks (plan 0038)
+- ftldoc custom tags (e.g. `@processing`) render as `**@tag**` sections in source order; known `@note`, `@remarks`, `@example` (fenced `ftl` block, verbatim), `@todo`, `@author`, `@version` get headings (plan 0038)
+- ftldoc JSDoc forms: `@param {type} name`, `@param [name]`, `@param [name=default]`, dotted `@param opts.key` (nested under `opts`), `@return {type} text`; a multi-line `@return {` … `}` shape renders as a code block (plan 0038)
+- ftldoc inline tags `{@link t}`, `{@link t label}` / `{@link t|label}`, `{@linkplain …}`, `{@linkcode x}`, `{@code x}`, `{@literal x}` (http(s) targets become links; unknown `{@foo}` stays literal) (plan 0038)
+- ftldoc in Signature Help (summary + Returns; per-parameter docs matched by name) and in completion item documentation for documented user symbols, incl. `ns.` imports; VS Code and LSP server (plan 0038)
+- LSP server Hover shows the same ftldoc Markdown as VS Code (incl. `#local` scope and `#import … as ns` symbols) (plan 0038)
+- `@param` validation diagnostics (Information): unknown `@param` name or duplicate `@param` on a `#function` / `#macro`; setting `ftl-dev.ftldoc.validateParams` (default `true`, re-validates open documents on change) (plan 0038)
+- TextMate: any line-start `@tag`, `{type}` / `[name]` in `@param`, and inline `{@link}` / `{@code}` … highlighted inside FTL comments (plan 0038)
+
+### Changed
+
+- ftldoc line breaks are preserved as Markdown hard breaks; a list directly after a paragraph line still renders as a list (plan 0038)
+- A leading `@ignore` is no longer special in any way: it is an ordinary (generic) tag, rendered as `**@ignore**` (plan 0038)
+- A multi-line `@deprecated` message in the deprecated-use warning has its whitespace collapsed (`Deprecated: use a then b`) (plan 0038)
+
+### Fixed
+
+- ftldoc descriptions on continuation / next lines were dropped (e.g. `@param payload` ⏎ `raw request data` showed no description); unknown tags were dropped (plan 0038)
+- ftldoc Returns was truncated to its first line (a `{ … }` shape showed only `{`) (plan 0038)
+- Markdown `*` bullets in ftldoc prose were stripped; the `*` gutter is now removed only when every line has it. Indented second paragraphs no longer render as code blocks (plan 0038)
+- `@param {type} name` / `@param [name]` were silently dropped (plan 0038)
+
 ## [0.5.0] - 2026-10-21
 
 ### Added

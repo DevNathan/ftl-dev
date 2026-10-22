@@ -36,6 +36,7 @@ const FORBIDDEN = [
 const ALLOWED_EXTRA = [
   "keyword.other.documentation.ftldoc",
   "variable.parameter.ftldoc",
+  "entity.name.type.ftldoc",
   "punctuation.definition.comment",
 ];
 
@@ -126,6 +127,8 @@ void (async () => {
     "<#-- <#assign x = [1,{a:2}]> ${y?string} -->",
     "[#-- square [1] {2} (3) ${z} [#list] --]",
     "<#--\nnested <#assign x = 1>\n-->",
+    // Plan 0038: ftldoc tag shapes stay comment-only.
+    '<#--\n@param {string} [label="a b"] x\n@return {hash} r\n * @custom {@link sym} <#if>\n-->',
   ];
 
   for (const sample of samples) {
