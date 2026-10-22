@@ -10,7 +10,7 @@ Open VSX / VS Marketplace는 같은 `publisher.name` + `version` 재배포를 �
 
 ## 규칙 (semver)
 
-`MAJOR.MINOR.PATCH` (초기에는 `0.0.x`):
+`MAJOR.MINOR.PATCH` (현재 `0.x`, 1.0 전 — 아래 안정성 약속 참고):
 
 | 올림 | 때 |
 |------|-----|
@@ -19,6 +19,18 @@ Open VSX / VS Marketplace는 같은 `publisher.name` + `version` 재배포를 �
 | **MAJOR** | 깨지는 변경 |
 
 README·태그 버전은 `package.json` 과 같게. 태그 예: `v0.0.12`.
+
+## 안정성 약속 (1.0.0부터)
+
+`0.x` 동안은 이름 변경·삭제가 있을 수 있다. **`1.0.0`부터** 아래는 공개 API이며 **MAJOR**에서만 바꾼다(가능하면 MINOR에서 먼저 deprecate).
+
+- 확장 id `nathan-0910.ftl-dev`, 언어 id `freemarker` / `.ftl` `.ftlh` `.ftlx`, 문법 scope `text.html.freemarker`
+- 설정 키 `ftl-dev.comparisonOperatorPresentation`, `ftl-dev.strictVariables`, `ftl-dev.dataModel`, `ftl-dev.ftldoc.validateParams` (이름·타입·기본 의미)
+- 프로젝트 파일 `.ftl-data-model.json` (`roots`, `templates`), 아이콘 테마 id `ftl-dev-icons`
+
+보장하지 않음: TextMate 세부 scope·색, 진단 문구, 자동완성 순서. 기본 켜진 진단이 **올바른** FTL에 오류를 내면 버그다.
+
+**1.0.0 조건:** 정상 FreeMarker 2.3 문법에 대한 기본 진단 오탐 0, CI가 grammar·전체 unit·서버 타입 검사를 돌림, 현재 기능 세트로 `0.x`를 한 번 이상 실제 배포.
 
 ## 언제 올리는가
 

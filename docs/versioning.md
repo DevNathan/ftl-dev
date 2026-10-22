@@ -10,15 +10,32 @@ See also: [publishing.md](publishing.md).
 
 ## Scheme
 
-Use **semver** `MAJOR.MINOR.PATCH` (currently `0.0.x` while the product is early):
+Use **semver** `MAJOR.MINOR.PATCH` (currently `0.x` — pre-1.0, see [Stability contract](#stability-contract-from-100)):
 
 | Bump | When |
 |------|------|
-| **PATCH** (`0.0.11` → `0.0.12`) | Bug fixes, docs-only packaging changes, small UX tweaks, publisher/namespace moves that still need a fresh upload |
-| **MINOR** (`0.0.x` → `0.1.0`) | New user-visible features without breaking existing FTL editing behavior |
+| **PATCH** (`0.7.0` → `0.7.1`) | Bug fixes, docs-only packaging changes, small UX tweaks, publisher/namespace moves that still need a fresh upload |
+| **MINOR** (`0.7.x` → `0.8.0`) | New user-visible features without breaking existing FTL editing behavior |
 | **MAJOR** (`0.x` → `1.0.0` or `1.x` → `2.0.0`) | Breaking changes users must notice (removed commands, incompatible defaults, etc.) |
 
 Do not invent parallel version numbers in README or tags that disagree with `package.json`. Git tags should mirror it: `v0.0.12` for version `0.0.12`.
+
+## Stability contract (from 1.0.0)
+
+`0.x` releases may still rename or remove things. **Starting with `1.0.0`**, the following are public API and only change in a **MAJOR** release (deprecate in a MINOR first when possible):
+
+| Surface | Current value |
+|---------|---------------|
+| Extension id | `nathan-0910.ftl-dev` |
+| Language id / file extensions | `freemarker` / `.ftl`, `.ftlh`, `.ftlx` |
+| Grammar scope name | `text.html.freemarker` |
+| Settings keys (name, type, default meaning) | `ftl-dev.comparisonOperatorPresentation`, `ftl-dev.strictVariables`, `ftl-dev.dataModel`, `ftl-dev.ftldoc.validateParams` |
+| Project file | `.ftl-data-model.json` (`roots`, `templates`) |
+| Icon theme id | `ftl-dev-icons` |
+
+Not covered (may change in MINOR/PATCH): exact TextMate sub-scopes and colors, diagnostic message wording, completion ordering, and new diagnostics that only flag invalid FTL. A default-on diagnostic that starts flagging **valid** FTL is a bug, not a feature.
+
+**1.0.0 gate:** no known false-positive default diagnostics on valid FreeMarker 2.3 syntax, CI covers grammar + all unit tests + language-server type-check, and at least one `0.x` release with the current feature set has been published.
 
 ## When to bump
 
