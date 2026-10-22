@@ -2,9 +2,8 @@
      Look at: numbers, booleans, operators (gt/lt/gte/lte, `>` inside parentheses),
      `??` / `!` defaults, ranges, sequence/hash literals, builtin chains,
      lambdas, and the legacy #{…} numeric interpolation.
-     Known false-positive diagnostics on this valid FTL (extension validator gaps):
-     "Unclosed directive tag" + "</#list>" for <#list 0..<n …> (the `<` of `..<`).
-     With strictVariables on: lambda parameter 'x' is reported as undeclared. -->
+     Expect no diagnostics (plan 0040). With strictVariables on: lambda parameter
+     'x' is still reported as undeclared (known gap). -->
 <#assign n = 5>
 <#assign ratio = 0.75>
 <#assign enabled = true>

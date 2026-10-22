@@ -2,10 +2,8 @@
 <#-- Playground: core directives (angle syntax; see square-syntax.ftl for [#…]).
      Look at: directive keywords, named params (output_format=), `as ns`,
      loop variables, and the <#noparse> body which must stay unhighlighted.
-     Known false-positive diagnostics on this valid FTL (extension validator gaps):
-     "#list classic form requires 'as'" + "</#items>" (the <#list seq><#items as x> form),
-     "</#sep>" (sep with a closing tag), "#else without #if" (<#list>…<#else>),
-     "</#noparse> no matching". With strictVariables on: 'notCode' inside noparse. -->
+     Expect no diagnostics (plan 0040). With strictVariables on: 'notCode' inside
+     noparse is still reported as undeclared (known gap). -->
 <#setting locale="en_US">
 <#setting number_format="0.##">
 <#import "lib.ftl" as lib>
