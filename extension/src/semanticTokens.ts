@@ -35,10 +35,7 @@
  * ```
  */
 
-import {
-  ftlCommentRanges,
-  offsetInFtlComment,
-} from "./comments";
+import { ftlCodeRanges, rangeCursor } from "./scan";
 import { collectImportSymbols, FileReader } from "./imports";
 import { buildLineMap, LineMap, offsetToPos } from "./lineMap";
 import {
@@ -71,8 +68,13 @@ export interface SemanticTokenSpan {
 export interface BuildSemanticTokenOptions {
   /** Symbols loaded from `#import "…" as ns` (see collectImportSymbols). */
   importedByNs?: Map<string, FtlSymbol[]>;
-  /** Reuse cached comment ranges when available. */
+  /**
+   * Cached comment ranges (accepted for API compatibility). Use-scans are
+   * restricted to `ftlCodeRanges`, which already excludes comments.
+   */
   comments?: Array<[number, number]>;
+  /** Reuse precomputed `ftlCodeRanges(text)` when available. */
+  codeRanges?: Array<[number, number]>;
 }
 
 function tokenTypeIndex(t: FtlSemanticTokenType): number {
@@ -134,8 +136,10 @@ function addSpan(
  * Build semantic token spans for an FTL document.
  * Declarations + cheap in-file identifier uses; optional `ns.member` via imports.
  *
- * Does not mute comments (TextMate does). Comment ranges are used only so the
- * identifier regex does not paint `variable`/`function` on top of comment text.
+ * Does not mute comments (TextMate does). Use-scans (steps 3–4) only consider
+ * identifiers inside FTL code regions (`ftlCodeRanges`: tags and `${…}`
+ * bodies, minus string contents and comments), so string keys, plain HTML
+ * text and comment text that happen to equal a local name are not painted.
  * Declarations inside comments are already omitted by `indexFtl`.
  */
 export function buildSemanticTokenSpans(
@@ -156,7 +160,7 @@ export function buildSemanticTokenSpansFromIndex(
   const declOffsets = new Set<number>();
   const map = buildLineMap(text);
   // Only for use-scans (step 3–4); index already excludes comment decls.
-  const comments = options.comments ?? ftlCommentRanges(text);
+  const codeRanges = options.codeRanges ?? ftlCodeRanges(text);
 
   const localByName = new Map<string, FtlSymbol>();
   for (const sym of index.symbols) {
@@ -210,9 +214,10 @@ export function buildSemanticTokenSpansFromIndex(
       remoteByNsName.set(ns, byName);
     }
     const dotted = /([a-zA-Z_][\w]*)\.([a-zA-Z_][\w]*)/g;
+    const inCode = rangeCursor(codeRanges);
     let m: RegExpExecArray | null;
     while ((m = dotted.exec(text)) !== null) {
-      if (offsetInFtlComment(m.index, comments)) {
+      if (!inCode(m.index)) {
         continue;
       }
       const ns = m[1]!;
@@ -243,11 +248,12 @@ export function buildSemanticTokenSpansFromIndex(
   // Skip the full-document ident scan when there is nothing to color.
   if (localByName.size > 0 || nsNames.size > 0) {
     const ident = /[a-zA-Z_][\w]*/g;
+    const inCode = rangeCursor(codeRanges);
     let im: RegExpExecArray | null;
     while ((im = ident.exec(text)) !== null) {
       const name = im[0];
       const offset = im.index;
-      if (declOffsets.has(offset) || offsetInFtlComment(offset, comments)) {
+      if (declOffsets.has(offset) || !inCode(offset)) {
         continue;
       }
 

@@ -4,6 +4,7 @@
  */
 
 import { ftlCommentRanges } from "./comments";
+import { ftlCodeRanges } from "./scan";
 import { collectImportSymbols, FileReader } from "./imports";
 import { FtlIndex, FtlSymbol, indexFtl } from "./symbols";
 
@@ -13,6 +14,8 @@ export type DocCacheEntry = {
   index: FtlIndex;
   /** Top-level FTL comment ranges for the cached text. */
   comments: Array<[number, number]>;
+  /** FTL code ranges (`ftlCodeRanges`) for semantic-token use-scans. */
+  codeRanges: Array<[number, number]>;
   importByNs?: Map<string, FtlSymbol[]>;
   importQualified?: string[];
 };
@@ -30,6 +33,7 @@ export class FtlDocCache {
       text,
       index: indexFtl(text),
       comments: ftlCommentRanges(text),
+      codeRanges: ftlCodeRanges(text),
     };
     this.byUri.set(uri, entry);
     return entry;

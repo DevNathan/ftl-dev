@@ -207,6 +207,84 @@ syncTest("encodeSemanticTokenSpans is 5 uints per token, sorted", () => {
   assert.ok(data[0]! >= 0);
 });
 
+function spansAt(
+  text: string,
+  spans: ReturnType<typeof buildSemanticTokenSpans>,
+  offset: number,
+  length: number
+) {
+  const pos = offsetToLineCharacter(text, offset);
+  return spans.filter(
+    (s) =>
+      s.line === pos.line && s.character === pos.character && s.length === length
+  );
+}
+
+syncTest("string keys equal to a local name get no span (plan 0039)", () => {
+  const text = `<#function build>
+  <#local header = {}>
+  <#return {
+      "header": header,
+      "request": request
+  } />
+</#function>
+`;
+  const spans = buildSemanticTokenSpans(text);
+  const key = text.indexOf('"header"') + 1;
+  assert.strictEqual(spansAt(text, spans, key, 6).length, 0, "string key");
+  const value = text.indexOf("header,");
+  assert.strictEqual(
+    spansAt(text, spans, value, 6)[0]?.tokenType,
+    "variable",
+    "value use stays variable"
+  );
+});
+
+syncTest("${name} inside a string in a directive gets a span", () => {
+  const text = `<#assign name = "x">
+<#assign s = "hello \${name} and name">
+`;
+  const spans = buildSemanticTokenSpans(text);
+  const use = text.indexOf("${name}") + 2;
+  assert.strictEqual(spansAt(text, spans, use, 4)[0]?.tokenType, "variable");
+  const plain = text.lastIndexOf("name\"");
+  assert.strictEqual(spansAt(text, spans, plain, 4).length, 0, "string text");
+});
+
+syncTest("plain HTML text equal to a local name gets no span", () => {
+  const text = `<#assign header = 1>
+<h1>header</h1> <p title="header">\${header}</p>
+`;
+  const spans = buildSemanticTokenSpans(text);
+  const html = text.indexOf("header</h1>");
+  assert.strictEqual(spansAt(text, spans, html, 6).length, 0, "html text");
+  const attr = text.indexOf('"header"') + 1;
+  assert.strictEqual(spansAt(text, spans, attr, 6).length, 0, "html attr");
+  const use = text.indexOf("${header}") + 2;
+  assert.strictEqual(spansAt(text, spans, use, 6)[0]?.tokenType, "variable");
+});
+
+syncTest("raw string content gets no span", () => {
+  const text = `<#assign name = 1>
+<#assign s = r"\${name} name">
+`;
+  const spans = buildSemanticTokenSpans(text);
+  const inRaw = text.indexOf("${name}") + 2;
+  assert.strictEqual(spansAt(text, spans, inRaw, 4).length, 0);
+  assert.strictEqual(spansAt(text, spans, text.lastIndexOf("name\""), 4).length, 0);
+});
+
+syncTest("noparse body gets no span", () => {
+  const text = `<#assign name = 1>
+<#noparse>\${name}</#noparse> \${name}
+`;
+  const spans = buildSemanticTokenSpans(text);
+  const first = text.indexOf("${name}") + 2;
+  assert.strictEqual(spansAt(text, spans, first, 4).length, 0);
+  const second = text.lastIndexOf("${name}") + 2;
+  assert.strictEqual(spansAt(text, spans, second, 4)[0]?.tokenType, "variable");
+});
+
 async function main(): Promise<void> {
   const mainText = `<#import "lib.ftl" as lib>
 \${lib.helper()}
