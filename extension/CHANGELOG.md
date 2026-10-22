@@ -6,12 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-22
+
 ### Fixed
 
 - No more false errors on valid `<#list seq>…<#items as x>` / `</#sep>` / `<#list>…<#else>` / `<#noparse>…</#noparse>` / `<#list 0..<n as i>`; `#list` without `as` and without `#items` is still reported (plan 0040)
 - Semantic highlighting no longer paints string contents (e.g. hash keys like `"header"`), plain HTML text or `<#noparse>` bodies as variables just because they equal a local name; only FTL code (tags and `${…}` bodies) is scanned (plan 0039)
 - `${…}` inside quoted FTL strings is highlighted like a JS template expression: `${` / `}` get the embedded-punctuation color and the body is highlighted as an expression (nested strings stay string-colored); `\${` stays an escape (plan 0039)
 - FTL raw strings `r"…"` / `r'…'` are highlighted as strings without escapes or interpolation (plan 0039)
+
+### Changed
+
+- The VSIX no longer ships test-only assets (test HTML grammar, dev scripts)
 
 ## [0.6.0] - 2026-10-22
 
