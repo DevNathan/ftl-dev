@@ -10,3 +10,7 @@ node_modules/**
 **/freemarkerRef.test.js
 *.vsix
 **/.DS_Store
+# Dev/test-only assets
+syntaxes/test-support/**
+scripts/**
+pnpm-lock.yaml
