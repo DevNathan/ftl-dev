@@ -164,6 +164,47 @@ test("allows #list with as", () => {
   assert.ok(!diags.some((d) => d.message.includes("'#list'") && d.message.includes("as")));
 });
 
+test("#list items form, #sep close and #list #else are valid", () => {
+  const src = [
+    "<#list xs>",
+    "  <ul><#items as it><li>${it}<#sep>, </#sep></li></#items></ul>",
+    "<#else>",
+    "  <p>none</p>",
+    "</#list>",
+    "<#list ys as y>${y}<#sep>, <#else>empty</#list>",
+  ].join("\n");
+  const errs = validateFtl(src).filter((d) => d.severity === "error");
+  assert.deepStrictEqual(errs.map((d) => d.message), []);
+});
+
+test("#list without as and without #items is flagged at the list", () => {
+  const diags = validateFtl("<#list xs>${x}</#list>");
+  assert.ok(diags.some((d) => d.offset === 0 && d.message.includes("'#items'")));
+});
+
+test("duplicate #else in #list is flagged", () => {
+  const diags = validateFtl("<#list xs as x>${x}<#else>a<#else>b</#list>");
+  assert.ok(diags.some((d) => d.message.includes("Duplicate '#else' in the same '#list'")));
+});
+
+test("#else inside #list inside #if binds to the list", () => {
+  const src = "<#if c><#list xs as x>${x}<#else>none</#list><#else>no c</#if>";
+  const errs = validateFtl(src).filter((d) => d.severity === "error");
+  assert.deepStrictEqual(errs.map((d) => d.message), []);
+});
+
+test("#noparse body is not validated and its close matches", () => {
+  const src = "<#noparse><#if x> </#bogus> ${y} <#list a></#noparse>\n[#noparse][#if][/#noparse]";
+  const errs = validateFtl(src).filter((d) => d.severity === "error");
+  assert.deepStrictEqual(errs.map((d) => d.message), []);
+});
+
+test("exclusive range ..< inside a tag does not end it", () => {
+  const src = "<#assign n = 3><#list 0..<n as i>${i}</#list><#list 0..< n as j>${j}</#list>";
+  const errs = validateFtl(src).filter((d) => d.severity === "error");
+  assert.deepStrictEqual(errs.map((d) => d.message), []);
+});
+
 test("navigation fixture shapes have no layer-A errors", () => {
   const fixture = path.join(
     __dirname,

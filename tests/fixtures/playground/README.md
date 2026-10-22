@@ -1,6 +1,6 @@
 # Playground fixtures
 
-Hand-check files for the Extension Host (Run and Debug → **Run Extension**, which opens `tests/fixtures`). Each file starts with a comment saying what to look at and which diagnostics are known false positives on that (valid) FTL.
+Hand-check files for the Extension Host (Run and Debug → **Run Extension**, which opens `tests/fixtures`). Each file starts with a comment saying what to look at and any known diagnostic gaps. With default settings every file should show no diagnostics.
 
 | File | What to check |
 |------|---------------|

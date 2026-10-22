@@ -278,6 +278,9 @@ const BLOCK_DIRECTIVES = new Set([
   "noautoesc",
   "transform",
   "switch",
+  "items",
+  "noparse",
+  "outputformat",
 ]);
 
 /** May be short (`<#assign x=1>`) or capture-block (`<#assign x>…</#assign>`). */
@@ -345,10 +348,31 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
   diags.push(...findUnclosedDirectiveOpens(text));
 
   const stack: DirTok[] = [];
-  /** Offsets of `#if` opens that already have an `#else`. */
+  /** Offsets of `#if` / `#list` opens that already have an `#else`. */
   const elseSeenForIf = new Set<number>();
+  /** `#list` opens without `as` (items form) that have seen their `#items`. */
+  const listHasItems = new Set<number>();
+  const listItemsIssue = (open: DirTok): FtlDiagnostic => ({
+    offset: open.offset,
+    length: open.length,
+    message: `'#list' without 'as' needs an '#items' inside (or use <#list seq as x>).`,
+    severity: "error",
+  });
+  const needsItems = (open: DirTok): boolean =>
+    open.name === "list" &&
+    !/\bas\b/.test(open.inner) &&
+    !listHasItems.has(open.offset);
 
   for (const tok of tokens) {
+    // `<#noparse>` body is literal text: ignore everything until its close.
+    const top = stack[stack.length - 1];
+    if (
+      top?.name === "noparse" &&
+      !(tok.sigil === "#" && tok.kind === "close" && tok.name === "noparse")
+    ) {
+      continue;
+    }
+
     if (tok.sigil === "@") {
       // user macros: only track non-self-close open/close for mismatch later if needed
       continue;
@@ -386,7 +410,8 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
     }
 
     if (tok.name === "else") {
-      const parentIf = findStackDir(stack, "if");
+      // `#else` belongs to the nearest `#if` or `#list` (empty-list branch).
+      const parentIf = findStackDirAny(stack, ["if", "list"]);
       if (!parentIf) {
         diags.push({
           offset: tok.offset,
@@ -398,7 +423,7 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
         diags.push({
           offset: tok.offset,
           length: tok.length,
-          message: `Duplicate '#else' in the same '#if'.`,
+          message: `Duplicate '#else' in the same '#${parentIf.name}'.`,
           severity: "error",
         });
       } else {
@@ -407,10 +432,25 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
       continue;
     }
 
+    if (tok.kind === "close" && tok.name === "sep") {
+      // `<#sep>` may be closed explicitly or implicitly; both are valid.
+      continue;
+    }
+
+    if (tok.name === "items" && tok.kind !== "close") {
+      const parentList = findStackDir(stack, "list");
+      if (parentList) {
+        listHasItems.add(parentList.offset);
+      }
+    }
+
     if (tok.kind === "close") {
       let matched = false;
       for (let i = stack.length - 1; i >= 0; i--) {
         if (stack[i]!.name === tok.name) {
+          if (needsItems(stack[i]!)) {
+            diags.push(listItemsIssue(stack[i]!));
+          }
           stack.splice(i, 1);
           matched = true;
           break;
@@ -427,20 +467,7 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
       continue;
     }
 
-    if (
-      tok.name === "list" &&
-      tok.kind === "open" &&
-      !tok.selfClose &&
-      !/\bas\b/.test(tok.inner)
-    ) {
-      diags.push({
-        offset: tok.offset,
-        length: tok.length,
-        message:
-          `'#list' classic form requires 'as' (e.g. <#list seq as x>).`,
-        severity: "error",
-      });
-    }
+    // `#list` without `as` is the items form; checked when the list closes.
 
     if (tok.name === "local" && macroFunctionDepth(stack) === 0) {
       diags.push({
@@ -513,6 +540,19 @@ function macroFunctionDepth(stack: DirTok[]): number {
 function findStackDir(stack: DirTok[], name: string): DirTok | undefined {
   for (let i = stack.length - 1; i >= 0; i--) {
     if (stack[i]!.name === name) {
+      return stack[i];
+    }
+  }
+  return undefined;
+}
+
+/** Nearest enclosing open on the stack whose name is one of `names`. */
+function findStackDirAny(
+  stack: DirTok[],
+  names: string[]
+): DirTok | undefined {
+  for (let i = stack.length - 1; i >= 0; i--) {
+    if (names.includes(stack[i]!.name)) {
       return stack[i];
     }
   }
@@ -610,7 +650,8 @@ function findUnclosedDirectiveOpens(text: string): FtlDiagnostic[] {
         continue;
       }
       // HTML tag or another FTL directive before this one closed
-      if (c === "<" || c === "[") {
+      // (`..<` is the exclusive range operator, not a tag start).
+      if ((c === "<" && !text.startsWith("..", i - 2)) || c === "[") {
         const rest = text.slice(i);
         if (
           rest.startsWith("<#") ||
@@ -775,7 +816,11 @@ function scanDirectives(text: string): DirTok[] {
         break;
       }
       // Bail if another tag starts before close (same as unclosed-open scanner)
-      if ((c === "<" || c === "[") && paren === 0 && brace === 0) {
+      if (
+        ((c === "<" && !text.startsWith("..", i - 2)) || c === "[") &&
+        paren === 0 &&
+        brace === 0
+      ) {
         const rest = text.slice(i);
         if (
           rest.startsWith("<#") ||
