@@ -248,3 +248,214 @@ export function matchDirectiveHead(
 export function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+// ---------------------------------------------------------------------------
+// FTL code regions (plan 0039)
+// ---------------------------------------------------------------------------
+
+type CodeStop =
+  | { kind: "tag"; close: ">" | "]" }
+  | { kind: "brace" };
+
+function pushRange(out: Array<[number, number]>, s: number, e: number): void {
+  if (e <= s) {
+    return;
+  }
+  const last = out[out.length - 1];
+  if (last && last[1] >= s) {
+    last[1] = Math.max(last[1], e);
+    return;
+  }
+  out.push([s, e]);
+}
+
+function isWordChar(c: string | undefined): boolean {
+  return c !== undefined && /\w/.test(c);
+}
+
+/** `r"…"` / `r'…'`: quote at `q` preceded by a standalone `r`. */
+function isRawStringQuote(text: string, q: number): boolean {
+  return q >= 1 && text[q - 1] === "r" && !isWordChar(text[q - 2]);
+}
+
+/**
+ * Scan a string literal whose opening quote is at `q`. String content is not
+ * code; `${…}` inside a non-raw string is code again (recursively).
+ * Returns the index just past the closing quote (or EOF).
+ */
+function scanCodeString(
+  text: string,
+  q: number,
+  raw: boolean,
+  out: Array<[number, number]>
+): number {
+  const quote = text[q]!;
+  let j = q + 1;
+  while (j < text.length) {
+    const c = text[j]!;
+    if (!raw && c === "\\") {
+      j += 2;
+      continue;
+    }
+    if (c === quote) {
+      return j + 1;
+    }
+    if (!raw && c === "$" && text[j + 1] === "{") {
+      j = scanCodeRegion(text, j, j + 2, { kind: "brace" }, out);
+      continue;
+    }
+    j++;
+  }
+  return text.length;
+}
+
+/**
+ * Emit code ranges from `segStart`, scanning from `from` until the stop
+ * (tag close `>`/`]` at depth 0, or the `}` matching an already-open `${`).
+ * Strings and FTL comments are excluded. Returns the index past the stop.
+ */
+function scanCodeRegion(
+  text: string,
+  segStart: number,
+  from: number,
+  stop: CodeStop,
+  out: Array<[number, number]>
+): number {
+  let seg = segStart;
+  let j = from;
+  let paren = 0;
+  let brace = stop.kind === "brace" ? 1 : 0;
+  let square = 0;
+  while (j < text.length) {
+    if (isFtlCommentStart(text, j)) {
+      pushRange(out, seg, j);
+      j = skipCommentAt(text, j);
+      seg = j;
+      continue;
+    }
+    const c = text[j]!;
+    if (c === '"' || c === "'") {
+      const raw = isRawStringQuote(text, j);
+      // Leave the raw-string prefix `r` out of code as well.
+      pushRange(out, seg, raw ? j - 1 : j);
+      j = scanCodeString(text, j, raw, out);
+      seg = j;
+      continue;
+    }
+    if (c === "(") {
+      paren++;
+    } else if (c === ")" && paren > 0) {
+      paren--;
+    } else if (c === "{") {
+      brace++;
+    } else if (c === "}") {
+      if (stop.kind === "brace") {
+        brace--;
+        if (brace === 0) {
+          pushRange(out, seg, j + 1);
+          return j + 1;
+        }
+      } else if (brace > 0) {
+        brace--;
+      }
+    } else if (stop.kind === "tag" && stop.close === "]") {
+      // Square-bracket tag: `[#if users[0]?? && x]` closes at the depth-0 `]`.
+      if (c === "[") {
+        square++;
+      } else if (c === "]") {
+        if (square > 0) {
+          square--;
+        } else if (paren === 0 && brace === 0) {
+          pushRange(out, seg, j + 1);
+          return j + 1;
+        }
+      }
+    } else if (stop.kind === "tag") {
+      const nestSquare = stop.close === ">";
+      if (nestSquare && c === "[" && paren === 0 && brace === 0) {
+        square++;
+      } else if (nestSquare && c === "]" && square > 0) {
+        square--;
+      } else if (
+        c === stop.close &&
+        paren === 0 &&
+        brace === 0 &&
+        square === 0
+      ) {
+        pushRange(out, seg, j + 1);
+        return j + 1;
+      }
+    }
+    j++;
+  }
+  pushRange(out, seg, text.length);
+  return text.length;
+}
+
+/**
+ * Sorted, non-overlapping half-open `[start, end)` ranges of FTL expression
+ * code: FTL tags (`<#…>`, `</#…>`, `<@…>`, `</@…>`, square forms) and
+ * `${…}` / `#{…}` bodies, minus string-literal contents (except `${…}` inside
+ * non-raw strings), minus FTL comments, and skipping `<#noparse>` bodies.
+ * Plain template text (HTML) is never code. One linear pass (nested string
+ * interpolations are scanned once each).
+ */
+export function ftlCodeRanges(text: string): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  let i = 0;
+  while (i < text.length) {
+    const c = text[i]!;
+    if ((c === "<" || c === "[") && isFtlCommentStart(text, i)) {
+      i = skipCommentAt(text, i);
+      continue;
+    }
+    if (c === "<" || c === "[") {
+      const head = matchDirectiveHead(text, i);
+      if (head) {
+        const close = head.bracket === "<" ? ">" : "]";
+        i = scanCodeRegion(
+          text,
+          i,
+          i + head.length,
+          { kind: "tag", close },
+          out
+        );
+        if (!head.isClose && head.sigil === "#" && head.name === "noparse") {
+          const endTag = head.bracket === "<" ? "</#noparse" : "[/#noparse";
+          const k = text.indexOf(endTag, i);
+          i = k === -1 ? text.length : k;
+        }
+        continue;
+      }
+    }
+    if ((c === "$" || c === "#") && text[i + 1] === "{") {
+      i = scanCodeRegion(text, i, i + 2, { kind: "brace" }, out);
+      continue;
+    }
+    i++;
+  }
+  return out;
+}
+
+/**
+ * Membership test for monotonically non-decreasing offsets against sorted
+ * ranges (amortized O(1) per query). Falls back to a reset when an offset
+ * goes backwards.
+ */
+export function rangeCursor(
+  ranges: Array<[number, number]>
+): (offset: number) => boolean {
+  let k = 0;
+  let prev = -1;
+  return (offset: number) => {
+    if (offset < prev) {
+      k = 0;
+    }
+    prev = offset;
+    while (k < ranges.length && ranges[k]![1] <= offset) {
+      k++;
+    }
+    const r = ranges[k];
+    return r !== undefined && offset >= r[0];
+  };
+}

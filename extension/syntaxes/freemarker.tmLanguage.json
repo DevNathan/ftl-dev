@@ -113,6 +113,7 @@
           },
           "patterns": [
             { "include": "#comment" },
+            { "include": "#string-raw" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#directive-named-param" },
@@ -133,6 +134,7 @@
           },
           "patterns": [
             { "include": "#comment" },
+            { "include": "#string-raw" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -152,6 +154,7 @@
           },
           "patterns": [
             { "include": "#comment" },
+            { "include": "#string-raw" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -175,6 +178,7 @@
           },
           "patterns": [
             { "include": "#comment" },
+            { "include": "#string-raw" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#directive-named-param" },
@@ -195,6 +199,7 @@
           },
           "patterns": [
             { "include": "#comment" },
+            { "include": "#string-raw" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -214,6 +219,7 @@
           },
           "patterns": [
             { "include": "#comment" },
+            { "include": "#string-raw" },
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#expression" }
@@ -227,20 +233,37 @@
       "match": "\\b(?:encoding|strip_whitespace|stripWhitespace|strip_text|stripText|strict_syntax|strictSyntax|attributes|ns_prefixes|nsPrefixes|auto_esc|autoEsc|output_format|outputFormat|locale|number_format|numberFormat|boolean_format|booleanFormat|date_format|dateFormat|time_format|timeFormat|datetime_format|datetimeFormat|time_zone|timeZone|sql_date_and_time_time_zone|sqlDateAndTimeTimeZone|c_format|cFormat|url_escaping_charset|urlEscapingCharset|output_encoding|outputEncoding|classic_compatible|classicCompatible|parse|ignore_missing|ignoreMissing)\\b(?=\\s*=[^=])"
     },
     "interpolation": {
-      "name": "meta.interpolation.freemarker",
+      "comment": "Also included inside non-raw string literals (plan 0039), JS template-literal style: meta.embedded.line resets the string color for the body and punctuation.section.embedded gives ${ } the template-expression color.",
+      "name": "meta.interpolation.freemarker meta.embedded.line.freemarker",
       "begin": "\\$\\{",
       "beginCaptures": {
-        "0": { "name": "punctuation.definition.interpolation.begin.freemarker" }
+        "0": { "name": "punctuation.definition.interpolation.begin.freemarker punctuation.section.embedded.begin.freemarker" }
       },
       "end": "\\}",
       "endCaptures": {
-        "0": { "name": "punctuation.definition.interpolation.end.freemarker" }
+        "0": { "name": "punctuation.definition.interpolation.end.freemarker punctuation.section.embedded.end.freemarker" }
       },
       "patterns": [
         { "include": "#comment" },
+        { "include": "#string-raw" },
         { "include": "#string-double" },
         { "include": "#string-single" },
         { "include": "#expression" }
+      ]
+    },
+    "string-raw": {
+      "comment": "FTL raw strings r\"…\" / r'…' (plan 0039): no escapes, no interpolation. \\b keeps identifiers ending in r unaffected.",
+      "patterns": [
+        {
+          "name": "string.quoted.double.raw.freemarker",
+          "begin": "\\br\"",
+          "end": "\""
+        },
+        {
+          "name": "string.quoted.single.raw.freemarker",
+          "begin": "\\br'",
+          "end": "'"
+        }
       ]
     },
     "string-double": {
@@ -251,7 +274,8 @@
         {
           "name": "constant.character.escape.freemarker",
           "match": "\\\\."
-        }
+        },
+        { "include": "#interpolation" }
       ]
     },
     "string-single": {
@@ -262,7 +286,8 @@
         {
           "name": "constant.character.escape.freemarker",
           "match": "\\\\."
-        }
+        },
+        { "include": "#interpolation" }
       ]
     },
     "expression": {
