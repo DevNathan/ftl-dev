@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-22
+
 ### Added
 
 - ftldoc block tags span multiple lines: everything after a line-start `@tag` up to the next one belongs to it, and a description may start on the next line (`@param name` ⏎ indented text); applies to `@param`, `@return`/`@returns`, `@deprecated`, `@see`, `@since`, `@stop` and every other tag. Bodies are dedented; blank lines are paragraph breaks (plan 0038)
