@@ -39,6 +39,8 @@ export interface SymbolCompletionEntry {
   name: string;
   /** User `#function` — insert `name($0)` with caret between parens. */
   asFunctionCall?: boolean;
+  /** ftldoc Markdown for the completion docs panel (plan 0038 G32). */
+  documentation?: string;
 }
 
 import type { CompletionContext } from "./context/completionContext";

@@ -31,7 +31,12 @@ import {
 } from "../../extension/src/catalog";
 import { validateFtl } from "../../extension/src/diagnostics";
 import { paramDocumentation } from "../../extension/src/directiveParams";
-import { builtinHover, directiveHover } from "../../extension/src/docs";
+import { symbolCompletionEntries } from "../../extension/src/completion/helpers";
+import {
+  builtinHover,
+  directiveHover,
+  symbolHoverAt,
+} from "../../extension/src/docs";
 import {
   builtinAt,
   directiveAt,
@@ -145,7 +150,9 @@ export function startFtlLanguageServer(connection: Connection): void {
         d.message,
         d.severity === "error"
           ? DiagnosticSeverity.Error
-          : DiagnosticSeverity.Warning,
+          : d.severity === "information"
+            ? DiagnosticSeverity.Information
+            : DiagnosticSeverity.Warning,
         undefined,
         "ftl-dev"
       );
@@ -169,27 +176,14 @@ export function startFtlLanguageServer(connection: Connection): void {
     const before = text.slice(0, offset);
     const ctx = completionContext(before);
     const index = indexFtl(text);
-    const { qualified, byNs } = await collectImportSymbols(
+    const { byNs } = await collectImportSymbols(
       fileUrlToPath(doc.uri),
       index,
       async (fsPath) => readFileSyncSafe(fsPath)
     );
 
-    const symbolEntries = [
-      ...index.symbols.map((s) => ({
-        name: s.name,
-        asFunctionCall: s.kind === "function",
-      })),
-      ...qualified.map((name) => {
-        const ns = name.split(".")[0]!;
-        const member = name.slice(ns.length + 1);
-        const rem = byNs.get(ns)?.find((s) => s.name === member);
-        return {
-          name,
-          asFunctionCall: rem?.kind === "function",
-        };
-      }),
-    ];
+    // Same entries as the VS Code provider, incl. ftldoc documentation (0038).
+    const symbolEntries = symbolCompletionEntries(index, byNs);
 
     return buildCompletions(ctx, symbolEntries).map((c) => {
       const item: CompletionItem = {
@@ -215,7 +209,7 @@ export function startFtlLanguageServer(connection: Connection): void {
     });
   });
 
-  connection.onHover((params) => {
+  connection.onHover(async (params) => {
     const doc = documents.get(params.textDocument.uri);
     if (!doc) {
       return undefined;
@@ -248,23 +242,21 @@ export function startFtlLanguageServer(connection: Connection): void {
       }
     }
 
-    const id = identifierAt(text, offset);
-    if (!id) {
+    if (!identifierAt(text, offset)) {
       return undefined;
     }
-    const simple = id.text.split(".").pop()!;
+    // Same Markdown as VS Code (ftldoc, #local scope, #import ns) — plan 0038 AC11.
     const index = indexFtl(text);
-    const defs = findDefinitions(index, simple);
-    if (defs.length === 0) {
+    const { byNs } = await collectImportSymbols(
+      fileUrlToPath(doc.uri),
+      index,
+      async (fsPath) => readFileSyncSafe(fsPath)
+    );
+    const md = symbolHoverAt(text, offset, index, byNs);
+    if (!md) {
       return undefined;
     }
-    const d = defs[0]!;
-    return {
-      contents: {
-        kind: MarkupKind.Markdown,
-        value: `**${d.kind}** \`${d.name}\``,
-      },
-    };
+    return { contents: { kind: MarkupKind.Markdown, value: md } };
   });
 
   connection.onDefinition((params): Location[] | undefined => {
@@ -373,8 +365,21 @@ export function startFtlLanguageServer(connection: Connection): void {
       signatures: [
         {
           label: help.label,
-          parameters: help.parameters,
-          documentation: help.documentation,
+          parameters: help.parameters.map((p) =>
+            p.documentation
+              ? {
+                  label: p.label,
+                  documentation: {
+                    kind: MarkupKind.Markdown,
+                    value: p.documentation,
+                  },
+                }
+              : { label: p.label }
+          ),
+          documentation:
+            help.documentation && help.documentationMarkdown
+              ? { kind: MarkupKind.Markdown, value: help.documentation }
+              : help.documentation,
         },
       ],
       activeSignature: 0,

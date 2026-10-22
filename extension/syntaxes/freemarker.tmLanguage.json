@@ -58,18 +58,38 @@
       ]
     },
     "ftldoc-tag": {
-      "comment": "ftldoc tags inside FTL comments (@param name, @nodoc, @return(s), @deprecated, @see, @since, @stop); nested #comment include stays first in comment patterns.",
+      "comment": "ftldoc tags inside FTL comments (plan 0038): @param {type} [name], @return(s) {type}, inline {@link|linkplain|linkcode|code|literal}, known tags anywhere, any @tag at line start (after optional whitespace / * gutter) or right after the comment opener; mid-line unknown @word and user@host stay plain comment. Nested #comment include stays first in comment patterns.",
       "patterns": [
         {
-          "match": "(?i)(@param)\\s+(\\S+)",
+          "match": "(?i)(@param)\\b(?:\\s+(\\{[^}\\n]*[^\\s}][^}\\n]*\\}))?(?:\\s+\\[?([A-Za-z_][\\w.]*))?",
           "captures": {
             "1": { "name": "keyword.other.documentation.ftldoc.freemarker" },
-            "2": { "name": "variable.parameter.ftldoc.freemarker" }
+            "2": { "name": "entity.name.type.ftldoc.freemarker" },
+            "3": { "name": "variable.parameter.ftldoc.freemarker" }
           }
         },
         {
-          "match": "(?i)@(?:nodoc|returns?|deprecated|see|since|stop)\\b",
+          "match": "(?i)(@returns?)\\b(?:\\s+(\\{[^}\\n]*[^\\s}][^}\\n]*\\}))?",
+          "captures": {
+            "1": { "name": "keyword.other.documentation.ftldoc.freemarker" },
+            "2": { "name": "entity.name.type.ftldoc.freemarker" }
+          }
+        },
+        {
+          "match": "\\{(@(?i:link|linkplain|linkcode|code|literal))\\b",
+          "captures": {
+            "1": { "name": "keyword.other.documentation.ftldoc.freemarker" }
+          }
+        },
+        {
+          "match": "(?i)@(?:nodoc|deprecated|see|since|stop|example|note|remarks|todo|author|version)\\b",
           "name": "keyword.other.documentation.ftldoc.freemarker"
+        },
+        {
+          "match": "(?:^|(?<=<#--|\\[#--))\\s*(?:\\*\\s*)?(@(?!(?i:param|returns?)\\b)[A-Za-z][\\w-]*)",
+          "captures": {
+            "1": { "name": "keyword.other.documentation.ftldoc.freemarker" }
+          }
         }
       ]
     },

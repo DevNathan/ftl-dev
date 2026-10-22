@@ -63,7 +63,8 @@
           "punctuation.definition.comment.begin.freemarker": "comment",
           "punctuation.definition.comment.end.freemarker": "comment",
           "keyword.other.documentation.ftldoc.freemarker": "comment",
-          "variable.parameter.ftldoc.freemarker": "comment"
+          "variable.parameter.ftldoc.freemarker": "comment",
+          "entity.name.type.ftldoc.freemarker": "comment"
         },
         "unbalancedBracketScopes": [
           "comment",
@@ -103,6 +104,11 @@
           },
           "default": [],
           "description": "Host-injected top-level FreeMarker data-model names (e.g. userService, request). Used when ftl-dev.strictVariables is enabled to silence known roots. Merged with roots from workspace-folder `.ftl-data-model.json` when present."
+        },
+        "ftl-dev.ftldoc.validateParams": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report ftldoc `@param` names that do not match a parameter of the documented #function / #macro, and duplicate `@param` entries (Information severity)."
         }
       }
     },

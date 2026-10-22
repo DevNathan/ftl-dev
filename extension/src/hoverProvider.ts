@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { sharedDocCache } from "./docCache";
 import { paramDocumentation } from "./directiveParams";
-import { builtinHover, directiveHover, symbolHover } from "./docs";
+import { builtinHover, directiveHover, symbolHoverAt } from "./docs";
 import {
   builtinAt,
   clauseKeywordAt,
@@ -9,7 +9,7 @@ import {
   namedParamAt,
 } from "./hoverTokens";
 
-import { findDefinitions, identifierAt } from "./symbols";
+import { identifierAt } from "./symbols";
 import { readFsPath } from "./vscodeIo";
 
 export class FtlHoverProvider implements vscode.HoverProvider {
@@ -47,8 +47,7 @@ export class FtlHoverProvider implements vscode.HoverProvider {
       }
     }
 
-    const id = identifierAt(text, offset);
-    if (!id) {
+    if (!identifierAt(text, offset)) {
       return undefined;
     }
 
@@ -59,28 +58,9 @@ export class FtlHoverProvider implements vscode.HoverProvider {
       document.uri.fsPath,
       readFsPath
     );
-    const index = cached.index;
-    const parts = id.text.split(".");
-
-    if (parts.length === 2) {
-      const [ns, sym] = parts as [string, string];
-      const hit = cached.importByNs?.get(ns)?.find((s) => s.name === sym);
-      if (hit) {
-        const imp = index.pathRefs.find(
-          (p) => p.kind === "import" && p.asName === ns
-        );
-        return new vscode.Hover(
-          symbolHover(id.text, hit.kind, imp?.path, hit.doc)
-        );
-      }
-    }
-
-    const local = findDefinitions(index, id.text, offset);
-    if (local[0]) {
-      const hit = local[0];
-      return new vscode.Hover(
-        symbolHover(hit.name, hit.kind, undefined, hit.doc)
-      );
+    const md = symbolHoverAt(text, offset, cached.index, cached.importByNs);
+    if (md) {
+      return new vscode.Hover(md);
     }
 
     return undefined;

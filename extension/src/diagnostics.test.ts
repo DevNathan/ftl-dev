@@ -712,4 +712,51 @@ test("0027 AC17: unknown-directive and structure regressions still work", () => 
   );
 });
 
+// --- Plan 0038: ftldoc @param diagnostics (D7) and multi-line @deprecated ---
+
+function infoDiags(text: string, opts?: Parameters<typeof validateFtl>[1]) {
+  return validateFtl(text, opts).filter((d) => d.severity === "information");
+}
+
+test("T29 unknown @param name → Information on the name (0038 AC12)", () => {
+  const text = "<#--\n@param missing x\n-->\n<#function f a>\n</#function>\n";
+  const d = infoDiags(text);
+  assert.strictEqual(d.length, 1);
+  assert.strictEqual(
+    d[0]!.message,
+    "ftldoc @param 'missing' does not match a parameter of 'f'"
+  );
+  assert.strictEqual(d[0]!.offset, text.indexOf("missing"));
+  assert.strictEqual(d[0]!.length, "missing".length);
+});
+
+test("T30 duplicate @param → Information on the second (0038 AC12)", () => {
+  const text = "<#--\n@param a x\n@param a y\n-->\n<#function f a>\n</#function>\n";
+  const d = infoDiags(text);
+  assert.strictEqual(d.length, 1);
+  assert.strictEqual(d[0]!.message, "Duplicate ftldoc @param 'a'");
+  assert.strictEqual(d[0]!.offset, text.indexOf("@param a y") + "@param ".length);
+});
+
+test("T31 dotted / optional / catch-all / non-function → none (0038 AC12)", () => {
+  const text =
+    "<#--\n@param opts.key k\n@param [opts] o\n@param args rest\n-->\n" +
+    "<#macro m opts args...>\n</#macro>\n" +
+    "<#-- @param z nope -->\n<#assign v = 1>\n";
+  assert.strictEqual(validateFtl(text).length, 0);
+});
+
+test("T32 ftldocParams: false suppresses (0038 AC12)", () => {
+  const text = "<#--\n@param missing x\n-->\n<#function f a>\n</#function>\n";
+  assert.strictEqual(validateFtl(text, { ftldocParams: false }).length, 0);
+});
+
+test("T33 multi-line @deprecated message collapses whitespace (0038 AC13)", () => {
+  const text =
+    "<#--\n@deprecated\n  use a\n  then b\n-->\n<#function old>\n</#function>\n${old()}\n";
+  const d = validateFtl(text).filter((x) => x.severity === "warning");
+  assert.strictEqual(d.length, 1);
+  assert.strictEqual(d[0]!.message, "Deprecated: use a then b");
+});
+
 console.log("All diagnostics unit tests passed.");

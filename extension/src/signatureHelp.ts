@@ -3,6 +3,12 @@ import {
   formatBuiltinSignatureLabel,
 } from "./builtinSignatures";
 import {
+  formatParamDocMarkdown,
+  formatSignatureDocMarkdown,
+  FtlDoc,
+} from "./ftldoc";
+import { ftlDocParamRoot } from "./ftldocMarkdown";
+import {
   formatSignatureLabel,
   FtlIndex,
   FtlParam,
@@ -12,9 +18,12 @@ import {
 
 export type SignatureHelpResult = {
   label: string;
-  parameters: { label: string }[];
+  /** `documentation` is Markdown (ftldoc) when set on a parameter entry. */
+  parameters: { label: string; documentation?: string }[];
   activeParameter: number;
   documentation?: string;
+  /** True when `documentation` is ftldoc Markdown (plan 0038 D8). */
+  documentationMarkdown?: boolean;
 };
 
 export type SymbolLookup = {
@@ -56,7 +65,7 @@ function functionCallHelp(
   if (!sym || sym.kind !== "function") {
     return undefined;
   }
-  return buildHelp(sym.name, sym.params, call.activeParameter);
+  return buildHelp(sym.name, sym.params, call.activeParameter, sym.doc);
 }
 
 function macroCallHelp(
@@ -77,26 +86,45 @@ function macroCallHelp(
     const idx = (sym.params ?? []).findIndex((p) => p.name === call.namedParam);
     active = idx >= 0 ? idx : 0;
   }
-  return buildHelp(sym.name, sym.params, active);
+  return buildHelp(sym.name, sym.params, active, sym.doc);
 }
 
 function buildHelp(
   name: string,
   params: FtlParam[] | undefined,
-  activeParameter: number
+  activeParameter: number,
+  doc?: FtlDoc
 ): SignatureHelpResult {
   const list = params ?? [];
-  const parameters = list.map((p) => ({ label: formatParamLabel(p) }));
+  // Parameter label stays the declaration's (`name=default`, `name...`);
+  // ftldoc only adds Markdown documentation matched by name (D8).
+  const parameters = list.map((p) => {
+    const label = formatParamLabel(p);
+    if (!doc) {
+      return { label };
+    }
+    const own = doc.params.find((d) => d.name === p.name);
+    const nested = doc.params.filter(
+      (d) => d.name !== p.name && ftlDocParamRoot(d.name) === p.name
+    );
+    const md = formatParamDocMarkdown(own, nested);
+    return md ? { label, documentation: md } : { label };
+  });
   const max = Math.max(0, parameters.length - 1);
   const active = parameters.length === 0 ? 0 : Math.min(activeParameter, max);
+  const sigDoc = doc ? formatSignatureDocMarkdown(doc) : undefined;
   return {
     label: formatSignatureLabel(name, list),
     parameters,
     activeParameter: active,
-    documentation:
-      list.length === 0
-        ? undefined
-        : `${name} takes ${list.length} parameter${list.length === 1 ? "" : "s"}.`,
+    ...(sigDoc
+      ? { documentation: sigDoc, documentationMarkdown: true }
+      : {
+          documentation:
+            list.length === 0
+              ? undefined
+              : `${name} takes ${list.length} parameter${list.length === 1 ? "" : "s"}.`,
+        }),
   };
 }
 

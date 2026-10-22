@@ -84,6 +84,42 @@ Throwaway: side-effect call only — Hover on `r` must NOT show this comment.
   <#return x>
 </#function>
 
+<#--
+    Parses the request payload and its header.
+    Some fields may be empty hashes depending on the header.
+
+@param payload
+    raw request data
+@param header
+    mapped header data; may contain a route key,
+    then a target key depending on routing
+
+@return {
+    status: ...,
+    items: ...,
+    ...
+}
+
+@processing
+    1. read the header
+    2. map the payload
+
+@note
+    remark text
+-->
+<#function parseRequest payload header>
+  <#return {"status": "ok", "items": []}>
+</#function>
+
+<#--
+  Stray @param on purpose (Information squiggle on `missing`).
+
+  @param missing not a parameter
+-->
+<#function strayParam a>
+  <#return a>
+</#function>
+
 <html>
 <body>
   <p>${title}</p>
@@ -94,6 +130,9 @@ Throwaway: side-effect call only — Hover on `r` must NOT show this comment.
   <#-- Expect warning on `legacy` (@deprecated) -->
   <p>${legacy("old")}</p>
   <p>${scopedDemo()}</p>
+  <#-- Hover / Signature Help / Ctrl+Space on `parseRequest` -->
+  <p>${parseRequest("p", "h").status}</p>
+  <p>${strayParam(1)}</p>
 
   <#-- OUTSIDE scopedDemo: Hover `tmp` should not pick up the #local doc -->
   <p>outside: tmp is not in scope here</p>

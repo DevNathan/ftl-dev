@@ -28,6 +28,8 @@
     "../extension/src/references.ts",
     "../extension/src/imports.ts",
     "../extension/src/docs.ts",
+    "../extension/src/ftldoc.ts",
+    "../extension/src/ftldocMarkdown.ts",
     "../extension/src/reference/freemarkerRef.ts"
   ],
   "exclude": ["../extension/src/**/*.test.ts", "node_modules"]

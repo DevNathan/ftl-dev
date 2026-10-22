@@ -35,10 +35,14 @@ export class FtlSignatureHelpProvider
 
     const sig = new vscode.SignatureInformation(result.label);
     if (result.documentation) {
-      sig.documentation = result.documentation;
+      sig.documentation = result.documentationMarkdown
+        ? markdown(result.documentation)
+        : result.documentation;
     }
-    sig.parameters = result.parameters.map(
-      (p) => new vscode.ParameterInformation(p.label)
+    sig.parameters = result.parameters.map((p) =>
+      p.documentation
+        ? new vscode.ParameterInformation(p.label, markdown(p.documentation))
+        : new vscode.ParameterInformation(p.label)
     );
 
     const help = new vscode.SignatureHelp();
@@ -47,4 +51,11 @@ export class FtlSignatureHelpProvider
     help.activeParameter = result.activeParameter;
     return help;
   }
+}
+
+/** ftldoc Markdown (plan 0038 D8); raw HTML stays off. */
+function markdown(value: string): vscode.MarkdownString {
+  const md = new vscode.MarkdownString(value);
+  md.supportHtml = false;
+  return md;
 }

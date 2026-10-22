@@ -25,7 +25,7 @@ export type FtlDiagnostic = {
   offset: number;
   length: number;
   message: string;
-  severity: "error" | "warning";
+  severity: "error" | "warning" | "information";
 };
 
 const KNOWN_DIRECTIVES = new Set(DIRECTIVES);
@@ -67,7 +67,8 @@ export function findDeprecatedUsageIssues(
         continue;
       }
       seen.add(key);
-      const dep = preferred.doc.deprecated.trim();
+      // Multi-line @deprecated (plan 0038 AC13): collapse whitespace runs.
+      const dep = preferred.doc.deprecated.replace(/\s+/g, " ").trim();
       diags.push({
         offset: hit.startOffset,
         length: hit.endOffset - hit.startOffset,
@@ -84,6 +85,51 @@ export function findDeprecatedUsageIssues(
 }
 
 /**
+ * ftldoc `@param` checks on documented `#function` / `#macro` symbols (plan
+ * 0038 D7): a `@param` whose root name (before the first `.`, `[…]` already
+ * stripped by the parser) is not a declared parameter (catch-all `args...`
+ * counts as `args`), and a repeated `@param` with the same full name. Severity
+ * Information; range = the name inside the comment. `#assign` / `#local` /
+ * `#global` docs are not checked.
+ */
+export function findFtldocParamIssues(
+  index: ReturnType<typeof indexFtl>
+): FtlDiagnostic[] {
+  const diags: FtlDiagnostic[] = [];
+  for (const sym of index.symbols) {
+    if ((sym.kind !== "function" && sym.kind !== "macro") || !sym.doc) {
+      continue;
+    }
+    const declared = new Set((sym.params ?? []).map((p) => p.name));
+    const seen = new Set<string>();
+    for (const p of sym.doc.params) {
+      if (p.nameOffset === undefined) {
+        continue;
+      }
+      const dot = p.name.indexOf(".");
+      const root = dot === -1 ? p.name : p.name.slice(0, dot);
+      if (!declared.has(root)) {
+        diags.push({
+          offset: p.nameOffset,
+          length: p.name.length,
+          message: `ftldoc @param '${p.name}' does not match a parameter of '${sym.name}'`,
+          severity: "information",
+        });
+      } else if (seen.has(p.name)) {
+        diags.push({
+          offset: p.nameOffset,
+          length: p.name.length,
+          message: `Duplicate ftldoc @param '${p.name}'`,
+          severity: "information",
+        });
+      }
+      seen.add(p.name);
+    }
+  }
+  return diags;
+}
+
+/**
  * Lightweight FreeMarker checks (not a full parser).
  * Catches common mistakes like `${boo?}` (dangling built-in operator).
  */
@@ -94,6 +140,11 @@ export type ValidateFtlOptions = {
   strictVariables?: boolean;
   /** Host-injected top-level names when strictVariables is on. */
   dataModel?: readonly string[];
+  /**
+   * ftldoc `@param` name checks (Information). Default true; VS Code setting
+   * `ftl-dev.ftldoc.validateParams`.
+   */
+  ftldocParams?: boolean;
 };
 
 export function validateFtl(
@@ -200,6 +251,9 @@ export function validateFtl(
   out.push(...findHashLiteralCommaIssues(text));
   const index = options.index ?? indexFtl(text);
   out.push(...findDeprecatedUsageIssues(text, index));
+  if (options.ftldocParams !== false) {
+    out.push(...findFtldocParamIssues(index));
+  }
   out.push(
     ...findUndeclaredIdentifierIssues(text, {
       strictVariables: options.strictVariables,

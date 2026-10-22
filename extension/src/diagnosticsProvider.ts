@@ -99,6 +99,9 @@ export function registerDiagnostics(
       index: cached.index,
       strictVariables: strict.strictVariables,
       dataModel,
+      ftldocParams: vscode.workspace
+        .getConfiguration("ftl-dev")
+        .get<boolean>("ftldoc.validateParams", true),
     });
     const map = buildLineMap(text);
     const diags = raw.map((d) => {
@@ -112,7 +115,9 @@ export function registerDiagnostics(
       const severity =
         d.severity === "error"
           ? vscode.DiagnosticSeverity.Error
-          : vscode.DiagnosticSeverity.Warning;
+          : d.severity === "information"
+            ? vscode.DiagnosticSeverity.Information
+            : vscode.DiagnosticSeverity.Warning;
       return new vscode.Diagnostic(range, d.message, severity);
     });
     collection.set(doc.uri, diags);
@@ -224,7 +229,8 @@ export function registerDiagnostics(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (
         e.affectsConfiguration("ftl-dev.strictVariables") ||
-        e.affectsConfiguration("ftl-dev.dataModel")
+        e.affectsConfiguration("ftl-dev.dataModel") ||
+        e.affectsConfiguration("ftl-dev.ftldoc.validateParams")
       ) {
         refreshVisible();
       }
