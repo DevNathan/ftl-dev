@@ -134,6 +134,7 @@ function findMidBlockParent(
       parents = RECOVER_PARENTS;
       break;
     case "case":
+    case "on":
     case "default":
       parents = CASE_PARENTS;
       break;

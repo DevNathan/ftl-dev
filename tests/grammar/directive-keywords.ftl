@@ -9,3 +9,9 @@
 //^^^^^ keyword.control.directive.freemarker
 </#macro>
 // ^^^^^ keyword.control.directive.freemarker
+<#switch n>
+//^^^^^^ keyword.control.directive.freemarker
+<#on 1, 2>
+//^^ keyword.control.directive.freemarker
+<#default>
+</#switch>

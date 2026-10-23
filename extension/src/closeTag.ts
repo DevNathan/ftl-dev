@@ -768,6 +768,7 @@ const MID_BLOCK = new Set([
   "elseif",
   "recover",
   "case",
+  "on",
   "default",
   "sep",
 ]);

@@ -2,7 +2,7 @@
  * FreeMarker indent policy (shared with language-configuration.json).
  *
  * - Block openers indent the following body.
- * - Mid-block branches (#else / #elseif / #recover / #case / #default / #sep)
+ * - Mid-block branches (#else / #elseif / #recover / #case / #on / #default / #sep)
  *   outdent to the opener column, then indent their own body.
  * - Closing tags outdent to the opener column.
  * - Short #assign / #include / #return / … do not change indent.
@@ -16,7 +16,7 @@ export const BLOCK_OPEN =
   "if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items";
 
 /** Mid-block lines: same column as opener, body still indented after them. */
-export const MID_BLOCK = "else|elseif|recover|case|default|sep";
+export const MID_BLOCK = "else|elseif|recover|case|on|default|sep";
 
 /** Capture-form assign family (no `=` / `++` / `+=` … in the open tag). */
 export const CAPTURE_ASSIGN = "assign|local|global";

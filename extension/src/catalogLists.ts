@@ -29,6 +29,7 @@ export const DIRECTIVES: readonly string[] = [
   "noescape",
   "noparse",
   "nt",
+  "on",
   "outputformat",
   "recover",
   "recurse",

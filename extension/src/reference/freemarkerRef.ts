@@ -886,6 +886,13 @@ export const DIRECTIVE_REF: Record<string, RefDoc> = {
     "ref_directive_switch.html",
     "<#case value>"
   ),
+  on: directiveDoc(
+    "on",
+    "Switch branch for one or more values (FreeMarker 2.3.34+).",
+    "Used inside `#switch` instead of `#case`: `<#on a, b>` matches any listed value and never falls through, so no `#break` is needed. Do not mix `#on` and `#case` in the same `#switch`.",
+    "ref_directive_switch.html",
+    "<#on value1, value2>"
+  ),
   compress: directiveDoc(
     "compress",
     "Compress whitespace in output.",
@@ -1113,9 +1120,9 @@ export const DIRECTIVE_REF: Record<string, RefDoc> = {
   switch: directiveDoc(
     "switch",
     "Multi-way branch.",
-    "Uses `#case`, `#default`, `#break`.",
+    "Uses `#on` (2.3.34+, no fall-through) or `#case` + `#break`, and `#default`.",
     "ref_directive_switch.html",
-    "<#switch x>\n  <#case 1>…<#break>\n  <#default>…\n</#switch>"
+    "<#switch x>\n  <#on 1, 2>…\n  <#default>…\n</#switch>"
   ),
   t: directiveDoc(
     "t",

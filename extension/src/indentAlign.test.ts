@@ -63,6 +63,15 @@ test("recover aligns to attempt", () => {
   assert.ok(after.includes("\n<#recover>"), after);
 });
 
+test("on aligns to switch like case", () => {
+  const before =
+    "<#switch x>\n" +
+    "  one or two\n" +
+    "  <#on 3";
+  const after = typeCloser(before, ">");
+  assert.ok(after.includes("\n<#on 3>"), after);
+});
+
 test("recover aligns even when </#attempt> is on the same line", () => {
   // Common after HTML-style pair + typing recover before the close on the body line.
   const before =

@@ -53,6 +53,16 @@
     other
 </#switch>
 
+<#-- switch / on (FreeMarker 2.3.34+: several values, no fall-through, no #break) -->
+<#switch count>
+  <#on 1, 2>
+    <p>one or two</p>
+  <#on 3>
+    <p>three</p>
+  <#default>
+    <p>many</p>
+</#switch>
+
 <#-- attempt / recover -->
 <#attempt>
   ${siteName?upper_case}

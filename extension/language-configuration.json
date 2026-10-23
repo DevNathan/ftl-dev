@@ -62,7 +62,7 @@
     {
       "open": "${",
       "close": "}",
-      "notIn": ["string", "comment"]
+      "notIn": ["comment"]
     }
   ],
   "surroundingPairs": [
@@ -94,8 +94,8 @@
     }
   },
   "indentationRules": {
-    "increaseIndentPattern": "^\\s*(?:<#(?:if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items|else|elseif|recover|case|default|sep)\\b.*>\\s*|\\[#(?:if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items|else|elseif|recover|case|default|sep)\\b.*\\]\\s*|<#(?:assign|local|global)(?:\\s+(?:[a-zA-Z_][\\w]*|\"[^\"]+\")(?:\\s+in\\s+[^>]*)?)?>\\s*|\\[#(?:assign|local|global)(?:\\s+(?:[a-zA-Z_][\\w]*|\"[^\"]+\")(?:\\s+in\\s+[^\\]]*)?)?\\]\\s*|<@[a-zA-Z_][\\w.]*(?!.*\\/\\s*>)(?:\\s[^>]*)?>\\s*|\\[@[a-zA-Z_][\\w.]*(?!.*\\/\\s*\\])(?:\\s[^\\]]*)?\\]\\s*)$",
-    "decreaseIndentPattern": "^\\s*(?:[\\[<]#(?:else|elseif|recover|case|default|sep)\\b|[\\[<]/#(?:if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items|assign|local|global)\\b|[\\[<]/@[a-zA-Z_][\\w.]*\\b)"
+    "increaseIndentPattern": "^\\s*(?:<#(?:if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items|else|elseif|recover|case|on|default|sep)\\b.*>\\s*|\\[#(?:if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items|else|elseif|recover|case|on|default|sep)\\b.*\\]\\s*|<#(?:assign|local|global)(?:\\s+(?:[a-zA-Z_][\\w]*|\"[^\"]+\")(?:\\s+in\\s+[^>]*)?)?>\\s*|\\[#(?:assign|local|global)(?:\\s+(?:[a-zA-Z_][\\w]*|\"[^\"]+\")(?:\\s+in\\s+[^\\]]*)?)?\\]\\s*|<@[a-zA-Z_][\\w.]*(?!.*\\/\\s*>)(?:\\s[^>]*)?>\\s*|\\[@[a-zA-Z_][\\w.]*(?!.*\\/\\s*\\])(?:\\s[^\\]]*)?\\]\\s*)$",
+    "decreaseIndentPattern": "^\\s*(?:[\\[<]#(?:else|elseif|recover|case|on|default|sep)\\b|[\\[<]/#(?:if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items|assign|local|global)\\b|[\\[<]/@[a-zA-Z_][\\w.]*\\b)"
   },
   "onEnterRules": [
     {
@@ -127,13 +127,13 @@
       }
     },
     {
-      "beforeText": "^\\s*<#(else|elseif|recover|case|default|sep)\\b.*>\\s*$",
+      "beforeText": "^\\s*<#(else|elseif|recover|case|on|default|sep)\\b.*>\\s*$",
       "action": {
         "indent": "indent"
       }
     },
     {
-      "beforeText": "^\\s*\\[#(else|elseif|recover|case|default|sep)\\b.*\\]\\s*$",
+      "beforeText": "^\\s*\\[#(else|elseif|recover|case|on|default|sep)\\b.*\\]\\s*$",
       "action": {
         "indent": "indent"
       }

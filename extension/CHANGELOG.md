@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Added
+
+- `#on` directive (FreeMarker 2.3.34+) inside `#switch`: keyword highlighting, completion and Hover docs, no "Unknown directive" error, auto-close / indent / linked-editing treat it like `#case`
+
+### Changed
+
+- `${` now auto-closes inside quoted FTL strings too (it is interpolation there, plan 0039)
+
 ## [0.7.0] - 2026-10-22
 
 ### Fixed
