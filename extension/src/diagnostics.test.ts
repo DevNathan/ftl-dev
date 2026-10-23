@@ -205,6 +205,11 @@ test("exclusive range ..< inside a tag does not end it", () => {
   assert.deepStrictEqual(errs.map((d) => d.message), []);
 });
 
+test("#on inside #switch is a known directive (2.3.34+)", () => {
+  const src = "<#switch x><#on 1, 2>a<#on 3>b<#default>c</#switch>";
+  assert.deepStrictEqual(validateFtl(src).map((d) => d.message), []);
+});
+
 test("navigation fixture shapes have no layer-A errors", () => {
   const fixture = path.join(
     __dirname,
