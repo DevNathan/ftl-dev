@@ -247,6 +247,7 @@ export function validateFtl(
   }
 
   out.push(...findDirectiveIssues(text));
+  out.push(...findSwitchIssues(text));
   out.push(...findUnknownDirectiveParamIssues(text));
   out.push(...findHashLiteralCommaIssues(text));
   const index = options.index ?? indexFtl(text);
@@ -544,6 +545,148 @@ function findStackDir(stack: DirTok[], name: string): DirTok | undefined {
     }
   }
   return undefined;
+}
+
+/** Matches an intentional fall-through marker comment (`<#-- falls through -->`). */
+const FALLTHROUGH_MARKER = /\bfall(?:s|-)?\s*through\b/i;
+const FTL_COMMENT_RE = /<#--[\s\S]*?-->|\[#--[\s\S]*?--\]/g;
+
+type SwitchBranch = {
+  tok: DirTok;
+  /** Branch body has output or directives. */
+  content: boolean;
+  /** Body ends with `#break` / `#return` / `#stop` at switch level. */
+  terminated: boolean;
+  /** An FTL comment in the body says the fall-through is intended. */
+  marker: boolean;
+};
+
+type SwitchFrame = {
+  /** Directive stack depth right inside this `#switch`. */
+  depth: number;
+  /** `case` or `on` — whichever branch form appeared first. */
+  kind?: "case" | "on";
+  branch?: SwitchBranch;
+};
+
+/**
+ * `#switch` checks:
+ * - mixing `#on` (2.3.34+) and `#case` in one `#switch` (FreeMarker rejects it);
+ * - a non-empty `#case` / `#default` body that falls through into the next
+ *   branch without `#break` / `#return` / `#stop` (warning, like JetBrains'
+ *   "fallthrough in switch"). Empty bodies (`<#case 1><#case 2>…`) group values
+ *   and are fine; a comment containing "falls through" marks it intentional.
+ *   `#on` branches never fall through.
+ */
+export function findSwitchIssues(text: string): FtlDiagnostic[] {
+  const diags: FtlDiagnostic[] = [];
+  const stack: DirTok[] = [];
+  const switches: SwitchFrame[] = [];
+  let prevEnd = 0;
+
+  const fallThrough = (sw: SwitchFrame): void => {
+    const b = sw.branch;
+    if (
+      sw.kind === "case" &&
+      b &&
+      b.content &&
+      !b.terminated &&
+      !b.marker
+    ) {
+      diags.push({
+        offset: b.tok.offset,
+        length: b.tok.length,
+        message: `'#${b.tok.name}' falls through to the next branch; add '<#break>' (or a '<#-- falls through -->' comment if intended).`,
+        severity: "warning",
+      });
+    }
+  };
+
+  for (const tok of scanDirectives(text)) {
+    const top = stack[stack.length - 1];
+    if (
+      top?.name === "noparse" &&
+      !(tok.sigil === "#" && tok.kind === "close" && tok.name === "noparse")
+    ) {
+      continue;
+    }
+
+    const sw = switches[switches.length - 1];
+    const gap = text.slice(prevEnd, tok.offset);
+    prevEnd = tok.offset + tok.length;
+    if (sw?.branch) {
+      if (FALLTHROUGH_MARKER.test(gap) && /<#--|\[#--/.test(gap)) {
+        sw.branch.marker = true;
+      }
+      if (gap.replace(FTL_COMMENT_RE, "").trim()) {
+        sw.branch.content = true;
+        sw.branch.terminated = false;
+      }
+    }
+
+    const atSwitchLevel = sw !== undefined && stack.length === sw.depth;
+    const isHash = tok.sigil === "#";
+
+    if (
+      atSwitchLevel &&
+      isHash &&
+      tok.kind !== "close" &&
+      (tok.name === "case" || tok.name === "on" || tok.name === "default")
+    ) {
+      if (tok.name !== "default") {
+        if (sw.kind && sw.kind !== tok.name) {
+          diags.push({
+            offset: tok.offset,
+            length: tok.length,
+            message: `Don't mix '#on' and '#case' in the same '#switch'; use only one form ('#on' needs no '#break').`,
+            severity: "error",
+          });
+        } else {
+          sw.kind = tok.name as "case" | "on";
+        }
+      }
+      fallThrough(sw);
+      sw.branch = { tok, content: false, terminated: false, marker: false };
+      continue;
+    }
+
+    if (sw?.branch && stack.length >= sw.depth) {
+      if (
+        atSwitchLevel &&
+        isHash &&
+        tok.kind !== "close" &&
+        (tok.name === "break" || tok.name === "return" || tok.name === "stop")
+      ) {
+        sw.branch.terminated = true;
+      } else {
+        sw.branch.content = true;
+        sw.branch.terminated = false;
+      }
+    }
+
+    if (!isHash) {
+      continue;
+    }
+    if (tok.kind === "close") {
+      for (let i = stack.length - 1; i >= 0; i--) {
+        if (stack[i]!.name === tok.name) {
+          if (tok.name === "switch") {
+            switches.pop();
+          }
+          stack.length = i;
+          break;
+        }
+      }
+      continue;
+    }
+    if (!tok.selfClose && tok.kind !== "empty" && isBlockDirectiveOpen(tok)) {
+      stack.push(tok);
+      if (tok.name === "switch") {
+        switches.push({ depth: stack.length });
+      }
+    }
+  }
+  return diags;
 }
 
 /** Nearest enclosing open on the stack whose name is one of `names`. */

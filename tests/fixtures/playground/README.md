@@ -1,6 +1,6 @@
 # Playground fixtures
 
-Hand-check files for the Extension Host (Run and Debug → **Run Extension**, which opens `tests/fixtures`). Each file starts with a comment saying what to look at and any known diagnostic gaps. With default settings every file should show no diagnostics.
+Hand-check files for the Extension Host (Run and Debug → **Run Extension**, which opens `tests/fixtures`). Each file starts with a comment saying what to look at and any known diagnostic gaps. With default settings every file except `switch-checks.ftl` should show no diagnostics.
 
 | File | What to check |
 |------|---------------|
@@ -11,3 +11,4 @@ Hand-check files for the Extension Host (Run and Debug → **Run Extension**, wh
 | [`html-mix.ftl`](html-mix.ftl) | `${…}` in HTML attributes, `<#if>` inside attribute lists, FTL in `<script>` / `<style>`, FTL comment (muted) vs HTML comment. |
 | [`square-syntax.ftl`](square-syntax.ftl) | The same directives in `[#…]` / `[@…]` syntax and `[#-- --]` comments (FreeMarker uses one tag syntax per file). |
 | [`lib.ftl`](lib.ftl) | Imported library (`lib`) used by the other files. |
+| [`switch-checks.ftl`](switch-checks.ftl) | `#switch` checks: fall-through warning on a non-empty `#case` without `#break` (grouping, `#return`/`#stop` and a `falls through` comment are fine) and an error for mixing `#on` with `#case`. Diagnostics here are intended. |
