@@ -244,6 +244,16 @@ export function matchDirectiveHead(
   };
 }
 
+/**
+ * Directives whose body is never parsed as FTL (`noparse`, deprecated
+ * `comment`), including camelCase spellings. Value: canonical name.
+ */
+export const LITERAL_BODY_DIRECTIVES: Readonly<Record<string, string>> = {
+  noparse: "noparse",
+  noParse: "noparse",
+  comment: "comment",
+};
+
 /** Escape a string for use inside a RegExp character class or pattern. */
 export function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -420,8 +430,9 @@ export function ftlCodeRanges(text: string): Array<[number, number]> {
           { kind: "tag", close },
           out
         );
-        if (!head.isClose && head.sigil === "#" && head.name === "noparse") {
-          const endTag = head.bracket === "<" ? "</#noparse" : "[/#noparse";
+        const literal = LITERAL_BODY_DIRECTIVES[head.name];
+        if (!head.isClose && head.sigil === "#" && literal) {
+          const endTag = (head.bracket === "<" ? "</#" : "[/#") + head.name;
           const k = text.indexOf(endTag, i);
           i = k === -1 ? text.length : k;
         }

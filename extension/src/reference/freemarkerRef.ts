@@ -3,6 +3,11 @@
  * Descriptions are paraphrased from the Apache FreeMarker Manual
  * (https://freemarker.apache.org/docs/) — Apache License 2.0.
  */
+import {
+  canonicalBuiltin,
+  canonicalDirective,
+  canonicalSpecialVar,
+} from "./aliases";
 
 export type RefDoc = {
   /** Short one-liner for CompletionItem.detail */
@@ -847,10 +852,542 @@ export const BUILTIN_REF: Record<string, RefDoc> = {
     "ref_builtins_string.html",
     "s?xml"
   ),
+  absolute_template_name: builtinDoc(
+    "absolute_template_name",
+    "Resolve a template name to an absolute one.",
+    "Converts a template name that may be relative to the current template into an absolute name. With an argument, resolves relative to that base name instead.",
+    "ref_builtins_string.html",
+    "\"lib.ftl\"?absolute_template_name"
+  ),
+  ancestors: builtinDoc(
+    "ancestors",
+    "Ancestor nodes of a node.",
+    "Returns the sequence of ancestor nodes (parent first). With arguments, only ancestors with the given node names are kept.",
+    "ref_builtins_node.html",
+    "node?ancestors"
+  ),
+  blank_to_null: builtinDoc(
+    "blank_to_null",
+    "Blank string → missing value.",
+    "Returns a missing value (null) if the string is empty or whitespace-only, otherwise the string. Combine with `!` / `??`.",
+    "ref_builtins_alphaidx.html",
+    "s?blank_to_null!\"n/a\""
+  ),
+  c_lower_case: builtinDoc(
+    "c_lower_case",
+    "Lower-case, locale-independent.",
+    "Like `?lower_case`, but always uses the root (C) locale rules. Use it for computer-language output (identifiers, keys).",
+    "ref_builtins_string.html",
+    "s?c_lower_case"
+  ),
+  c_upper_case: builtinDoc(
+    "c_upper_case",
+    "Upper-case, locale-independent.",
+    "Like `?upper_case`, but always uses the root (C) locale rules. Use it for computer-language output (identifiers, keys).",
+    "ref_builtins_string.html",
+    "s?c_upper_case"
+  ),
+  chunk: builtinDoc(
+    "chunk",
+    "Split a sequence into fixed-size chunks.",
+    "Returns a sequence of sequences of the given size. With a filler, the last chunk is padded to full size.",
+    "ref_builtins_sequence.html",
+    "seq?chunk(3)"
+  ),
+  cn: builtinDoc(
+    "cn",
+    "Like `?c`, but prints `null` for a missing value.",
+    "Computer-language formatting like `?c`; a null/missing value is printed as the null literal of the current `c_format`.",
+    "ref_builtins_alphaidx.html",
+    "x?cn"
+  ),
+  counter: builtinDoc(
+    "counter",
+    "1-based index of the loop variable.",
+    "Only on a `#list` / `#items` loop variable. Like `?index` but starts from 1.",
+    "ref_builtins_loop_var.html",
+    "item?counter"
+  ),
+  date_if_unknown: builtinDoc(
+    "date_if_unknown",
+    "Treat an unknown-type date as date-only.",
+    "If the date-like value has unknown type (e.g. from `java.util.Date`), marks it as date-only; otherwise returns it unchanged.",
+    "ref_builtins_date.html",
+    "d?date_if_unknown"
+  ),
+  datetime_if_unknown: builtinDoc(
+    "datetime_if_unknown",
+    "Treat an unknown-type date as date-time.",
+    "If the date-like value has unknown type, marks it as date-time; otherwise returns it unchanged.",
+    "ref_builtins_date.html",
+    "d?datetime_if_unknown"
+  ),
+  dedent: builtinDoc(
+    "dedent",
+    "Remove common leading indentation (2.3.35+).",
+    "Without arguments, removes the indentation common to all non-blank lines. With a prefix argument, removes that prefix from the start of lines; the optional boolean (default `true`) also trims trailing whitespace.",
+    "ref_builtins_string.html",
+    "s?dedent"
+  ),
+  drop_while: builtinDoc(
+    "drop_while",
+    "Drop leading elements while a condition holds.",
+    "Returns the sequence without its leading elements for which the predicate (lambda or function) is true.",
+    "ref_builtins_sequence.html",
+    "seq?drop_while(x -> x < 0)"
+  ),
+  empty_to_null: builtinDoc(
+    "empty_to_null",
+    "Empty string → missing value.",
+    "Returns a missing value (null) if the string is empty, otherwise the string. Combine with `!` / `??`.",
+    "ref_builtins_alphaidx.html",
+    "s?empty_to_null!\"n/a\""
+  ),
+  eval_json: builtinDoc(
+    "eval_json",
+    "Parse a JSON string into a value.",
+    "Parses JSON text into FTL hashes, sequences, strings, numbers and booleans. Safer than `?eval` for JSON input.",
+    "ref_builtins_expert.html",
+    "jsonText?eval_json"
+  ),
+  exists: builtinDoc(
+    "exists",
+    "Deprecated: does the value exist?",
+    "Deprecated; use `value??` instead.",
+    "ref_depr_builtin.html",
+    "x?exists"
+  ),
+  has_next: builtinDoc(
+    "has_next",
+    "Is there another item after this one?",
+    "Only on a `#list` / `#items` loop variable. False for the last item.",
+    "ref_builtins_loop_var.html",
+    "item?has_next"
+  ),
+  if_exists: builtinDoc(
+    "if_exists",
+    "Deprecated: value or empty.",
+    "Deprecated; use `value!` instead.",
+    "ref_depr_builtin.html",
+    "x?if_exists"
+  ),
+  indent: builtinDoc(
+    "indent",
+    "Add a prefix to every line (2.3.35+).",
+    "Prepends the prefix to each line; the optional boolean (default `true`) also trims trailing whitespace.",
+    "ref_builtins_string.html",
+    "s?indent(\"  \")"
+  ),
+  index: builtinDoc(
+    "index",
+    "0-based index of the loop variable.",
+    "Only on a `#list` / `#items` loop variable.",
+    "ref_builtins_loop_var.html",
+    "item?index"
+  ),
+  is_collection_ex: builtinDoc(
+    "is_collection_ex",
+    "Is it a collection (extended check)?",
+    "Like `?is_collection`, but also true for values that can only be listed (e.g. Java iterables wrapped as collections).",
+    "ref_builtins_expert.html",
+    "x?is_collection_ex"
+  ),
+  is_date_only: builtinDoc(
+    "is_date_only",
+    "Is it a date-only value?",
+    "True for date values without time part.",
+    "ref_builtins_expert.html",
+    "x?is_date_only"
+  ),
+  is_datetime: builtinDoc(
+    "is_datetime",
+    "Is it a date-time value?",
+    "True for date values with both date and time part.",
+    "ref_builtins_expert.html",
+    "x?is_datetime"
+  ),
+  is_even_item: builtinDoc(
+    "is_even_item",
+    "Is the loop item at an even position (1-based)?",
+    "Only on a `#list` / `#items` loop variable: true for the 2nd, 4th, … item.",
+    "ref_builtins_loop_var.html",
+    "item?is_even_item"
+  ),
+  is_first: builtinDoc(
+    "is_first",
+    "Is this the first loop item?",
+    "Only on a `#list` / `#items` loop variable.",
+    "ref_builtins_loop_var.html",
+    "item?is_first"
+  ),
+  is_last: builtinDoc(
+    "is_last",
+    "Is this the last loop item?",
+    "Only on a `#list` / `#items` loop variable.",
+    "ref_builtins_loop_var.html",
+    "item?is_last"
+  ),
+  is_odd_item: builtinDoc(
+    "is_odd_item",
+    "Is the loop item at an odd position (1-based)?",
+    "Only on a `#list` / `#items` loop variable: true for the 1st, 3rd, … item.",
+    "ref_builtins_loop_var.html",
+    "item?is_odd_item"
+  ),
+  is_time: builtinDoc(
+    "is_time",
+    "Is it a time-only value?",
+    "True for date values that only have a time part.",
+    "ref_builtins_expert.html",
+    "x?is_time"
+  ),
+  is_unknown_date_like: builtinDoc(
+    "is_unknown_date_like",
+    "Is it a date of unknown type?",
+    "True for date-like values whose type (date / time / date-time) is unknown.",
+    "ref_builtins_expert.html",
+    "x?is_unknown_date_like"
+  ),
+  iso: builtinDoc(
+    "iso",
+    "ISO 8601 format (the time zone given as argument, seconds).",
+    "Formats the date as ISO 8601 in the time zone given as argument, with precision seconds (milliseconds only when non-zero).",
+    "ref_builtins_date.html",
+    "d?iso(tz)"
+  ),
+  iso_h: builtinDoc(
+    "iso_h",
+    "ISO 8601 format (the time zone given as argument, hours).",
+    "Formats the date as ISO 8601 in the time zone given as argument, with precision hours.",
+    "ref_builtins_date.html",
+    "d?iso_h(tz)"
+  ),
+  iso_h_nz: builtinDoc(
+    "iso_h_nz",
+    "ISO 8601 format (the time zone given as argument, hours).",
+    "Formats the date as ISO 8601 in the time zone given as argument, with precision hours. Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_h_nz(tz)"
+  ),
+  iso_local: builtinDoc(
+    "iso_local",
+    "ISO 8601 format (the current time zone, seconds).",
+    "Formats the date as ISO 8601 in the current time zone, with precision seconds (milliseconds only when non-zero).",
+    "ref_builtins_date.html",
+    "d?iso_local"
+  ),
+  iso_local_h: builtinDoc(
+    "iso_local_h",
+    "ISO 8601 format (the current time zone, hours).",
+    "Formats the date as ISO 8601 in the current time zone, with precision hours.",
+    "ref_builtins_date.html",
+    "d?iso_local_h"
+  ),
+  iso_local_h_nz: builtinDoc(
+    "iso_local_h_nz",
+    "ISO 8601 format (the current time zone, hours).",
+    "Formats the date as ISO 8601 in the current time zone, with precision hours. Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_local_h_nz"
+  ),
+  iso_local_m: builtinDoc(
+    "iso_local_m",
+    "ISO 8601 format (the current time zone, minutes).",
+    "Formats the date as ISO 8601 in the current time zone, with precision minutes.",
+    "ref_builtins_date.html",
+    "d?iso_local_m"
+  ),
+  iso_local_m_nz: builtinDoc(
+    "iso_local_m_nz",
+    "ISO 8601 format (the current time zone, minutes).",
+    "Formats the date as ISO 8601 in the current time zone, with precision minutes. Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_local_m_nz"
+  ),
+  iso_local_ms: builtinDoc(
+    "iso_local_ms",
+    "ISO 8601 format (the current time zone, milliseconds).",
+    "Formats the date as ISO 8601 in the current time zone, with precision milliseconds.",
+    "ref_builtins_date.html",
+    "d?iso_local_ms"
+  ),
+  iso_local_ms_nz: builtinDoc(
+    "iso_local_ms_nz",
+    "ISO 8601 format (the current time zone, milliseconds).",
+    "Formats the date as ISO 8601 in the current time zone, with precision milliseconds. Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_local_ms_nz"
+  ),
+  iso_local_nz: builtinDoc(
+    "iso_local_nz",
+    "ISO 8601 format (the current time zone, seconds).",
+    "Formats the date as ISO 8601 in the current time zone, with precision seconds (milliseconds only when non-zero). Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_local_nz"
+  ),
+  iso_m: builtinDoc(
+    "iso_m",
+    "ISO 8601 format (the time zone given as argument, minutes).",
+    "Formats the date as ISO 8601 in the time zone given as argument, with precision minutes.",
+    "ref_builtins_date.html",
+    "d?iso_m(tz)"
+  ),
+  iso_m_nz: builtinDoc(
+    "iso_m_nz",
+    "ISO 8601 format (the time zone given as argument, minutes).",
+    "Formats the date as ISO 8601 in the time zone given as argument, with precision minutes. Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_m_nz(tz)"
+  ),
+  iso_ms: builtinDoc(
+    "iso_ms",
+    "ISO 8601 format (the time zone given as argument, milliseconds).",
+    "Formats the date as ISO 8601 in the time zone given as argument, with precision milliseconds.",
+    "ref_builtins_date.html",
+    "d?iso_ms(tz)"
+  ),
+  iso_ms_nz: builtinDoc(
+    "iso_ms_nz",
+    "ISO 8601 format (the time zone given as argument, milliseconds).",
+    "Formats the date as ISO 8601 in the time zone given as argument, with precision milliseconds. Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_ms_nz(tz)"
+  ),
+  iso_nz: builtinDoc(
+    "iso_nz",
+    "ISO 8601 format (the time zone given as argument, seconds).",
+    "Formats the date as ISO 8601 in the time zone given as argument, with precision seconds (milliseconds only when non-zero). Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_nz(tz)"
+  ),
+  iso_utc: builtinDoc(
+    "iso_utc",
+    "ISO 8601 format (UTC, seconds).",
+    "Formats the date as ISO 8601 in UTC, with precision seconds (milliseconds only when non-zero).",
+    "ref_builtins_date.html",
+    "d?iso_utc"
+  ),
+  iso_utc_fz: builtinDoc(
+    "iso_utc_fz",
+    "ISO 8601 format (UTC, seconds).",
+    "Formats the date as ISO 8601 in UTC, with precision seconds (milliseconds only when non-zero). Always shows the zone offset, even `Z` for UTC.",
+    "ref_builtins_date.html",
+    "d?iso_utc_fz"
+  ),
+  iso_utc_h: builtinDoc(
+    "iso_utc_h",
+    "ISO 8601 format (UTC, hours).",
+    "Formats the date as ISO 8601 in UTC, with precision hours.",
+    "ref_builtins_date.html",
+    "d?iso_utc_h"
+  ),
+  iso_utc_h_nz: builtinDoc(
+    "iso_utc_h_nz",
+    "ISO 8601 format (UTC, hours).",
+    "Formats the date as ISO 8601 in UTC, with precision hours. Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_utc_h_nz"
+  ),
+  iso_utc_m: builtinDoc(
+    "iso_utc_m",
+    "ISO 8601 format (UTC, minutes).",
+    "Formats the date as ISO 8601 in UTC, with precision minutes.",
+    "ref_builtins_date.html",
+    "d?iso_utc_m"
+  ),
+  iso_utc_m_nz: builtinDoc(
+    "iso_utc_m_nz",
+    "ISO 8601 format (UTC, minutes).",
+    "Formats the date as ISO 8601 in UTC, with precision minutes. Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_utc_m_nz"
+  ),
+  iso_utc_ms: builtinDoc(
+    "iso_utc_ms",
+    "ISO 8601 format (UTC, milliseconds).",
+    "Formats the date as ISO 8601 in UTC, with precision milliseconds.",
+    "ref_builtins_date.html",
+    "d?iso_utc_ms"
+  ),
+  iso_utc_ms_nz: builtinDoc(
+    "iso_utc_ms_nz",
+    "ISO 8601 format (UTC, milliseconds).",
+    "Formats the date as ISO 8601 in UTC, with precision milliseconds. Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_utc_ms_nz"
+  ),
+  iso_utc_nz: builtinDoc(
+    "iso_utc_nz",
+    "ISO 8601 format (UTC, seconds).",
+    "Formats the date as ISO 8601 in UTC, with precision seconds (milliseconds only when non-zero). Without the zone offset.",
+    "ref_builtins_date.html",
+    "d?iso_utc_nz"
+  ),
+  item_cycle: builtinDoc(
+    "item_cycle",
+    "Cycle through values per loop item.",
+    "Only on a `#list` / `#items` loop variable: returns the argument at position (index mod argument count), e.g. alternating CSS classes.",
+    "ref_builtins_loop_var.html",
+    "item?item_cycle('odd', 'even')"
+  ),
+  item_parity: builtinDoc(
+    "item_parity",
+    "\"odd\" / \"even\" for the loop item.",
+    "Only on a `#list` / `#items` loop variable (1-based: the first item is \"odd\").",
+    "ref_builtins_loop_var.html",
+    "item?item_parity"
+  ),
+  item_parity_cap: builtinDoc(
+    "item_parity_cap",
+    "\"Odd\" / \"Even\" for the loop item.",
+    "Like `?item_parity`, capitalized.",
+    "ref_builtins_loop_var.html",
+    "item?item_parity_cap"
+  ),
+  j_string: builtinDoc(
+    "j_string",
+    "Escape as a Java string literal body.",
+    "Escapes the string for use inside a Java string literal (without the quotes).",
+    "ref_builtins_string.html",
+    "s?j_string"
+  ),
+  lines: builtinDoc(
+    "lines",
+    "Split a string into lines (2.3.35+).",
+    "Returns a sequence of lines; `\\n`, `\\r` and `\\r\\n` are line breaks, and the line breaks are not included.",
+    "ref_builtins_string.html",
+    "s?lines"
+  ),
+  lower_abc: builtinDoc(
+    "lower_abc",
+    "Number → a, b, c … letters.",
+    "1 → `a`, 2 → `b`, 26 → `z`, 27 → `aa` …",
+    "ref_builtins_number.html",
+    "n?lower_abc"
+  ),
+  next_sibling: builtinDoc(
+    "next_sibling",
+    "Next sibling node.",
+    "The following sibling of an XML node, or missing if there is none.",
+    "ref_builtins_node.html",
+    "node?next_sibling"
+  ),
+  no_esc: builtinDoc(
+    "no_esc",
+    "Output without auto-escaping.",
+    "Marks the string as markup so auto-escaping does not escape it. Use only for trusted markup.",
+    "ref_builtins_string.html",
+    "html?no_esc"
+  ),
+  previous_sibling: builtinDoc(
+    "previous_sibling",
+    "Previous sibling node.",
+    "The preceding sibling of an XML node, or missing if there is none.",
+    "ref_builtins_node.html",
+    "node?previous_sibling"
+  ),
+  take_while: builtinDoc(
+    "take_while",
+    "Keep leading elements while a condition holds.",
+    "Returns the leading elements for which the predicate (lambda or function) is true.",
+    "ref_builtins_sequence.html",
+    "seq?take_while(x -> x > 0)"
+  ),
+  time_if_unknown: builtinDoc(
+    "time_if_unknown",
+    "Treat an unknown-type date as time-only.",
+    "If the date-like value has unknown type, marks it as time-only; otherwise returns it unchanged.",
+    "ref_builtins_date.html",
+    "d?time_if_unknown"
+  ),
+  trim_to_null: builtinDoc(
+    "trim_to_null",
+    "Trim; blank → missing value.",
+    "Trims the string; returns a missing value (null) if the result is empty. Combine with `!` / `??`.",
+    "ref_builtins_alphaidx.html",
+    "s?trim_to_null!\"n/a\""
+  ),
+  truncate_c: builtinDoc(
+    "truncate_c",
+    "Truncate at any character.",
+    "Like `?truncate`, but may cut in the middle of a word.",
+    "ref_builtins_string.html",
+    "s?truncate_c(20)"
+  ),
+  truncate_c_m: builtinDoc(
+    "truncate_c_m",
+    "Truncate at any character, markup terminator.",
+    "Like `?truncate_c`, but the terminator is markup (e.g. `<span>…</span>`) and the result is markup.",
+    "ref_builtins_string.html",
+    "s?truncate_c_m(20, '<i>…</i>'?no_esc)"
+  ),
+  truncate_m: builtinDoc(
+    "truncate_m",
+    "Truncate with a markup terminator.",
+    "Like `?truncate`, but the terminator is markup and the result is markup.",
+    "ref_builtins_string.html",
+    "s?truncate_m(20, '<i>…</i>'?no_esc)"
+  ),
+  truncate_w: builtinDoc(
+    "truncate_w",
+    "Truncate at a word boundary.",
+    "Like `?truncate`, but only cuts at word boundaries (may return a shorter result).",
+    "ref_builtins_string.html",
+    "s?truncate_w(20)"
+  ),
+  truncate_w_m: builtinDoc(
+    "truncate_w_m",
+    "Truncate at a word boundary, markup terminator.",
+    "Like `?truncate_w`, but the terminator is markup and the result is markup.",
+    "ref_builtins_string.html",
+    "s?truncate_w_m(20, '<i>…</i>'?no_esc)"
+  ),
+  upper_abc: builtinDoc(
+    "upper_abc",
+    "Number → A, B, C … letters.",
+    "1 → `A`, 2 → `B`, 26 → `Z`, 27 → `AA` …",
+    "ref_builtins_number.html",
+    "n?upper_abc"
+  ),
+  url_path: builtinDoc(
+    "url_path",
+    "URL-escape a path, keeping `/`.",
+    "Like `?url`, but does not escape `/`, so it can be used on whole paths.",
+    "ref_builtins_string.html",
+    "path?url_path"
+  ),
+  wrap: builtinDoc(
+    "wrap",
+    "Word-wrap text to a width (2.3.35+).",
+    "Wraps lines longer than the width at word boundaries. Optional prefixes for the first line and the following lines.",
+    "ref_builtins_string.html",
+    "s?wrap(72)"
+  ),
 };
 
 /** Directive (`#name`) documentation keyed by name. */
 export const DIRECTIVE_REF: Record<string, RefDoc> = {
+  call: directiveDoc(
+    "call",
+    "Deprecated: call a macro.",
+    "Old syntax for calling a macro. Use `<@name …>` instead.",
+    "ref_depr_directive.html",
+    "<#call name args…>"
+  ),
+  comment: directiveDoc(
+    "comment",
+    "Deprecated: ignored block.",
+    "Its body is not executed or printed. Use an FTL comment `<#-- … -->` instead.",
+    "ref_depr_directive.html",
+    "<#comment>\n  …\n</#comment>"
+  ),
+  foreach: directiveDoc(
+    "foreach",
+    "Deprecated: iterate a sequence.",
+    "Old form of `#list` with the loop variable first. Use `<#list seq as x>` instead.",
+    "ref_depr_directive.html",
+    "<#foreach x in seq>\n  …\n</#foreach>"
+  ),
   assign: directiveDoc(
     "assign",
     "Create/replace a variable in the current namespace.",
@@ -1190,6 +1727,12 @@ export const SPECIAL_VAR_REF: Record<string, RefDoc> = {
     "Empty string if the caller is nameless. Error outside macro/function calls.",
     ".caller_template_name"
   ),
+  current_node: specialVarDoc(
+    "current_node",
+    "The node currently processed by #visit / #recurse.",
+    "Only meaningful inside a node handler macro called by `#visit` / `#recurse` (XML processing).",
+    ".current_node"
+  ),
   current_template_name: specialVarDoc(
     "current_template_name",
     "Name of the template where this reference occurs.",
@@ -1331,13 +1874,13 @@ export const SPECIAL_VAR_REF: Record<string, RefDoc> = {
 };
 
 export function getBuiltinRef(name: string): RefDoc | undefined {
-  return BUILTIN_REF[name];
+  return BUILTIN_REF[name] ?? BUILTIN_REF[canonicalBuiltin(name)];
 }
 
 export function getDirectiveRef(name: string): RefDoc | undefined {
-  return DIRECTIVE_REF[name];
+  return DIRECTIVE_REF[name] ?? DIRECTIVE_REF[canonicalDirective(name)];
 }
 
 export function getSpecialVarRef(name: string): RefDoc | undefined {
-  return SPECIAL_VAR_REF[name];
+  return SPECIAL_VAR_REF[name] ?? SPECIAL_VAR_REF[canonicalSpecialVar(name)];
 }

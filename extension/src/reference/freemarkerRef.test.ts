@@ -7,6 +7,7 @@ import {
   DIRECTIVE_REF,
   getBuiltinRef,
   getDirectiveRef,
+  getSpecialVarRef,
 } from "./freemarkerRef";
 
 function test(name: string, fn: () => void): void {
@@ -53,6 +54,13 @@ test("completion candidates carry documentation", () => {
 test("hover helpers reuse catalog markdown", () => {
   assert.strictEqual(builtinHover("has_content"), BUILTIN_REF.has_content!.documentation);
   assert.strictEqual(directiveHover("list"), DIRECTIVE_REF.list!.documentation);
+});
+
+test("camelCase names resolve to the snake_case reference entries", () => {
+  assert.strictEqual(getBuiltinRef("upperCase"), BUILTIN_REF.upper_case);
+  assert.strictEqual(getBuiltinRef("isoUtcFZ"), BUILTIN_REF.iso_utc_fz);
+  assert.strictEqual(getDirectiveRef("noParse"), DIRECTIVE_REF.noparse);
+  assert.strictEqual(getSpecialVarRef("currentNode"), SPECIAL_VAR_REF.current_node);
 });
 
 test("every catalog BUILTIN/DIRECTIVE name has a ref entry", () => {

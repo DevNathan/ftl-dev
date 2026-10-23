@@ -13,10 +13,10 @@
 
 /** Directives that always open an indented body. */
 export const BLOCK_OPEN =
-  "if|list|macro|function|attempt|compress|escape|noescape|autoesc|noautoesc|transform|switch|items";
+  "if|list|macro|function|attempt|compress|escape|noescape|noEscape|autoesc|autoEsc|noautoesc|noAutoEsc|transform|switch|items|foreach|forEach|comment";
 
 /** Mid-block lines: same column as opener, body still indented after them. */
-export const MID_BLOCK = "else|elseif|recover|case|on|default|sep";
+export const MID_BLOCK = "else|elseif|elseIf|recover|case|on|default|sep";
 
 /** Capture-form assign family (no `=` / `++` / `+=` … in the open tag). */
 export const CAPTURE_ASSIGN = "assign|local|global";

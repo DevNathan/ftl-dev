@@ -28,7 +28,7 @@ export const FTL_TAG_NAME_WORD_PATTERN = /[A-Za-z_][\w.]*/;
 
 // Mirrors `MID_BLOCK` / `CAPTURE_ASSIGN` in closeTag.ts (kept as local copies;
 // closeTag.ts does not export them). Keep in sync.
-const MID_BLOCK = new Set(["else", "elseif", "recover", "case", "on", "default", "sep"]);
+const MID_BLOCK = new Set(["else", "elseif", "elseIf", "recover", "case", "on", "default", "sep"]);
 const CAPTURE_ASSIGN = new Set(["assign", "local", "global"]);
 
 export type LinkedTagNameResult = {

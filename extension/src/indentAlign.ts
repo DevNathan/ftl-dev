@@ -125,6 +125,7 @@ function findMidBlockParent(
   let parents: Set<string>;
   switch (midName) {
     case "elseif":
+    case "elseIf":
       parents = ELSEIF_PARENTS;
       break;
     case "else":

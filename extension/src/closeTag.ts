@@ -759,6 +759,13 @@ const ALWAYS_BLOCK = new Set([
   "transform",
   "switch",
   "items",
+  // camelCase spellings and deprecated block directives
+  "noEscape",
+  "autoEsc",
+  "noAutoEsc",
+  "foreach",
+  "forEach",
+  "comment",
 ]);
 
 const CAPTURE_ASSIGN = new Set(["assign", "local", "global"]);
@@ -766,6 +773,7 @@ const CAPTURE_ASSIGN = new Set(["assign", "local", "global"]);
 const MID_BLOCK = new Set([
   "else",
   "elseif",
+  "elseIf",
   "recover",
   "case",
   "on",
@@ -1102,7 +1110,9 @@ const SELF_CLOSE_DENY = new Set([
   ...ALWAYS_BLOCK,
   ...MID_BLOCK,
   "outputformat",
+  "outputFormat",
   "noparse",
+  "noParse",
 ]);
 
 /**

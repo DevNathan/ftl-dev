@@ -249,6 +249,18 @@ test("#on branches never warn about fall-through; nested switches are separate",
   assert.deepStrictEqual(switchMsgs(src), []);
 });
 
+test("camelCase directive names are valid", () => {
+  const src = '<#outputFormat "HTML">a</#outputFormat><#noParse><#bogus></#noParse><#if x??>a<#elseIf y??>b</#if><#autoEsc>c</#autoEsc><#noAutoEsc>d</#noAutoEsc>';
+  assert.deepStrictEqual(validateFtl(src).map((d) => d.message), []);
+});
+
+test("deprecated #call / #comment / #foreach warn instead of Unknown", () => {
+  const src = "<#call m><#comment><#if></#comment><#foreach i in [1]>${i}<#break></#foreach><#forEach j in [2]>${j}</#forEach>";
+  const diags = validateFtl(src);
+  assert.ok(!diags.some((d) => d.severity === "error"), JSON.stringify(diags));
+  assert.strictEqual(diags.filter((d) => d.message.includes("deprecated")).length, 4);
+});
+
 test("navigation fixture shapes have no layer-A errors", () => {
   const fixture = path.join(
     __dirname,

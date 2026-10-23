@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Added
 
 - `#on` directive (FreeMarker 2.3.34+) inside `#switch`: keyword highlighting, completion and Hover docs, no "Unknown directive" error, auto-close / indent / linked-editing treat it like `#case`
+- camelCase directive names (`#outputFormat`, `#noParse`, `#elseIf`, `#autoEsc`, `#noAutoEsc`, `#noEscape`, `#forEach`) are recognized: no more "Unknown directive" errors, keyword highlighting, Hover, auto-close / indent like the snake_case form
+- Deprecated `#call`, `#comment`, `#foreach` are recognized with a deprecation warning instead of an "Unknown directive" error; the `#comment` body is ignored like `#noparse`
+- 73 missing built-ins (checked against FreeMarker 2.3.35 sources) in completion, Hover and Signature Help: loop-variable built-ins (`?index`, `?counter`, `?has_next`, `?is_first`, `?is_last`, `?item_parity`, `?item_cycle`, …), the `?iso*` family, `?c_lower_case` / `?c_upper_case`, `?cn`, `?blank_to_null` / `?empty_to_null` / `?trim_to_null`, `?chunk`, `?drop_while` / `?take_while`, `?truncate_c` / `_w` / `_m` variants, `?no_esc`, `?eval_json`, `?url_path`, node navigation, and 2.3.35's `?dedent` / `?indent` / `?lines` / `?wrap`
+- Special variable `.current_node`; camelCase built-in and special-variable names (`?upperCase`, `?isoUtcFZ`, `.dataModel`) resolve to their documentation
 - `#switch` checks: error when `#on` and `#case` are mixed in one `#switch`; warning when a non-empty `#case` / `#default` falls through to the next branch without `#break` / `#return` / `#stop` (empty `#case` grouping is fine; a `<#-- falls through -->` comment marks it intentional)
 
 ### Changed
