@@ -210,6 +210,45 @@ test("#on inside #switch is a known directive (2.3.34+)", () => {
   assert.deepStrictEqual(validateFtl(src).map((d) => d.message), []);
 });
 
+const switchMsgs = (src: string) =>
+  validateFtl(src)
+    .filter((d) => /falls through|Don't mix/.test(d.message))
+    .map((d) => `${d.severity}@${d.offset}`);
+
+test("mixing #on and #case in one #switch is an error", () => {
+  const src = "<#switch x><#on 1>a<#case 2>b<#break></#switch>";
+  assert.deepStrictEqual(switchMsgs(src), [`error@${src.indexOf("<#case")}`]);
+});
+
+test("#case falling through without #break warns", () => {
+  const src = "<#switch x><#case 1>a<#case 2>b<#break><#default>c</#switch>";
+  assert.deepStrictEqual(switchMsgs(src), [`warning@${src.indexOf("<#case 1")}`]);
+});
+
+test("#case fall-through: grouping, break/return/stop, marker, last branch are fine", () => {
+  const src = [
+    "<#function f x><#switch x>",
+    "  <#case 1>",
+    "  <#case 2>one or two<#break>",
+    "  <#case 3>three<#return 3>",
+    "  <#case 4>four <#-- falls through -->",
+    "  <#case 5>five<#stop 'x'>",
+    "  <#default>other",
+    "</#switch></#function>",
+  ].join("\n");
+  assert.deepStrictEqual(switchMsgs(src), []);
+});
+
+test("#break inside a nested #list does not end the #case", () => {
+  const src = "<#switch x><#case 1><#list xs as y>${y}<#break></#list><#case 2>b</#switch>";
+  assert.deepStrictEqual(switchMsgs(src), [`warning@${src.indexOf("<#case 1")}`]);
+});
+
+test("#on branches never warn about fall-through; nested switches are separate", () => {
+  const src = "<#switch x><#on 1>a<#switch y><#case 1>b<#break><#case 2>c</#switch><#on 2>d<#default>e</#switch>";
+  assert.deepStrictEqual(switchMsgs(src), []);
+});
+
 test("navigation fixture shapes have no layer-A errors", () => {
   const fixture = path.join(
     __dirname,
