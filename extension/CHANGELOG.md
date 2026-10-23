@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-23
+
 ### Added
 
 - `#on` directive (FreeMarker 2.3.34+) inside `#switch`: keyword highlighting, completion and Hover docs, no "Unknown directive" error, auto-close / indent / linked-editing treat it like `#case`
