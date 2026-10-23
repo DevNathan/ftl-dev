@@ -15,3 +15,9 @@
 //^^ keyword.control.directive.freemarker
 <#default>
 </#switch>
+<#outputFormat "HTML">
+//^^^^^^^^^^^^ keyword.control.directive.freemarker
+</#outputFormat>
+<#foreach i in [1]>
+//^^^^^^^ keyword.control.directive.freemarker
+</#foreach>

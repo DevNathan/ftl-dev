@@ -94,14 +94,14 @@
       ]
     },
     "directive-names": {
-      "match": "\\b(assign|attempt|autoesc|break|case|compress|continue|default|else|elseif|escape|fallback|flush|ftl|function|global|if|import|include|items|list|local|lt|macro|nested|noautoesc|noescape|noparse|nt|on|outputformat|recover|recurse|return|rt|sep|setting|stop|switch|t|transform|visit)\\b",
+      "match": "\\b(assign|attempt|autoesc|autoEsc|break|call|case|comment|compress|continue|default|else|elseif|elseIf|escape|fallback|flush|foreach|forEach|ftl|function|global|if|import|include|items|list|local|lt|macro|nested|noautoesc|noAutoEsc|noescape|noEscape|noparse|noParse|nt|on|outputformat|outputFormat|recover|recurse|return|rt|sep|setting|stop|switch|t|transform|visit)\\b",
       "name": "keyword.control.directive.freemarker"
     },
     "directive-angle": {
       "patterns": [
         {
           "name": "meta.directive.freemarker",
-          "begin": "(</?#)(assign|attempt|autoesc|break|case|compress|continue|default|else|elseif|escape|fallback|flush|ftl|function|global|if|import|include|items|list|local|lt|macro|nested|noautoesc|noescape|noparse|nt|on|outputformat|recover|recurse|return|rt|sep|setting|stop|switch|t|transform|visit)\\b",
+          "begin": "(</?#)(assign|attempt|autoesc|autoEsc|break|call|case|comment|compress|continue|default|else|elseif|elseIf|escape|fallback|flush|foreach|forEach|ftl|function|global|if|import|include|items|list|local|lt|macro|nested|noautoesc|noAutoEsc|noescape|noEscape|noparse|noParse|nt|on|outputformat|outputFormat|recover|recurse|return|rt|sep|setting|stop|switch|t|transform|visit)\\b",
           "beginCaptures": {
             "1": { "name": "punctuation.definition.tag.begin.freemarker" },
             "2": { "name": "keyword.control.directive.freemarker" }
@@ -166,7 +166,7 @@
       "patterns": [
         {
           "name": "meta.directive.freemarker",
-          "begin": "(\\[/?#)(assign|attempt|autoesc|break|case|compress|continue|default|else|elseif|escape|fallback|flush|ftl|function|global|if|import|include|items|list|local|lt|macro|nested|noautoesc|noescape|noparse|nt|on|outputformat|recover|recurse|return|rt|sep|setting|stop|switch|t|transform|visit)\\b",
+          "begin": "(\\[/?#)(assign|attempt|autoesc|autoEsc|break|call|case|comment|compress|continue|default|else|elseif|elseIf|escape|fallback|flush|foreach|forEach|ftl|function|global|if|import|include|items|list|local|lt|macro|nested|noautoesc|noAutoEsc|noescape|noEscape|noparse|noParse|nt|on|outputformat|outputFormat|recover|recurse|return|rt|sep|setting|stop|switch|t|transform|visit)\\b",
           "beginCaptures": {
             "1": { "name": "punctuation.definition.tag.begin.freemarker" },
             "2": { "name": "keyword.control.directive.freemarker" }

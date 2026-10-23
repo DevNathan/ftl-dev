@@ -5,6 +5,8 @@
  * → no Signature Help. CamelCase aliases resolve to snake_case entries.
  */
 
+import { canonicalBuiltin } from "./reference/aliases";
+
 export type BuiltinSignature = {
   parameters: readonly string[];
   documentation?: string;
@@ -56,6 +58,29 @@ export const BUILTIN_SIGNATURES: Readonly<
     parameters: ["maxLength", "terminator?", "terminatorLength?"],
   },
   url: { parameters: ["charset?"] },
+  absolute_template_name: { parameters: ["baseName?"] },
+  ancestors: { parameters: ["nodeName…"] },
+  chunk: { parameters: ["size", "filler?"] },
+  dedent: { parameters: ["prefix?", "rightTrim?"] },
+  drop_while: { parameters: ["predicate"] },
+  indent: { parameters: ["prefix", "rightTrim?"] },
+  iso: { parameters: ["timeZone"] },
+  iso_h: { parameters: ["timeZone"] },
+  iso_h_nz: { parameters: ["timeZone"] },
+  iso_m: { parameters: ["timeZone"] },
+  iso_m_nz: { parameters: ["timeZone"] },
+  iso_ms: { parameters: ["timeZone"] },
+  iso_ms_nz: { parameters: ["timeZone"] },
+  iso_nz: { parameters: ["timeZone"] },
+  item_cycle: { parameters: ["value…"] },
+  take_while: { parameters: ["predicate"] },
+  truncate_c: { parameters: ["maxLength", "terminator?", "terminatorLength?"] },
+  truncate_c_m: { parameters: ["maxLength", "terminator?", "terminatorLength?"] },
+  truncate_m: { parameters: ["maxLength", "terminator?", "terminatorLength?"] },
+  truncate_w: { parameters: ["maxLength", "terminator?", "terminatorLength?"] },
+  truncate_w_m: { parameters: ["maxLength", "terminator?", "terminatorLength?"] },
+  url_path: { parameters: ["charset?"] },
+  wrap: { parameters: ["width", "firstLinePrefix?", "otherLinesPrefix?"] },
 };
 
 /** FreeMarker 2.3.23+ camelCase → snake_case for catalog lookup. */
@@ -78,7 +103,10 @@ export function builtinSignatureOf(
     return direct;
   }
   if (!name.includes("_") && /[A-Z]/.test(name)) {
-    return BUILTIN_SIGNATURES[camelToSnakeBuiltin(name)];
+    return (
+      BUILTIN_SIGNATURES[canonicalBuiltin(name)] ??
+      BUILTIN_SIGNATURES[camelToSnakeBuiltin(name)]
+    );
   }
   return undefined;
 }

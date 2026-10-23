@@ -1,4 +1,5 @@
 import { DIRECTIVES } from "./catalog";
+import { canonicalDirective, LEGACY_DIRECTIVES } from "./reference/aliases";
 import { findCommentDelimiterIssues, ftlCommentRanges, skipFtlComment } from "./comments";
 import { namedParamsWithAliases } from "./directiveParams";
 import { buildLineMap, offsetToPos } from "./lineMap";
@@ -28,7 +29,13 @@ export type FtlDiagnostic = {
   severity: "error" | "warning" | "information";
 };
 
-const KNOWN_DIRECTIVES = new Set(DIRECTIVES);
+const KNOWN_DIRECTIVES = new Set([
+  ...DIRECTIVES,
+  ...Object.keys(LEGACY_DIRECTIVES),
+]);
+
+/** Directives whose body is literal text (never parsed). */
+const LITERAL_BODY = new Set(["noparse", "comment"]);
 
 /**
  * Warn when a name that resolves to an ftldoc-`@deprecated` symbol is used
@@ -282,6 +289,8 @@ const BLOCK_DIRECTIVES = new Set([
   "items",
   "noparse",
   "outputformat",
+  "comment",
+  "foreach",
 ]);
 
 /** May be short (`<#assign x=1>`) or capture-block (`<#assign x>…</#assign>`). */
@@ -368,8 +377,9 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
     // `<#noparse>` body is literal text: ignore everything until its close.
     const top = stack[stack.length - 1];
     if (
-      top?.name === "noparse" &&
-      !(tok.sigil === "#" && tok.kind === "close" && tok.name === "noparse")
+      top !== undefined &&
+      LITERAL_BODY.has(top.name) &&
+      !(tok.sigil === "#" && tok.kind === "close" && tok.name === top.name)
     ) {
       continue;
     }
@@ -387,6 +397,16 @@ function findDirectiveIssues(text: string): FtlDiagnostic[] {
         severity: "error",
       });
       // Still process structure below so mismatch/unclosed stay useful.
+    }
+
+    const legacy = LEGACY_DIRECTIVES[tok.name];
+    if (legacy && tok.kind !== "close") {
+      diags.push({
+        offset: tok.offset,
+        length: tok.length,
+        message: legacy,
+        severity: "warning",
+      });
     }
 
     if (tok.name === "elseif") {
@@ -605,8 +625,9 @@ export function findSwitchIssues(text: string): FtlDiagnostic[] {
   for (const tok of scanDirectives(text)) {
     const top = stack[stack.length - 1];
     if (
-      top?.name === "noparse" &&
-      !(tok.sigil === "#" && tok.kind === "close" && tok.name === "noparse")
+      top !== undefined &&
+      LITERAL_BODY.has(top.name) &&
+      !(tok.sigil === "#" && tok.kind === "close" && tok.name === top.name)
     ) {
       continue;
     }
@@ -818,6 +839,14 @@ function findUnclosedDirectiveOpens(text: string): FtlDiagnostic[] {
       i++;
     }
 
+    const literalName = canonicalDirective(head.name);
+    if (closed && !head.isClose && head.sigil === "#" && LITERAL_BODY.has(literalName)) {
+      // Literal body: skip to the matching close so its text is not scanned.
+      const endTag = (openCh === "[" ? "[/#" : "</#") + head.name;
+      const end = text.indexOf(endTag, i);
+      i = end < 0 ? text.length : end;
+    }
+
     if (!closed) {
       diags.push({
         offset: start,
@@ -870,7 +899,8 @@ function scanDirectives(text: string): DirTok[] {
     const bracket = head.bracket;
     const isClose = head.isClose;
     const sigil = head.sigil;
-    const name = head.name;
+    // camelCase spellings (`noParse`, `elseIf`, …) map to the canonical name.
+    const name = sigil === "#" ? canonicalDirective(head.name) : head.name;
     const closeCh = bracket === "[" ? "]" : ">";
     i += head.length;
 
