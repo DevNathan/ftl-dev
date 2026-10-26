@@ -44,6 +44,19 @@ Vim 런타임은 **별도 git** ([ftl-dev.vim](https://github.com/DevNathan/ftl-
 - 한국어: `*.ko.md` 병행.
 - 채팅은 한국어 가능; 남는 문서는 요청 없으면 영어.
 
+## 개발
+
+루트 `package.json`은 없다. Node 18+ (CI는 20).
+
+```bash
+npm ci --prefix extension
+npm ci --prefix server
+npm test --prefix extension
+npx tsc -p server --noEmit
+```
+
+`extension/`의 `npm run check:terms`는 금지어 목록이 없으면 0으로 끝난다. 컴파일 후 `npm start --prefix server`가 stdio 언어 서버다. `tree-sitter-freemarker/`는 선택이며 CI에 없다.
+
 ## 제약
 
 - active plan이 있으면 그에 맞춤.
