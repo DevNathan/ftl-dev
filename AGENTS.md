@@ -51,6 +51,19 @@ CodeOSS FreeMarker tooling for **FTL as a scripting / application-logic language
 - Korean: optional `*.ko.md` siblings.
 - Chat may be Korean; lasting docs default to English unless asked for KO.
 
+## Develop
+
+No root `package.json`. Node 18+ (CI uses 20).
+
+```bash
+npm ci --prefix extension
+npm ci --prefix server
+npm test --prefix extension
+npx tsc -p server --noEmit
+```
+
+`npm run check:terms` in `extension/` exits 0 when no forbidden-term list is configured. After compile, `npm start --prefix server` is the stdio language server. `tree-sitter-freemarker/` is optional and is not part of CI.
+
 ## Constraints
 
 - Align changes with an active plan when one exists.
