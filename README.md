@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://devnathan.github.io/ftl-dev/"><img src="site/assets/banner.svg" alt="ftl-dev 1.0.0 — FreeMarker, finally first-class" width="100%"></a>
+  <a href="https://devnathan.github.io/ftl-dev/"><img src="site/assets/banner.svg" alt="ftl-dev 1.0: FreeMarker language support" width="100%"></a>
 </p>
 
 <p align="center">
@@ -13,10 +13,9 @@
 # FTL-dev
 
 > [!TIP]
-> 🎉 **ftl-dev 1.0.0 is out — the first stable release.**
-> 41 plans and hundreds of tests later, FreeMarker finally feels like a real language in your editor: highlighting that reads, Ctrl+click navigation, diagnostics that only flag real mistakes, and ftldoc in every hover. So: one-point-oh.
-> From here on, the extension id, language id, settings keys and `.ftl-data-model.json` only change in a major version ([stability contract](docs/versioning.md#stability-contract-from-100)).
-> **[See the project page →](https://devnathan.github.io/ftl-dev/)** · [What's new in 1.0.0](extension/CHANGELOG.md)
+> **1.0 is out.** It's been stable for a while now, so I'm calling it.
+> From here on I won't rename the extension id, language id, settings keys or `.ftl-data-model.json` without a major version bump ([details](docs/versioning.md#stability-contract-from-100)).
+> [Project page](https://devnathan.github.io/ftl-dev/) · [Changelog](extension/CHANGELOG.md)
 
 Did you know FreeMarker (ftl for short) can be used as a real programming language? ftl is faster than light (okay, heavily exaggerated), and while it is less extensible than mainstream languages, it is not exactly *insufficient*. Anyway, people barely use ftl, so of course there was no decent all-in-one extension.
 

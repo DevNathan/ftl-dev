@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://devnathan.github.io/ftl-dev/"><img src="site/assets/banner.svg" alt="ftl-dev 1.0.0 — FreeMarker, finally first-class" width="100%"></a>
+  <a href="https://devnathan.github.io/ftl-dev/"><img src="site/assets/banner.svg" alt="ftl-dev 1.0: FreeMarker language support" width="100%"></a>
 </p>
 
 <p align="center">
@@ -13,10 +13,9 @@
 # FTL-dev
 
 > [!TIP]
-> 🎉 **ftl-dev 1.0.0 출시 — 첫 안정 버전입니다.**
-> 41개의 계획과 수백 개의 테스트 끝에, 이제 에디터에서 FreeMarker를 진짜 언어처럼 쓸 수 있습니다. 읽기 좋은 하이라이팅, Ctrl+클릭 이동, 진짜 실수만 잡는 진단, 호버마다 보이는 ftldoc까지. 그래서 1.0을 냅니다.
-> 앞으로 익스텐션 ID, 언어 ID, 설정 키, `.ftl-data-model.json`은 메이저 버전에서만 바뀝니다([안정성 약속](docs/versioning.ko.md)).
-> **[프로젝트 페이지 보기 →](https://devnathan.github.io/ftl-dev/)** · [1.0.0 변경 내용](extension/CHANGELOG.md)
+> **1.0 나왔습니다.** 한동안 별 탈 없이 잘 굴러가서 이제 1.0 달아도 되겠다 싶었어요.
+> 앞으로 익스텐션 ID, 언어 ID, 설정 키, `.ftl-data-model.json`은 메이저 버전 올릴 때만 바꿉니다([자세히](docs/versioning.ko.md)).
+> [프로젝트 페이지](https://devnathan.github.io/ftl-dev/) · [변경 이력](extension/CHANGELOG.md)
 
 > Canonical: [README.md](README.md) (English).
 

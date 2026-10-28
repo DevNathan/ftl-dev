@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ftl-dev — FreeMarker language support</title>
-<meta name="description" content="ftl-dev {{version}} is stable: syntax highlighting, navigation, diagnostics and ftldoc for FreeMarker in VS Code, Cursor, CodeOSS and Vim / Neovim.">
-<meta property="og:title" content="ftl-dev {{version}} — FreeMarker, finally first-class">
-<meta property="og:description" content="Highlighting, navigation, diagnostics and docs for .ftl files in VS Code, Cursor, CodeOSS and Vim / Neovim.">
+<title>ftl-dev · FreeMarker for VS Code, Cursor and Vim</title>
+<meta name="description" content="FreeMarker (.ftl) support for VS Code, Cursor, CodeOSS and Vim / Neovim: highlighting, go to definition, diagnostics and ftldoc.">
+<meta property="og:title" content="ftl-dev {{version}}: FreeMarker support for VS Code, Cursor and Vim">
+<meta property="og:description" content="Highlighting, go to definition, diagnostics and ftldoc for .ftl files.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -101,7 +101,7 @@ img { max-width: 100%; }
 
 /* Korean: break between words, not inside them */
 [data-lang="ko"] body { word-break: keep-all; overflow-wrap: break-word; }
-[data-lang="ko"] h1 { font-size: clamp(38px, 5vw, 54px); line-height: 1.12; }
+[data-lang="ko"] h1 { font-size: clamp(34px, 4.4vw, 48px); line-height: 1.18; }
 
 /* language switch: show only the active language */
 [data-lang="en"] [lang="ko"], [data-lang="ko"] [lang="en"] { display: none !important; }
@@ -148,7 +148,7 @@ img { max-width: 100%; }
   padding: 7px 12px; border-radius: 999px;
 }
 .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
-h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.04; letter-spacing: -.035em; margin: 20px 0 18px; font-weight: 800; }
+h1 { font-size: clamp(38px, 5.4vw, 58px); line-height: 1.04; letter-spacing: -.035em; margin: 20px 0 18px; font-weight: 800; }
 h1 .grad { background: linear-gradient(120deg, var(--brand) 10%, var(--accent) 95%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .lede { font-size: 19px; color: var(--fg-muted); margin: 0 0 28px; max-width: 34em; }
 .ctas { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -328,19 +328,19 @@ footer a { color: var(--fg-muted); }
   <section class="hero">
     <div class="wrap">
       <div>
-        <span class="pill"><span class="dot"></span><span lang="en">v{{version}} is here — first stable release</span><span lang="ko">v{{version}} 출시 — 첫 안정 버전</span></span>
-        <h1><span lang="en">FreeMarker,<br><span class="grad">finally first&#8209;class.</span></span><span lang="ko">FreeMarker도 이제<br><span class="grad">제대로 된 언어처럼.</span></span></h1>
-        <p class="lede" lang="en">Highlighting that reads, Ctrl+click navigation, diagnostics that catch real mistakes and ftldoc in every hover. For VS Code, Cursor, CodeOSS and Vim / Neovim.</p>
-        <p class="lede" lang="ko">읽기 좋은 하이라이팅, Ctrl+클릭 이동, 진짜 실수만 잡는 진단, 호버마다 보이는 ftldoc까지. VS Code, Cursor, CodeOSS, Vim / Neovim에서.</p>
+        <span class="pill"><span class="dot"></span><span lang="en">v{{version}} · 1.0 is out</span><span lang="ko">v{{version}} · 1.0 나왔습니다</span></span>
+        <h1><span lang="en">Writing ftl shouldn't <span class="grad">hurt this much.</span></span><span lang="ko">ftl 짜는 게 <span class="grad">이렇게까지 괴로울 일인가요?</span></span></h1>
+        <p class="lede" lang="en">So I built the extension I wanted: proper highlighting, Ctrl+click to definitions, errors caught before render time, ftldoc on hover, and indent that follows FTL blocks. Runs in VS Code, Cursor and CodeOSS. Vim / Neovim has its own plugin.</p>
+        <p class="lede" lang="ko">그래서 직접 만들었습니다. 제대로 된 하이라이팅, Ctrl+클릭으로 정의 이동, 렌더링 전에 잡아 주는 문법 오류, 호버로 보는 ftldoc, FTL 블록에 맞는 들여쓰기. VS Code, Cursor, CodeOSS에서 돌아가고 Vim / Neovim은 플러그인이 따로 있습니다.</p>
         <div class="ctas">
           <a class="btn primary" href="https://marketplace.visualstudio.com/items?itemName=nathan-0910.ftl-dev">
             <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1a.75.75 0 0 1 .75.75v6.69l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 0 1 1.06-1.06l2.22 2.22V1.75A.75.75 0 0 1 8 1zM2.75 12.5a.75.75 0 0 0 0 1.5h10.5a.75.75 0 0 0 0-1.5H2.75z"/></svg>
             <span lang="en">VS Code Marketplace</span><span lang="ko">VS Code 마켓플레이스</span>
           </a>
-          <a class="btn" href="https://open-vsx.org/extension/nathan-0910/ftl-dev"><span lang="en">Open VSX (Cursor, CodeOSS)</span><span lang="ko">Open VSX (Cursor, CodeOSS)</span></a>
+          <a class="btn" href="https://open-vsx.org/extension/nathan-0910/ftl-dev">Open VSX (Cursor, CodeOSS)</a>
           <a class="btn" href="https://github.com/DevNathan/ftl-dev.vim">Vim / Neovim</a>
         </div>
-        <p class="hero-note"><span lang="en">Free and open source · Apache-2.0 · extension id</span><span lang="ko">무료 오픈소스 · Apache-2.0 · 익스텐션 ID</span> <code>nathan-0910.ftl-dev</code></p>
+        <p class="hero-note"><span lang="en">Free, Apache-2.0. Extension id</span><span lang="ko">무료, Apache-2.0. 익스텐션 ID</span> <code>nathan-0910.ftl-dev</code></p>
       </div>
       <div class="window" role="img" aria-label="FTL code highlighted by ftl-dev">
         <div class="window-bar"><i></i><i></i><i></i><span>greeting.ftl</span></div>
@@ -351,13 +351,12 @@ footer a { color: var(--fg-muted); }
 
   <section class="alt" id="stable">
     <div class="wrap">
-      <p class="eyebrow"><span lang="en">What 1.0 means</span><span lang="ko">1.0이 뜻하는 것</span></p>
-      <h2><span lang="en">Stable enough to build your workflow on.</span><span lang="ko">이제 믿고 써도 됩니다.</span></h2>
-      <p class="section-lede" lang="en">Forty-one plans, hundreds of tests and a zero-false-positive rule for default diagnostics got us here. From 1.0.0 on, these only change in a major version:</p>
-      <p class="section-lede" lang="ko">41개의 계획, 수백 개의 테스트, 그리고 "정상 문법에는 기본 진단을 띄우지 않는다"는 원칙 끝에 여기까지 왔습니다. 1.0.0부터 아래 항목은 메이저 버전에서만 바뀝니다.</p>
+      <h2><span lang="en">What 1.0 means</span><span lang="ko">1.0이 되면서 달라진 점</span></h2>
+      <p class="section-lede" lang="en">From 1.0 on I won't casually rename the things below. If one of them has to change, it comes with a major version bump and a note in the changelog first.</p>
+      <p class="section-lede" lang="ko">1.0부터는 아래 것들을 함부로 안 바꿉니다. 바꿔야 할 일이 생기면 메이저 버전 올리고, 변경 이력에 먼저 적어 둘게요.</p>
       <div class="stable-grid">
         <div class="stable-item"><b><span lang="en">Extension &amp; language id</span><span lang="ko">익스텐션·언어 ID</span></b><p><code>nathan-0910.ftl-dev</code> · <code>freemarker</code></p></div>
-        <div class="stable-item"><b><span lang="en">File types &amp; grammar</span><span lang="ko">파일 형식·문법 scope</span></b><p><code>.ftl</code> <code>.ftlh</code> <code>.ftlx</code> · <code>text.html.freemarker</code></p></div>
+        <div class="stable-item"><b><span lang="en">File types &amp; grammar scope</span><span lang="ko">파일 확장자·문법 scope</span></b><p><code>.ftl</code> <code>.ftlh</code> <code>.ftlx</code> · <code>text.html.freemarker</code></p></div>
         <div class="stable-item"><b><span lang="en">Settings keys</span><span lang="ko">설정 키</span></b><p><code>ftl-dev.strictVariables</code>, <code>ftl-dev.dataModel</code>, …</p></div>
         <div class="stable-item"><b><span lang="en">Project file</span><span lang="ko">프로젝트 파일</span></b><p><code>.ftl-data-model.json</code></p></div>
       </div>
@@ -366,58 +365,57 @@ footer a { color: var(--fg-muted); }
 
   <section id="features">
     <div class="wrap">
-      <p class="eyebrow"><span lang="en">Features</span><span lang="ko">기능</span></p>
-      <h2><span lang="en">Everything the other FTL extensions forgot.</span><span lang="ko">다른 FTL 익스텐션이 빼먹은 것들, 전부.</span></h2>
-      <p class="section-lede" lang="en">Built by someone who writes FreeMarker every day and got tired of grepping for macro definitions.</p>
-      <p class="section-lede" lang="ko">매일 FreeMarker를 쓰다가 매크로 정의를 grep으로 찾는 데 지친 사람이 만들었습니다.</p>
+      <h2><span lang="en">Features</span><span lang="ko">기능</span></h2>
+      <p class="section-lede" lang="en">Things I kept wishing for while writing ftl and couldn't find in any other extension.</p>
+      <p class="section-lede" lang="ko">ftl 짜면서 계속 아쉬웠는데 다른 익스텐션엔 없던 것들입니다.</p>
       <div class="features">
         <article class="feature">
           <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M3 5h9M3 10h14M3 15h7"/></svg></div>
-          <h3><span lang="en">Highlighting that reads</span><span lang="ko">읽히는 하이라이팅</span></h3>
-          <p lang="en">Directives, built-ins, <code>${…}</code> inside strings, raw strings, square-bracket syntax and HTML, all colored correctly.</p>
-          <p lang="ko">디렉티브, built-in, 문자열 속 <code>${…}</code>, raw 문자열, 대괄호 문법, HTML까지 제대로 칠합니다.</p>
+          <h3><span lang="en">Syntax highlighting</span><span lang="ko">하이라이팅</span></h3>
+          <p lang="en">Directives, built-ins, <code>${…}</code> inside strings, raw strings, square-bracket syntax and the HTML around them all get the right colors. No more squinting to see where a tag ends.</p>
+          <p lang="ko">디렉티브, built-in, 문자열 안의 <code>${…}</code>, raw 문자열, 대괄호 문법, 주변 HTML까지 제대로 칠합니다. 태그가 어디서 끝나는지 눈으로 더듬을 필요 없어요.</p>
         </article>
         <article class="feature">
           <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8 4H4v12h12v-4M11 3h6v6M17 3l-8 8"/></svg></div>
           <h3><span lang="en">Go to definition &amp; rename</span><span lang="ko">정의로 이동·이름 바꾸기</span></h3>
-          <p lang="en">Ctrl+click through macros, functions, variables and <code>#import</code> namespaces. F2 renames, Ctrl+T finds any symbol in the workspace.</p>
-          <p lang="ko">매크로·함수·변수·<code>#import</code> 네임스페이스로 Ctrl+클릭 이동. F2로 이름 바꾸기, Ctrl+T로 워크스페이스 심볼 검색.</p>
+          <p lang="en">Ctrl+click a macro, function, variable or <code>#import</code> namespace and you're at the declaration. F2 renames, Ctrl+T searches the whole workspace.</p>
+          <p lang="ko">매크로, 함수, 변수, <code>#import</code> 네임스페이스에서 Ctrl+클릭하면 선언으로 갑니다. 이름은 F2로 바꾸고, 워크스페이스 전체 검색은 Ctrl+T.</p>
         </article>
         <article class="feature">
           <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M4 4h12v9H8l-4 3z"/></svg></div>
-          <h3><span lang="en">Completion &amp; signature help</span><span lang="ko">자동완성·시그니처 도움말</span></h3>
-          <p lang="en">Directives and built-ins up to FreeMarker 2.3.35, named directive parameters, and parameter hints for your own <code>#function</code> / <code>#macro</code>.</p>
-          <p lang="ko">FreeMarker 2.3.35까지의 디렉티브와 built-in, 디렉티브 이름 인자, 직접 만든 <code>#function</code> / <code>#macro</code> 인자 힌트까지.</p>
+          <h3><span lang="en">Completion &amp; parameter hints</span><span lang="ko">자동완성·인자 힌트</span></h3>
+          <p lang="en">Directives and built-ins up to FreeMarker 2.3.35, directive parameters, and parameter hints for your own <code>#function</code> / <code>#macro</code>.</p>
+          <p lang="ko">FreeMarker 2.3.35까지의 디렉티브와 built-in, 디렉티브 인자, 직접 만든 <code>#function</code> / <code>#macro</code>의 인자 힌트가 뜹니다.</p>
         </article>
         <article class="feature">
           <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M10 3l8 14H2zM10 8v4M10 14.5v.01"/></svg></div>
-          <h3><span lang="en">Diagnostics that don't cry wolf</span><span lang="ko">헛경고 없는 진단</span></h3>
-          <p lang="en">Unclosed tags, mismatched blocks, <code>#switch</code> mistakes, deprecated directives. Valid FTL never gets a red line.</p>
-          <p lang="ko">닫히지 않은 태그, 짝이 안 맞는 블록, <code>#switch</code> 실수, deprecated 디렉티브. 올바른 FTL엔 빨간 줄이 생기지 않습니다.</p>
+          <h3><span lang="en">Diagnostics</span><span lang="ko">문법 검사</span></h3>
+          <p lang="en">Unclosed tags, mismatched blocks, <code>#switch</code> mistakes, deprecated directives. If valid FTL gets a red line, that's a bug. Please tell me.</p>
+          <p lang="ko">안 닫힌 태그, 짝 안 맞는 블록, <code>#switch</code> 실수, deprecated 디렉티브를 잡습니다. 멀쩡한 FTL에 빨간 줄이 뜨면 버그니까 알려 주세요.</p>
         </article>
         <article class="feature">
           <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M5 3h7l3 3v11H5zM8 9h5M8 12h5"/></svg></div>
-          <h3><span lang="en">ftldoc</span><span lang="ko">ftldoc 문서 주석</span></h3>
-          <p lang="en">Javadoc / JSDoc-style comments with <code>@param</code>, <code>@return</code>, <code>@deprecated</code>, <code>@example</code> in Hover, Signature Help and completion.</p>
-          <p lang="ko"><code>@param</code>, <code>@return</code>, <code>@deprecated</code>, <code>@example</code> 등 Javadoc / JSDoc 스타일 주석을 호버·시그니처 도움말·자동완성에 보여 줍니다.</p>
+          <h3>ftldoc</h3>
+          <p lang="en">Write Javadoc-style comments (<code>@param</code>, <code>@return</code>, <code>@deprecated</code>, <code>@example</code>, …) and they show up in hover, parameter hints and completion.</p>
+          <p lang="ko"><code>@param</code>, <code>@return</code>, <code>@deprecated</code>, <code>@example</code> 같은 Javadoc식 주석을 달면 호버, 인자 힌트, 자동완성에 그대로 나옵니다.</p>
         </article>
         <article class="feature">
           <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M7 5L3 10l4 5M13 5l4 5-4 5"/></svg></div>
-          <h3><span lang="en">Typing that keeps up</span><span lang="ko">손이 덜 가는 편집</span></h3>
-          <p lang="en">Auto-close for directives, FTL-aware indent, and linked editing: rename <code>&lt;#if&gt;</code> and <code>&lt;/#if&gt;</code> follows.</p>
-          <p lang="ko">디렉티브 자동 닫기, FTL식 들여쓰기, 연결 편집: <code>&lt;#if&gt;</code>를 고치면 <code>&lt;/#if&gt;</code>도 따라 바뀝니다.</p>
+          <h3><span lang="en">Closing tags &amp; indent</span><span lang="ko">태그 닫기·들여쓰기</span></h3>
+          <p lang="en">Closing tags get filled in for you, indent follows FTL blocks, and renaming <code>&lt;#if&gt;</code> renames its <code>&lt;/#if&gt;</code> too.</p>
+          <p lang="ko">닫는 태그는 알아서 채워 주고, 들여쓰기는 FTL 블록 기준으로 맞춥니다. <code>&lt;#if&gt;</code> 이름을 고치면 <code>&lt;/#if&gt;</code>도 같이 바뀝니다.</p>
         </article>
         <article class="feature">
           <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M4 5h3M4 10h3M4 15h3M10 5h6M10 10h6M10 15h6"/></svg></div>
           <h3><span lang="en">Outline &amp; references</span><span lang="ko">아웃라인·참조 찾기</span></h3>
-          <p lang="en">Document outline, find all references, semantic tokens for locals and parameters, optional strict-variable checks.</p>
-          <p lang="ko">문서 아웃라인, 모든 참조 찾기, 지역 변수·인자 시맨틱 토큰, 선택형 엄격 변수 검사.</p>
+          <p lang="en">Document outline, find all references, separate colors for locals and parameters. Turn on strict mode if you want warnings for undeclared variables.</p>
+          <p lang="ko">문서 아웃라인, 모든 참조 찾기, 지역 변수와 인자 구분 색. 선언 안 된 변수까지 경고받고 싶으면 strict 모드를 켜세요.</p>
         </article>
         <article class="feature">
           <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M3 4h14v10H3zM7 17h6"/></svg></div>
           <h3>Vim / Neovim</h3>
-          <p lang="en">A native Vim plugin for syntax, indent and closing tags. Neovim can also run the ftl-dev language server for Hover, completion and diagnostics.</p>
-          <p lang="ko">문법·들여쓰기·태그 닫기는 Vim 플러그인으로. Neovim에서는 ftl-dev 언어 서버를 붙여 호버·자동완성·진단도 쓸 수 있습니다.</p>
+          <p lang="en">A separate plugin, <a href="https://github.com/DevNathan/ftl-dev.vim">ftl-dev.vim</a>, handles syntax, indent and closing tags. On Neovim you can also hook up the ftl-dev language server for hover, completion and diagnostics.</p>
+          <p lang="ko">문법, 들여쓰기, 태그 닫기는 별도 플러그인 <a href="https://github.com/DevNathan/ftl-dev.vim">ftl-dev.vim</a>이 맡습니다. Neovim이면 ftl-dev 언어 서버를 붙여서 호버, 자동완성, 진단도 쓸 수 있어요.</p>
         </article>
       </div>
     </div>
@@ -426,15 +424,14 @@ footer a { color: var(--fg-muted); }
   <section class="alt" id="diagnostics">
     <div class="wrap split rev">
       <div>
-        <p class="eyebrow"><span lang="en">Hover &amp; diagnostics</span><span lang="ko">호버와 진단</span></p>
-        <h2><span lang="en">Know before FreeMarker tells you.</span><span lang="ko">FreeMarker가 터지기 전에 먼저 압니다.</span></h2>
-        <p class="section-lede" lang="en">Errors that FreeMarker would only throw at render time show up as you type, in the same words a teammate would use.</p>
-        <p class="section-lede" lang="ko">렌더링할 때야 터질 에러를 타이핑하는 순간 보여 줍니다. 동료가 말해 주듯 알아듣기 쉬운 말로요.</p>
+        <h2><span lang="en">Diagnostics and hover</span><span lang="ko">진단과 호버</span></h2>
+        <p class="section-lede" lang="en">Some mistakes FreeMarker only reports when it renders the template. These show up while you type.</p>
+        <p class="section-lede" lang="ko">FreeMarker가 렌더링할 때가 돼서야 던지는 에러가 있습니다. 그런 걸 치는 동안 바로 보여 줍니다.</p>
         <ul class="checks">
-          <li lang="en"><span><b>Matches the engine</b>: mixing <code>#on</code> and <code>#case</code> is a ParseException in FreeMarker 2.3.34, and an error here.</span></li>
-          <li lang="ko"><span><b>엔진과 같은 판단</b>: <code>#on</code>과 <code>#case</code>를 섞으면 FreeMarker 2.3.34에서 ParseException이고, 여기서도 에러입니다.</span></li>
-          <li lang="en"><span><b>Docs where you need them</b>: hover a call to see its ftldoc, parameters and defaults.</span></li>
-          <li lang="ko"><span><b>필요한 자리에 문서</b>: 호출부에 마우스를 올리면 ftldoc, 인자, 기본값이 보입니다.</span></li>
+          <li lang="en"><span>Mixing <code>#on</code> and <code>#case</code> in one <code>#switch</code> is a ParseException in FreeMarker 2.3.34. Here you get a red line before you even save.</span></li>
+          <li lang="ko"><span><code>#switch</code> 하나에 <code>#on</code>과 <code>#case</code>를 섞으면 FreeMarker 2.3.34에선 ParseException입니다. 여기선 저장하기도 전에 빨간 줄이 뜹니다.</span></li>
+          <li lang="en"><span>Hover a call to see its ftldoc, parameters and defaults.</span></li>
+          <li lang="ko"><span>호출하는 곳에 마우스를 올리면 ftldoc, 인자, 기본값이 보입니다.</span></li>
         </ul>
       </div>
       <div class="stack">
@@ -462,27 +459,26 @@ footer a { color: var(--fg-muted); }
 
   <section id="install">
     <div class="wrap">
-      <p class="eyebrow"><span lang="en">Install</span><span lang="ko">설치</span></p>
-      <h2><span lang="en">Thirty seconds, tops.</span><span lang="ko">30초면 끝.</span></h2>
-      <p class="section-lede" lang="en">Pick your editor. Open any <code>.ftl</code>, <code>.ftlh</code> or <code>.ftlx</code> file and you're done.</p>
-      <p class="section-lede" lang="ko">에디터만 고르세요. <code>.ftl</code>, <code>.ftlh</code>, <code>.ftlx</code> 파일을 열면 끝입니다.</p>
+      <h2><span lang="en">Install</span><span lang="ko">설치</span></h2>
+      <p class="section-lede" lang="en">Not much to it. Install it in your editor and open a <code>.ftl</code>, <code>.ftlh</code> or <code>.ftlx</code> file.</p>
+      <p class="section-lede" lang="ko">할 게 뭐 있겠습니까. 에디터에 설치하고 <code>.ftl</code>, <code>.ftlh</code>, <code>.ftlx</code> 파일을 열면 됩니다.</p>
       <div class="install-grid">
         <div class="install">
           <h3>VS Code</h3>
-          <p lang="en">From the Visual Studio Marketplace, or run in Quick Open (Ctrl+P):</p>
-          <p lang="ko">Visual Studio 마켓플레이스에서 받거나, Quick Open(Ctrl+P)에서 실행:</p>
+          <p lang="en">Get it from the Visual Studio Marketplace, or paste this into Quick Open (Ctrl+P):</p>
+          <p lang="ko">Visual Studio 마켓플레이스에서 받거나, Quick Open(Ctrl+P)에 이걸 붙여 넣으세요.</p>
           <div class="cmd"><code>ext install nathan-0910.ftl-dev</code><button class="copy" type="button">Copy</button></div>
         </div>
         <div class="install">
           <h3>Cursor · CodeOSS</h3>
-          <p lang="en">From Open VSX: search <b>FreeMarker (ftl-dev)</b> in the Extensions view, or:</p>
-          <p lang="ko">Open VSX에서: 확장 보기에서 <b>FreeMarker (ftl-dev)</b>를 검색하거나:</p>
+          <p lang="en">It's on Open VSX. Search <b>FreeMarker (ftl-dev)</b> in the Extensions view, or:</p>
+          <p lang="ko">Open VSX에 있습니다. 확장 탭에서 <b>FreeMarker (ftl-dev)</b>를 검색하거나:</p>
           <div class="cmd"><code>code-oss --install-extension nathan-0910.ftl-dev</code><button class="copy" type="button">Copy</button></div>
         </div>
         <div class="install">
           <h3>Vim / Neovim</h3>
-          <p lang="en">Install the plugin with your plugin manager, e.g. vim-plug:</p>
-          <p lang="ko">플러그인 매니저로 설치하세요. 예: vim-plug</p>
+          <p lang="en">Use your plugin manager. With vim-plug:</p>
+          <p lang="ko">플러그인 매니저로 설치하세요. vim-plug라면:</p>
           <div class="cmd"><code>Plug 'DevNathan/ftl-dev.vim'</code><button class="copy" type="button">Copy</button></div>
         </div>
       </div>
@@ -491,13 +487,13 @@ footer a { color: var(--fg-muted); }
 
   <section class="alt thanks">
     <div class="wrap">
-      <h2><span lang="en">Thanks for writing FreeMarker with us. 🎉</span><span lang="ko">FreeMarker와 함께해 주셔서 고맙습니다. 🎉</span></h2>
-      <p lang="en">Found a false positive, a missing built-in or an ugly color? Open an issue. Valid FTL getting flagged is always a bug.</p>
-      <p lang="ko">헛경고, 빠진 built-in, 이상한 색을 발견하셨나요? 이슈로 알려 주세요. 올바른 FTL에 경고가 뜨면 언제나 버그입니다.</p>
+      <h2><span lang="en">Found a bug?</span><span lang="ko">버그 찾으셨나요?</span></h2>
+      <p lang="en">Open an issue. A red line on valid FTL, a missing built-in, an ugly color: all bugs. And if ftl-dev saves you some pain, a star on GitHub would be nice :)</p>
+      <p lang="ko">이슈로 남겨 주세요. 멀쩡한 FTL에 뜬 빨간 줄, 빠진 built-in, 이상한 색 전부 버그입니다. 쓸 만하다 싶으면 GitHub 별 하나 눌러 주시면 좋고요 :)</p>
       <div class="ctas">
-        <a class="btn primary" href="https://github.com/DevNathan/ftl-dev"><span lang="en">Star on GitHub</span><span lang="ko">GitHub에서 Star</span></a>
-        <a class="btn" href="https://github.com/DevNathan/ftl-dev/blob/main/extension/CHANGELOG.md"><span lang="en">Read the changelog</span><span lang="ko">변경 이력 보기</span></a>
-        <button class="btn" type="button" id="celebrate"><span lang="en">Celebrate again</span><span lang="ko">한 번 더 축하하기</span></button>
+        <a class="btn primary" href="https://github.com/DevNathan/ftl-dev/issues"><span lang="en">Open an issue</span><span lang="ko">이슈 남기기</span></a>
+        <a class="btn" href="https://github.com/DevNathan/ftl-dev"><span lang="en">Star on GitHub</span><span lang="ko">GitHub에서 별 주기</span></a>
+        <button class="btn" type="button" id="celebrate"><span lang="en">More confetti</span><span lang="ko">컨페티 한 번 더</span></button>
       </div>
     </div>
   </section>
