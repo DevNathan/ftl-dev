@@ -75,6 +75,28 @@ test("@nodoc at start yields no doc (AC1)", () => {
 });
 
 // --- AC2 ---
+test("@lang marker is not a doc (plan 0041)", () => {
+  assert.strictEqual(parseFtlDoc(" @lang sql "), undefined);
+  assert.strictEqual(parseFtlDoc("@LANG sql"), undefined);
+  const src = "<#-- @lang sql -->\n<#assign q>select 1</#assign>";
+  assert.strictEqual(leadingFtlDoc(src, src.indexOf("<#assign")), undefined);
+});
+
+test("doc above @lang marker still attaches (plan 0041)", () => {
+  const src =
+    "<#--\n  Insert statement.\n-->\n<#-- @lang sql -->\n<#assign sqlInsert>\nINSERT 1\n</#assign>";
+  const doc = leadingFtlDoc(src, src.indexOf("<#assign"));
+  assert.ok(doc);
+  assert.strictEqual(doc!.summary.trim(), "Insert statement.");
+  const sq = "[#-- Sq doc --]\n[#-- @lang sql --]\n[#assign q]x[/#assign]";
+  assert.strictEqual(leadingFtlDoc(sq, sq.indexOf("[#assign"))?.summary.trim(), "Sq doc");
+});
+
+test("non-whitespace above @lang marker blocks the doc (plan 0041)", () => {
+  const src = "<#-- Doc -->\n<p>\n<#-- @lang sql -->\n<#assign q>x</#assign>";
+  assert.strictEqual(leadingFtlDoc(src, src.indexOf("<#assign")), undefined);
+});
+
 test("mid-body @nodoc does not wipe doc (AC2)", () => {
   const doc = parseFtlDoc("Keep me.\n@nodoc\n@param a x");
   assert.ok(doc);
