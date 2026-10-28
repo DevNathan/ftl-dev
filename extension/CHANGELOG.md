@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-28
+
+### Changed
+
+- Marketplace README: rewrote the 1.0 announcement in plain words and updated the banner
+
 ## [1.0.0] - 2026-10-28
 
 First stable release. From here on the extension id, language id, file extensions, grammar scope name, settings keys, `.ftl-data-model.json` and icon theme id only change in a major version ([stability contract](../docs/versioning.md#stability-contract-from-100)).
