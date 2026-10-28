@@ -3,6 +3,7 @@
   "name": "FreeMarker",
   "scopeName": "text.html.freemarker",
   "patterns": [
+    { "include": "#sql-embed" },
     { "include": "#comment" },
     { "include": "#directive-angle" },
     { "include": "#directive-square" },
@@ -12,6 +13,7 @@
   "injections": {
     "L:text.html.basic - comment - string": {
       "patterns": [
+        { "include": "#sql-embed" },
         { "include": "#comment" },
         { "include": "#directive-angle" },
         { "include": "#directive-square" },
@@ -20,6 +22,216 @@
     }
   },
   "repository": {
+    "sql-embed": {
+      "comment": "SQL in capture assignments (plan 0041). (1) <#assign|local|global sql…> — name starts with sql (case-insensitive). (2) <#-- @lang sql --> directly above any capture <#assign|local|global name>; the marker region closes right after that block or at the first other non-blank token. Body: FTL first, then SQL (source.sql, embeddedLanguages sql).",
+      "patterns": [
+        {
+          "begin": "(<#--)\\s*(@(?i:lang))\\s+((?i:sql))\\s*(-->)",
+          "beginCaptures": {
+            "0": {
+              "name": "comment.block.freemarker"
+            },
+            "1": {
+              "name": "punctuation.definition.comment.begin.freemarker"
+            },
+            "2": {
+              "name": "keyword.other.documentation.ftldoc.freemarker"
+            },
+            "4": {
+              "name": "punctuation.definition.comment.end.freemarker"
+            }
+          },
+          "end": "(?<=</#assign>|</#local>|</#global>)|(?=\\S)(?!<#(?:assign|local|global)\\s+[A-Za-z_][\\w]*(?:\\s+in\\s+[A-Za-z_][\\w.]*)?\\s*>)",
+          "patterns": [
+            {
+              "include": "#comment"
+            },
+            {
+              "include": "#sql-block-any"
+            }
+          ]
+        },
+        {
+          "include": "#sql-block-named"
+        }
+      ]
+    },
+    "sql-block-named": {
+      "name": "meta.embedded.sql-block.freemarker",
+      "begin": "(<#)(assign|local|global)\\s+((?i:sql)[\\w]*)((?:\\s+in\\s+[A-Za-z_][\\w.]*)?)\\s*(>)",
+      "beginCaptures": {
+        "0": {
+          "name": "meta.directive.freemarker"
+        },
+        "1": {
+          "name": "punctuation.definition.tag.begin.freemarker"
+        },
+        "2": {
+          "name": "keyword.control.directive.freemarker"
+        },
+        "3": {
+          "name": "variable.other.freemarker"
+        },
+        "5": {
+          "name": "punctuation.definition.tag.end.freemarker"
+        }
+      },
+      "end": "(</#)(\\2)\\s*(>)",
+      "endCaptures": {
+        "0": {
+          "name": "meta.directive.freemarker"
+        },
+        "1": {
+          "name": "punctuation.definition.tag.begin.freemarker"
+        },
+        "2": {
+          "name": "keyword.control.directive.freemarker"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.freemarker"
+        }
+      },
+      "contentName": "meta.embedded.block.sql",
+      "patterns": [
+        {
+          "include": "#sql-body"
+        }
+      ]
+    },
+    "sql-block-any": {
+      "name": "meta.embedded.sql-block.freemarker",
+      "begin": "(<#)(assign|local|global)\\s+([A-Za-z_][\\w]*)((?:\\s+in\\s+[A-Za-z_][\\w.]*)?)\\s*(>)",
+      "beginCaptures": {
+        "0": {
+          "name": "meta.directive.freemarker"
+        },
+        "1": {
+          "name": "punctuation.definition.tag.begin.freemarker"
+        },
+        "2": {
+          "name": "keyword.control.directive.freemarker"
+        },
+        "3": {
+          "name": "variable.other.freemarker"
+        },
+        "5": {
+          "name": "punctuation.definition.tag.end.freemarker"
+        }
+      },
+      "end": "(</#)(\\2)\\s*(>)",
+      "endCaptures": {
+        "0": {
+          "name": "meta.directive.freemarker"
+        },
+        "1": {
+          "name": "punctuation.definition.tag.begin.freemarker"
+        },
+        "2": {
+          "name": "keyword.control.directive.freemarker"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.freemarker"
+        }
+      },
+      "contentName": "meta.embedded.block.sql",
+      "patterns": [
+        {
+          "include": "#sql-body"
+        }
+      ]
+    },
+    "sql-body": {
+      "comment": "FTL constructs win over SQL. Own string / comment rules stop at the closing capture tag so an unbalanced quote cannot run past </#assign>.",
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#directive-angle"
+        },
+        {
+          "include": "#interpolation"
+        },
+        {
+          "name": "string.quoted.single.sql",
+          "begin": "'",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.sql"
+            }
+          },
+          "end": "'(?!')|(?=</#(?:assign|local|global)\\s*>)",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.sql"
+            }
+          },
+          "patterns": [
+            {
+              "name": "constant.character.escape.sql",
+              "match": "''"
+            },
+            {
+              "include": "#interpolation"
+            },
+            {
+              "include": "#directive-angle"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.sql",
+          "begin": "\"",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.sql"
+            }
+          },
+          "end": "\"|(?=</#(?:assign|local|global)\\s*>)",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.sql"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#interpolation"
+            },
+            {
+              "include": "#directive-angle"
+            }
+          ]
+        },
+        {
+          "name": "comment.block.sql",
+          "begin": "/\\*",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.begin.sql"
+            }
+          },
+          "end": "\\*/|(?=</#(?:assign|local|global)\\s*>)",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.end.sql"
+            }
+          }
+        },
+        {
+          "comment": "Named bind parameter (@컬럼 / @name). Not after a word char so user@host stays plain.",
+          "match": "(?<![\\w@])(@)([\\p{L}_][\\p{L}\\p{N}_]*)",
+          "name": "variable.parameter.bind.sql",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.variable.sql"
+            }
+          }
+        },
+        {
+          "include": "source.sql"
+        }
+      ]
+    },
     "comment": {
       "patterns": [
         {

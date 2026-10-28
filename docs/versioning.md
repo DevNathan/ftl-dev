@@ -10,7 +10,7 @@ See also: [publishing.md](publishing.md).
 
 ## Scheme
 
-Use **semver** `MAJOR.MINOR.PATCH` (currently `0.x` — pre-1.0, see [Stability contract](#stability-contract-from-100)):
+Use **semver** `MAJOR.MINOR.PATCH` (stable since `1.0.0` — see [Stability contract](#stability-contract-from-100)):
 
 | Bump | When |
 |------|------|
@@ -35,7 +35,7 @@ Do not invent parallel version numbers in README or tags that disagree with `pac
 
 Not covered (may change in MINOR/PATCH): exact TextMate sub-scopes and colors, diagnostic message wording, completion ordering, and new diagnostics that only flag invalid FTL. A default-on diagnostic that starts flagging **valid** FTL is a bug, not a feature.
 
-**1.0.0 gate:** no known false-positive default diagnostics on valid FreeMarker 2.3 syntax, CI covers grammar + all unit tests + language-server type-check, and at least one `0.x` release with the current feature set has been published.
+**1.0.0 gate** (met, released 2026-10-28): no known false-positive default diagnostics on valid FreeMarker 2.3 syntax, CI covers grammar + all unit tests + language-server type-check, and at least one `0.x` release with the current feature set has been published.
 
 ## When to bump
 

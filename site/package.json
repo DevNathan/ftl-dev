@@ -1,0 +1,12 @@
+{
+  "name": "ftl-dev-site",
+  "private": true,
+  "description": "GitHub Pages site for ftl-dev. Code samples are highlighted at build time with the extension's own TextMate grammar.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "shiki": "1.29.2"
+  }
+}

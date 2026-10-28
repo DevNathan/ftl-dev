@@ -1,4 +1,22 @@
+<p align="center">
+  <a href="https://devnathan.github.io/ftl-dev/"><img src="site/assets/banner.svg" alt="ftl-dev 1.0.0 — FreeMarker, finally first-class" width="100%"></a>
+</p>
+
+<p align="center">
+
+[![Open VSX](https://img.shields.io/open-vsx/v/nathan-0910/ftl-dev?label=Open%20VSX&color=0050b2)](https://open-vsx.org/extension/nathan-0910/ftl-dev)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/nathan-0910.ftl-dev?label=VS%20Code%20Marketplace&color=0050b2)](https://marketplace.visualstudio.com/items?itemName=nathan-0910.ftl-dev)
+[![License](https://img.shields.io/badge/license-Apache--2.0-0a8f6c)](LICENSE)
+
+</p>
+
 # FTL-dev
+
+> [!TIP]
+> 🎉 **ftl-dev 1.0.0 출시 — 첫 안정 버전입니다.**
+> 41개의 계획과 수백 개의 테스트 끝에, 이제 에디터에서 FreeMarker를 진짜 언어처럼 쓸 수 있습니다. 읽기 좋은 하이라이팅, Ctrl+클릭 이동, 진짜 실수만 잡는 진단, 호버마다 보이는 ftldoc까지. 그래서 1.0을 냅니다.
+> 앞으로 익스텐션 ID, 언어 ID, 설정 키, `.ftl-data-model.json`은 메이저 버전에서만 바뀝니다([안정성 약속](docs/versioning.ko.md)).
+> **[프로젝트 페이지 보기 →](https://devnathan.github.io/ftl-dev/)** · [1.0.0 변경 내용](extension/CHANGELOG.md)
 
 > Canonical: [README.md](README.md) (English).
 
@@ -27,7 +45,7 @@ FreeMarker(이하 ftl)가 개발 언어로 쓰일 수 있다는 사실, 알고 �
 
 ## 주요 기능
 
-- 신택스 하이라이팅
+- 신택스 하이라이팅 (`<#assign sql…>` 캡처 블록이나 `<#-- @lang sql -->` 표시 블록 안의 SQL 포함)
 - 정의·import·경로로 이동·탐색
 - 자동완성
 - 디렉티브 닫기 · FTL식 들여쓰기

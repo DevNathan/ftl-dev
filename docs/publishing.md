@@ -44,3 +44,7 @@ npm run package
 # npx ovsx publish ftl-dev-*.vsix -p "$OVSX_PAT"
 # npx @vscode/vsce publish --packagePath ftl-dev-*.vsix -p "$VSCE_PAT"
 ```
+
+## Project site (GitHub Pages)
+
+The landing page in [`site/`](../site/) is deployed by [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) on pushes to `main` that touch `site/`, the grammar or `extension/package.json` (the page shows the current version). One-time setup: **Settings → Pages → Build and deployment → Source: GitHub Actions**. URL: <https://devnathan.github.io/ftl-dev/>.

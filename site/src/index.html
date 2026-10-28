@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ftl-dev — FreeMarker language support</title>
+<meta name="description" content="ftl-dev {{version}} is stable: syntax highlighting, navigation, diagnostics and ftldoc for FreeMarker in VS Code, Cursor, CodeOSS and Vim / Neovim.">
+<meta property="og:title" content="ftl-dev {{version}} — FreeMarker, finally first-class">
+<meta property="og:description" content="Highlighting, navigation, diagnostics and docs for .ftl files in VS Code, Cursor, CodeOSS and Vim / Neovim.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f9fc;
+  --bg-elev: #ffffff;
+  --bg-soft: #eef3fa;
+  --fg: #0d1b2e;
+  --fg-muted: #4a5b73;
+  --fg-faint: #7487a1;
+  --line: #dbe3ee;
+  --brand: #0050b2;
+  --brand-strong: #003d8a;
+  --brand-soft: #e3eefc;
+  --accent: #0a8f6c;
+  --accent-soft: #dcf5ec;
+  --danger: #c4302b;
+  --danger-soft: #fdebea;
+  --code-bg: #ffffff;
+  --shadow: 0 1px 2px rgba(13, 27, 46, .06), 0 8px 24px rgba(13, 27, 46, .06);
+  --radius: 14px;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", Helvetica, Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #070e1c;
+    --bg-elev: #0d182b;
+    --bg-soft: #111f37;
+    --fg: #e6edf7;
+    --fg-muted: #a3b3ca;
+    --fg-faint: #6f819c;
+    --line: #1e2d47;
+    --brand: #5aa2ff;
+    --brand-strong: #8fc1ff;
+    --brand-soft: #10264a;
+    --accent: #3ddbb0;
+    --accent-soft: #0c2e28;
+    --danger: #ff7b72;
+    --danger-soft: #3a1416;
+    --code-bg: #0a1426;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #070e1c;
+  --bg-elev: #0d182b;
+  --bg-soft: #111f37;
+  --fg: #e6edf7;
+  --fg-muted: #a3b3ca;
+  --fg-faint: #6f819c;
+  --line: #1e2d47;
+  --brand: #5aa2ff;
+  --brand-strong: #8fc1ff;
+  --brand-soft: #10264a;
+  --accent: #3ddbb0;
+  --accent-soft: #0c2e28;
+  --danger: #ff7b72;
+  --danger-soft: #3a1416;
+  --code-bg: #0a1426;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, kbd { font-family: var(--mono); font-size: .9em; }
+:not(pre) > code {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: .08em .38em;
+}
+img { max-width: 100%; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+/* Korean: break between words, not inside them */
+[data-lang="ko"] body { word-break: keep-all; overflow-wrap: break-word; }
+[data-lang="ko"] h1 { font-size: clamp(38px, 5vw, 54px); line-height: 1.12; }
+
+/* language switch: show only the active language */
+[data-lang="en"] [lang="ko"], [data-lang="ko"] [lang="en"] { display: none !important; }
+
+/* ---------- nav ---------- */
+.nav {
+  position: sticky; top: 0; z-index: 10;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.nav .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--fg); letter-spacing: .01em; }
+.brand:hover { text-decoration: none; }
+.brand .logo { width: 28px; height: 28px; color: var(--brand); }
+.brand .ver { font: 600 12px/1 var(--mono); color: var(--accent); background: var(--accent-soft); padding: 4px 7px; border-radius: 999px; }
+.nav-links { display: flex; gap: 20px; margin-left: auto; font-size: 15px; }
+.nav-links a { color: var(--fg-muted); }
+.nav-links a:hover { color: var(--fg); text-decoration: none; }
+.nav-tools { display: flex; gap: 6px; }
+.tool {
+  border: 1px solid var(--line); background: var(--bg-elev); color: var(--fg-muted);
+  border-radius: 8px; height: 34px; min-width: 34px; padding: 0 10px;
+  font: 600 13px/1 var(--sans); cursor: pointer;
+}
+.tool:hover { color: var(--fg); border-color: var(--fg-faint); }
+.tool:focus-visible, .btn:focus-visible, a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* ---------- hero ---------- */
+.hero { position: relative; overflow: hidden; padding: 72px 0 56px; }
+.hero::before {
+  content: ""; position: absolute; inset: -40% -10% auto -10%; height: 120%;
+  background:
+    radial-gradient(600px 320px at 18% 30%, color-mix(in srgb, var(--brand) 22%, transparent), transparent 70%),
+    radial-gradient(520px 300px at 85% 10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%);
+  pointer-events: none;
+}
+.hero .wrap { position: relative; display: grid; grid-template-columns: 1.02fr 1fr; gap: 48px; align-items: center; }
+.pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 600 13px/1 var(--sans); color: var(--accent);
+  background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  padding: 7px 12px; border-radius: 999px;
+}
+.pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
+h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.04; letter-spacing: -.035em; margin: 20px 0 18px; font-weight: 800; }
+h1 .grad { background: linear-gradient(120deg, var(--brand) 10%, var(--accent) 95%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lede { font-size: 19px; color: var(--fg-muted); margin: 0 0 28px; max-width: 34em; }
+.ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 18px; border-radius: 10px;
+  font: 600 15px/1 var(--sans); border: 1px solid var(--line);
+  background: var(--bg-elev); color: var(--fg); box-shadow: var(--shadow);
+}
+.btn:hover { text-decoration: none; border-color: var(--fg-faint); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+.btn.primary:hover { background: var(--brand-strong); border-color: var(--brand-strong); }
+:root[data-theme="dark"] .btn.primary { color: #04122b; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #04122b; } }
+.btn svg { width: 16px; height: 16px; }
+.hero-note { margin-top: 18px; font-size: 14px; color: var(--fg-faint); }
+
+/* ---------- code windows ---------- */
+.window {
+  background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); overflow: hidden; min-width: 0;
+}
+.window-bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+.window-bar i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+.window-bar i:nth-child(1) { background: #ff5f57; }
+.window-bar i:nth-child(2) { background: #febc2e; }
+.window-bar i:nth-child(3) { background: #28c840; }
+.window-bar span { margin-left: auto; font: 12px/1 var(--mono); color: var(--fg-faint); }
+.window pre.shiki { margin: 0; padding: 18px 20px; overflow-x: auto; font: 13.5px/1.65 var(--mono); tab-size: 2; background: transparent !important; }
+.shiki, .shiki span { color: var(--shiki-light); }
+:root[data-theme="dark"] .shiki, :root[data-theme="dark"] .shiki span { color: var(--shiki-dark); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shiki, :root:not([data-theme="light"]) .shiki span { color: var(--shiki-dark); }
+}
+.squiggle { text-decoration: underline wavy var(--danger); text-decoration-skip-ink: none; text-underline-offset: 3px; }
+
+/* ---------- sections ---------- */
+section { padding: 72px 0; }
+section.alt { background: var(--bg-elev); border-block: 1px solid var(--line); }
+.eyebrow { font: 700 12px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--brand); margin: 0 0 12px; }
+h2 { font-size: clamp(28px, 3.6vw, 38px); letter-spacing: -.025em; line-height: 1.15; margin: 0 0 14px; }
+.section-lede { color: var(--fg-muted); font-size: 18px; max-width: 40em; margin: 0 0 36px; }
+
+/* stability strip */
+.stable-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stable-item { padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.stable-item b { display: block; font-size: 15px; margin-bottom: 4px; }
+.stable-item code { font-size: 12.5px; }
+.stable-item p { margin: 0; color: var(--fg-muted); font-size: 14px; }
+
+/* features */
+.features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.feature {
+  padding: 22px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-elev); box-shadow: var(--shadow);
+}
+.feature .ico {
+  width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--brand-soft); color: var(--brand); margin-bottom: 14px;
+}
+.feature .ico svg { width: 20px; height: 20px; }
+.feature h3 { font-size: 17px; margin: 0 0 6px; letter-spacing: -.01em; }
+.feature p { margin: 0; color: var(--fg-muted); font-size: 15px; }
+
+/* split showcase */
+.split { display: grid; grid-template-columns: .9fr 1.1fr; gap: 48px; align-items: center; }
+.split.rev { grid-template-columns: 1.1fr .9fr; }
+.split.rev > :first-child { order: 2; }
+.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.checks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: var(--fg-muted); }
+.checks li::before {
+  content: ""; width: 20px; height: 20px; margin-top: 2px; border-radius: 6px;
+  background: var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3 3 7-7' fill='none' stroke='%230a8f6c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat;
+}
+.checks li b { color: var(--fg); font-weight: 600; }
+
+/* hover + problem mocks */
+.stack { display: grid; gap: 14px; min-width: 0; }
+.hover-card {
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+  padding: 14px 16px; font-size: 14px; max-width: 440px; margin-left: auto;
+}
+.hover-card .sig { font-family: var(--mono); font-size: 13px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line); }
+.hover-card .sig b { color: var(--brand); font-weight: 600; }
+.hover-card p { margin: 0 0 8px; }
+.hover-card ul { margin: 4px 0 8px; padding-left: 18px; color: var(--fg-muted); }
+.hover-card .label { font-weight: 700; color: var(--fg); }
+.problem {
+  display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start;
+  background: var(--danger-soft); border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-radius: 10px; padding: 12px 14px; font-size: 14px;
+}
+.problem svg { width: 18px; height: 18px; color: var(--danger); margin-top: 2px; }
+.problem small { display: block; color: var(--fg-faint); font-family: var(--mono); font-size: 12px; margin-top: 2px; }
+
+/* install */
+.install-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.install {
+  padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.install h3 { margin: 0; font-size: 17px; }
+.install p { margin: 0; color: var(--fg-muted); font-size: 14.5px; }
+.cmd {
+  display: flex; align-items: center; gap: 8px; margin-top: auto;
+  font: 13px/1.4 var(--mono); background: var(--code-bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 10px 10px 12px; min-width: 0;
+}
+.cmd code { flex: 1; overflow-x: auto; white-space: nowrap; background: none; border: 0; padding: 0; }
+.copy {
+  border: 1px solid var(--line); background: var(--bg-elev); color: var(--fg-muted); border-radius: 6px;
+  font: 600 12px/1 var(--sans); padding: 6px 8px; cursor: pointer; flex: none;
+}
+.copy:hover { color: var(--fg); }
+
+/* celebration */
+.thanks { text-align: center; padding: 84px 0; }
+.thanks h2 { margin-bottom: 12px; }
+.thanks p { color: var(--fg-muted); max-width: 36em; margin: 0 auto 26px; font-size: 18px; }
+.thanks .ctas { justify-content: center; }
+
+footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--fg-faint); font-size: 14px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+footer nav { margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap; }
+footer a { color: var(--fg-muted); }
+
+/* grid children may shrink below their content (long commands / code scroll instead) */
+.hero .wrap > *, .split > *, .features > *, .install-grid > *, .stable-grid > * { min-width: 0; }
+
+/* confetti */
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 960px) {
+  .hero .wrap, .split, .split.rev { grid-template-columns: 1fr; gap: 36px; }
+  .split.rev > :first-child { order: 0; }
+  .features, .install-grid { grid-template-columns: 1fr 1fr; }
+  .stable-grid { grid-template-columns: 1fr 1fr; }
+  .hover-card { margin-left: 0; }
+}
+@media (max-width: 640px) {
+  .wrap { padding: 0 16px; }
+  .nav-links { display: none; }
+  .nav-tools { margin-left: auto; }
+  .hero { padding: 48px 0 40px; }
+  .lede { font-size: 17px; }
+  section { padding: 56px 0; }
+  .features, .install-grid, .stable-grid { grid-template-columns: 1fr; }
+  .window pre.shiki { font-size: 12.5px; padding: 14px; }
+  .btn { flex: 1 1 auto; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><svg class="logo" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M24.023,20.9,25.408,23l4.615-7L25.408,9l-1.385,2.1L27.255,16Z M7.977,11.1,6.592,9,1.977,16l4.615,7,1.385-2.1L4.745,16Z M13.035,9h2.8l-.494,2.8h2.8L18.635,9h2.8l-.494,2.8h2.8l-.495,2.8h-2.8l-.493,2.8h2.8l-.494,2.8h-2.8L18.967,23h-2.8l.493-2.8-2.8,0L13.375,23H10.567l.493-2.8-2.8,0,.494-2.8h2.8l.493-2.793h-2.8L9.741,11.8h2.8Zm1.319,8.4h2.8l.494-2.8h-2.8Z"/></svg>ftl-dev <span class="ver">v{{version}}</span></a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#features"><span lang="en">Features</span><span lang="ko">기능</span></a>
+      <a href="#diagnostics"><span lang="en">Diagnostics</span><span lang="ko">진단</span></a>
+      <a href="#install"><span lang="en">Install</span><span lang="ko">설치</span></a>
+      <a href="https://github.com/DevNathan/ftl-dev">GitHub</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="tool" id="lang-toggle" type="button" aria-label="Switch language"><span lang="en">한국어</span><span lang="ko">English</span></button>
+      <button class="tool" id="theme-toggle" type="button" aria-label="Toggle dark mode">
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 1 0 0 16V2z"/><circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <span class="pill"><span class="dot"></span><span lang="en">v{{version}} is here — first stable release</span><span lang="ko">v{{version}} 출시 — 첫 안정 버전</span></span>
+        <h1><span lang="en">FreeMarker,<br><span class="grad">finally first&#8209;class.</span></span><span lang="ko">FreeMarker도 이제<br><span class="grad">제대로 된 언어처럼.</span></span></h1>
+        <p class="lede" lang="en">Highlighting that reads, Ctrl+click navigation, diagnostics that catch real mistakes and ftldoc in every hover. For VS Code, Cursor, CodeOSS and Vim / Neovim.</p>
+        <p class="lede" lang="ko">읽기 좋은 하이라이팅, Ctrl+클릭 이동, 진짜 실수만 잡는 진단, 호버마다 보이는 ftldoc까지. VS Code, Cursor, CodeOSS, Vim / Neovim에서.</p>
+        <div class="ctas">
+          <a class="btn primary" href="https://marketplace.visualstudio.com/items?itemName=nathan-0910.ftl-dev">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1a.75.75 0 0 1 .75.75v6.69l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 0 1 1.06-1.06l2.22 2.22V1.75A.75.75 0 0 1 8 1zM2.75 12.5a.75.75 0 0 0 0 1.5h10.5a.75.75 0 0 0 0-1.5H2.75z"/></svg>
+            <span lang="en">VS Code Marketplace</span><span lang="ko">VS Code 마켓플레이스</span>
+          </a>
+          <a class="btn" href="https://open-vsx.org/extension/nathan-0910/ftl-dev"><span lang="en">Open VSX (Cursor, CodeOSS)</span><span lang="ko">Open VSX (Cursor, CodeOSS)</span></a>
+          <a class="btn" href="https://github.com/DevNathan/ftl-dev.vim">Vim / Neovim</a>
+        </div>
+        <p class="hero-note"><span lang="en">Free and open source · Apache-2.0 · extension id</span><span lang="ko">무료 오픈소스 · Apache-2.0 · 익스텐션 ID</span> <code>nathan-0910.ftl-dev</code></p>
+      </div>
+      <div class="window" role="img" aria-label="FTL code highlighted by ftl-dev">
+        <div class="window-bar"><i></i><i></i><i></i><span>greeting.ftl</span></div>
+        {{sample:hero}}
+      </div>
+    </div>
+  </section>
+
+  <section class="alt" id="stable">
+    <div class="wrap">
+      <p class="eyebrow"><span lang="en">What 1.0 means</span><span lang="ko">1.0이 뜻하는 것</span></p>
+      <h2><span lang="en">Stable enough to build your workflow on.</span><span lang="ko">이제 믿고 써도 됩니다.</span></h2>
+      <p class="section-lede" lang="en">Forty-one plans, hundreds of tests and a zero-false-positive rule for default diagnostics got us here. From 1.0.0 on, these only change in a major version:</p>
+      <p class="section-lede" lang="ko">41개의 계획, 수백 개의 테스트, 그리고 "정상 문법에는 기본 진단을 띄우지 않는다"는 원칙 끝에 여기까지 왔습니다. 1.0.0부터 아래 항목은 메이저 버전에서만 바뀝니다.</p>
+      <div class="stable-grid">
+        <div class="stable-item"><b><span lang="en">Extension &amp; language id</span><span lang="ko">익스텐션·언어 ID</span></b><p><code>nathan-0910.ftl-dev</code> · <code>freemarker</code></p></div>
+        <div class="stable-item"><b><span lang="en">File types &amp; grammar</span><span lang="ko">파일 형식·문법 scope</span></b><p><code>.ftl</code> <code>.ftlh</code> <code>.ftlx</code> · <code>text.html.freemarker</code></p></div>
+        <div class="stable-item"><b><span lang="en">Settings keys</span><span lang="ko">설정 키</span></b><p><code>ftl-dev.strictVariables</code>, <code>ftl-dev.dataModel</code>, …</p></div>
+        <div class="stable-item"><b><span lang="en">Project file</span><span lang="ko">프로젝트 파일</span></b><p><code>.ftl-data-model.json</code></p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <p class="eyebrow"><span lang="en">Features</span><span lang="ko">기능</span></p>
+      <h2><span lang="en">Everything the other FTL extensions forgot.</span><span lang="ko">다른 FTL 익스텐션이 빼먹은 것들, 전부.</span></h2>
+      <p class="section-lede" lang="en">Built by someone who writes FreeMarker every day and got tired of grepping for macro definitions.</p>
+      <p class="section-lede" lang="ko">매일 FreeMarker를 쓰다가 매크로 정의를 grep으로 찾는 데 지친 사람이 만들었습니다.</p>
+      <div class="features">
+        <article class="feature">
+          <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M3 5h9M3 10h14M3 15h7"/></svg></div>
+          <h3><span lang="en">Highlighting that reads</span><span lang="ko">읽히는 하이라이팅</span></h3>
+          <p lang="en">Directives, built-ins, <code>${…}</code> inside strings, raw strings, square-bracket syntax and HTML, all colored correctly.</p>
+          <p lang="ko">디렉티브, built-in, 문자열 속 <code>${…}</code>, raw 문자열, 대괄호 문법, HTML까지 제대로 칠합니다.</p>
+        </article>
+        <article class="feature">
+          <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8 4H4v12h12v-4M11 3h6v6M17 3l-8 8"/></svg></div>
+          <h3><span lang="en">Go to definition &amp; rename</span><span lang="ko">정의로 이동·이름 바꾸기</span></h3>
+          <p lang="en">Ctrl+click through macros, functions, variables and <code>#import</code> namespaces. F2 renames, Ctrl+T finds any symbol in the workspace.</p>
+          <p lang="ko">매크로·함수·변수·<code>#import</code> 네임스페이스로 Ctrl+클릭 이동. F2로 이름 바꾸기, Ctrl+T로 워크스페이스 심볼 검색.</p>
+        </article>
+        <article class="feature">
+          <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M4 4h12v9H8l-4 3z"/></svg></div>
+          <h3><span lang="en">Completion &amp; signature help</span><span lang="ko">자동완성·시그니처 도움말</span></h3>
+          <p lang="en">Directives and built-ins up to FreeMarker 2.3.35, named directive parameters, and parameter hints for your own <code>#function</code> / <code>#macro</code>.</p>
+          <p lang="ko">FreeMarker 2.3.35까지의 디렉티브와 built-in, 디렉티브 이름 인자, 직접 만든 <code>#function</code> / <code>#macro</code> 인자 힌트까지.</p>
+        </article>
+        <article class="feature">
+          <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M10 3l8 14H2zM10 8v4M10 14.5v.01"/></svg></div>
+          <h3><span lang="en">Diagnostics that don't cry wolf</span><span lang="ko">헛경고 없는 진단</span></h3>
+          <p lang="en">Unclosed tags, mismatched blocks, <code>#switch</code> mistakes, deprecated directives. Valid FTL never gets a red line.</p>
+          <p lang="ko">닫히지 않은 태그, 짝이 안 맞는 블록, <code>#switch</code> 실수, deprecated 디렉티브. 올바른 FTL엔 빨간 줄이 생기지 않습니다.</p>
+        </article>
+        <article class="feature">
+          <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M5 3h7l3 3v11H5zM8 9h5M8 12h5"/></svg></div>
+          <h3><span lang="en">ftldoc</span><span lang="ko">ftldoc 문서 주석</span></h3>
+          <p lang="en">Javadoc / JSDoc-style comments with <code>@param</code>, <code>@return</code>, <code>@deprecated</code>, <code>@example</code> in Hover, Signature Help and completion.</p>
+          <p lang="ko"><code>@param</code>, <code>@return</code>, <code>@deprecated</code>, <code>@example</code> 등 Javadoc / JSDoc 스타일 주석을 호버·시그니처 도움말·자동완성에 보여 줍니다.</p>
+        </article>
+        <article class="feature">
+          <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M7 5L3 10l4 5M13 5l4 5-4 5"/></svg></div>
+          <h3><span lang="en">Typing that keeps up</span><span lang="ko">손이 덜 가는 편집</span></h3>
+          <p lang="en">Auto-close for directives, FTL-aware indent, and linked editing: rename <code>&lt;#if&gt;</code> and <code>&lt;/#if&gt;</code> follows.</p>
+          <p lang="ko">디렉티브 자동 닫기, FTL식 들여쓰기, 연결 편집: <code>&lt;#if&gt;</code>를 고치면 <code>&lt;/#if&gt;</code>도 따라 바뀝니다.</p>
+        </article>
+        <article class="feature">
+          <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M4 5h3M4 10h3M4 15h3M10 5h6M10 10h6M10 15h6"/></svg></div>
+          <h3><span lang="en">Outline &amp; references</span><span lang="ko">아웃라인·참조 찾기</span></h3>
+          <p lang="en">Document outline, find all references, semantic tokens for locals and parameters, optional strict-variable checks.</p>
+          <p lang="ko">문서 아웃라인, 모든 참조 찾기, 지역 변수·인자 시맨틱 토큰, 선택형 엄격 변수 검사.</p>
+        </article>
+        <article class="feature">
+          <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M3 4h14v10H3zM7 17h6"/></svg></div>
+          <h3>Vim / Neovim</h3>
+          <p lang="en">A native Vim plugin for syntax, indent and closing tags. Neovim can also run the ftl-dev language server for Hover, completion and diagnostics.</p>
+          <p lang="ko">문법·들여쓰기·태그 닫기는 Vim 플러그인으로. Neovim에서는 ftl-dev 언어 서버를 붙여 호버·자동완성·진단도 쓸 수 있습니다.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt" id="diagnostics">
+    <div class="wrap split rev">
+      <div>
+        <p class="eyebrow"><span lang="en">Hover &amp; diagnostics</span><span lang="ko">호버와 진단</span></p>
+        <h2><span lang="en">Know before FreeMarker tells you.</span><span lang="ko">FreeMarker가 터지기 전에 먼저 압니다.</span></h2>
+        <p class="section-lede" lang="en">Errors that FreeMarker would only throw at render time show up as you type, in the same words a teammate would use.</p>
+        <p class="section-lede" lang="ko">렌더링할 때야 터질 에러를 타이핑하는 순간 보여 줍니다. 동료가 말해 주듯 알아듣기 쉬운 말로요.</p>
+        <ul class="checks">
+          <li lang="en"><span><b>Matches the engine</b>: mixing <code>#on</code> and <code>#case</code> is a ParseException in FreeMarker 2.3.34, and an error here.</span></li>
+          <li lang="ko"><span><b>엔진과 같은 판단</b>: <code>#on</code>과 <code>#case</code>를 섞으면 FreeMarker 2.3.34에서 ParseException이고, 여기서도 에러입니다.</span></li>
+          <li lang="en"><span><b>Docs where you need them</b>: hover a call to see its ftldoc, parameters and defaults.</span></li>
+          <li lang="ko"><span><b>필요한 자리에 문서</b>: 호출부에 마우스를 올리면 ftldoc, 인자, 기본값이 보입니다.</span></li>
+        </ul>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="window-bar"><i></i><i></i><i></i><span>switch.ftl</span></div>
+          {{sample:diag}}
+        </div>
+        <div class="problem" role="note">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="currentColor"/><path d="M7 7l6 6M13 7l-6 6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <div>Don't mix '#on' and '#case' in the same '#switch'; use only one form ('#on' needs no '#break').<small>switch.ftl · Ln 4, Col 3 · ftl-dev</small></div>
+        </div>
+        <div class="hover-card" role="note" aria-label="Hover example">
+          <div class="sig"><b>greet</b> — function</div>
+          <p>Greets a user by display name.</p>
+          <p class="label">Parameters</p>
+          <ul>
+            <li><code>name</code> <code>{string}</code> — display name</li>
+            <li><code>punct</code> (optional, default: <code>"!"</code>) — closing mark</li>
+          </ul>
+          <p style="margin:0"><span class="label">Returns</span> — greeting text</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <p class="eyebrow"><span lang="en">Install</span><span lang="ko">설치</span></p>
+      <h2><span lang="en">Thirty seconds, tops.</span><span lang="ko">30초면 끝.</span></h2>
+      <p class="section-lede" lang="en">Pick your editor. Open any <code>.ftl</code>, <code>.ftlh</code> or <code>.ftlx</code> file and you're done.</p>
+      <p class="section-lede" lang="ko">에디터만 고르세요. <code>.ftl</code>, <code>.ftlh</code>, <code>.ftlx</code> 파일을 열면 끝입니다.</p>
+      <div class="install-grid">
+        <div class="install">
+          <h3>VS Code</h3>
+          <p lang="en">From the Visual Studio Marketplace, or run in Quick Open (Ctrl+P):</p>
+          <p lang="ko">Visual Studio 마켓플레이스에서 받거나, Quick Open(Ctrl+P)에서 실행:</p>
+          <div class="cmd"><code>ext install nathan-0910.ftl-dev</code><button class="copy" type="button">Copy</button></div>
+        </div>
+        <div class="install">
+          <h3>Cursor · CodeOSS</h3>
+          <p lang="en">From Open VSX: search <b>FreeMarker (ftl-dev)</b> in the Extensions view, or:</p>
+          <p lang="ko">Open VSX에서: 확장 보기에서 <b>FreeMarker (ftl-dev)</b>를 검색하거나:</p>
+          <div class="cmd"><code>code-oss --install-extension nathan-0910.ftl-dev</code><button class="copy" type="button">Copy</button></div>
+        </div>
+        <div class="install">
+          <h3>Vim / Neovim</h3>
+          <p lang="en">Install the plugin with your plugin manager, e.g. vim-plug:</p>
+          <p lang="ko">플러그인 매니저로 설치하세요. 예: vim-plug</p>
+          <div class="cmd"><code>Plug 'DevNathan/ftl-dev.vim'</code><button class="copy" type="button">Copy</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt thanks">
+    <div class="wrap">
+      <h2><span lang="en">Thanks for writing FreeMarker with us. 🎉</span><span lang="ko">FreeMarker와 함께해 주셔서 고맙습니다. 🎉</span></h2>
+      <p lang="en">Found a false positive, a missing built-in or an ugly color? Open an issue. Valid FTL getting flagged is always a bug.</p>
+      <p lang="ko">헛경고, 빠진 built-in, 이상한 색을 발견하셨나요? 이슈로 알려 주세요. 올바른 FTL에 경고가 뜨면 언제나 버그입니다.</p>
+      <div class="ctas">
+        <a class="btn primary" href="https://github.com/DevNathan/ftl-dev"><span lang="en">Star on GitHub</span><span lang="ko">GitHub에서 Star</span></a>
+        <a class="btn" href="https://github.com/DevNathan/ftl-dev/blob/main/extension/CHANGELOG.md"><span lang="en">Read the changelog</span><span lang="ko">변경 이력 보기</span></a>
+        <button class="btn" type="button" id="celebrate"><span lang="en">Celebrate again</span><span lang="ko">한 번 더 축하하기</span></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© DevNathan · Apache-2.0</span>
+    <nav aria-label="Footer">
+      <a href="https://github.com/DevNathan/ftl-dev">GitHub</a>
+      <a href="https://github.com/DevNathan/ftl-dev.vim">ftl-dev.vim</a>
+      <a href="https://github.com/DevNathan/ftl-dev/issues"><span lang="en">Issues</span><span lang="ko">이슈</span></a>
+      <a href="https://github.com/DevNathan/ftl-dev/blob/main/extension/CHANGELOG.md"><span lang="en">Changelog</span><span lang="ko">변경 이력</span></a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+  // language: saved choice, else browser language
+  var lang = store("ftl-dev-lang") || ((navigator.language || "").toLowerCase().indexOf("ko") === 0 ? "ko" : "en");
+  function setLang(l) { root.setAttribute("data-lang", l); root.setAttribute("lang", l); }
+  setLang(lang);
+  document.getElementById("lang-toggle").addEventListener("click", function () {
+    lang = lang === "en" ? "ko" : "en"; setLang(lang); store("ftl-dev-lang", lang);
+  });
+
+  // theme: saved choice, else system
+  var saved = store("ftl-dev-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+  document.getElementById("theme-toggle").addEventListener("click", function () {
+    var cur = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    var next = cur === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next); store("ftl-dev-theme", next);
+  });
+
+  // copy buttons
+  document.querySelectorAll(".copy").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var text = b.previousElementSibling.textContent;
+      var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1400); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {}); else done();
+    });
+  });
+
+  // confetti: once per visit, skipped for reduced motion
+  var canvas = document.getElementById("confetti"), ctx = canvas.getContext("2d");
+  var colors = ["#0050b2", "#5aa2ff", "#06d6a0", "#ffd166", "#ef476f", "#c3a6ff"];
+  var parts = [], running = false;
+  function burst() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+    canvas.style.width = innerWidth + "px"; canvas.style.height = innerHeight + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (var i = 0; i < 140; i++) {
+      parts.push({
+        x: innerWidth * (0.2 + Math.random() * 0.6), y: innerHeight * 0.35,
+        vx: (Math.random() - 0.5) * 12, vy: -Math.random() * 13 - 4,
+        w: 5 + Math.random() * 6, h: 3 + Math.random() * 4,
+        r: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
+        c: colors[(Math.random() * colors.length) | 0], life: 0
+      });
+    }
+    if (!running) { running = true; requestAnimationFrame(tick); }
+  }
+  function tick() {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    parts = parts.filter(function (p) { return p.y < innerHeight + 20 && p.life < 240; });
+    parts.forEach(function (p) {
+      p.vy += 0.32; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life++;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.globalAlpha = Math.max(0, 1 - p.life / 240);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+    });
+    if (parts.length) requestAnimationFrame(tick); else { running = false; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+  }
+  if (!store("ftl-dev-confetti-{{version}}")) { setTimeout(burst, 450); store("ftl-dev-confetti-{{version}}", "1"); }
+  document.getElementById("celebrate").addEventListener("click", burst);
+})();
+</script>
+</body>
+</html>

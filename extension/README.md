@@ -1,4 +1,10 @@
+<p align="center">
+  <a href="https://devnathan.github.io/ftl-dev/"><img src="https://raw.githubusercontent.com/DevNathan/ftl-dev/main/site/assets/og.png" alt="ftl-dev 1.0.0 — FreeMarker, finally first-class" width="100%"></a>
+</p>
+
 # FTL-dev
+
+> 🎉 **1.0.0 is out — the first stable release.** The extension id, language id and settings keys are now stable. [Project page](https://devnathan.github.io/ftl-dev/) · [What's new](CHANGELOG.md)
 
 Did you know FreeMarker (ftl for short) can be used as a real programming language? ftl is faster than light (okay, heavily exaggerated), and while it is less extensible than mainstream languages, it is not exactly *insufficient*. Anyway, people barely use ftl, so of course there was no decent all-in-one extension.
 
@@ -23,7 +29,7 @@ If the well is dry, dig your own. This extension aims for:
 
 ## Features
 
-- Syntax highlighting
+- Syntax highlighting, including SQL inside `<#assign sql…>` capture blocks or blocks marked `<#-- @lang sql -->`
 - Go-to / navigate definitions, imports, and paths
 - Completions
 - Directive closing · FTL-aware indent

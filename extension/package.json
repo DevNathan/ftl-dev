@@ -2,7 +2,7 @@
   "name": "ftl-dev",
   "displayName": "FreeMarker (ftl-dev)",
   "description": "FreeMarker (.ftl) language support for CodeOSS — scripting-oriented tooling",
-  "version": "0.8.0",
+  "version": "1.0.0",
   "publisher": "nathan-0910",
   "license": "Apache-2.0",
   "icon": "icons/freemarker-icon.png",
@@ -56,7 +56,8 @@
         "scopeName": "text.html.freemarker",
         "path": "./syntaxes/freemarker.tmLanguage.json",
         "embeddedLanguages": {
-          "text.html.basic": "html"
+          "text.html.basic": "html",
+          "meta.embedded.block.sql": "sql"
         },
         "tokenTypes": {
           "comment.block.freemarker": "comment",
@@ -123,7 +124,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test:grammar": "vscode-tmgrammar-test -g syntaxes/freemarker.tmLanguage.json -g syntaxes/test-support/text.html.basic.tmLanguage.json \"../tests/grammar/*.ftl\"",
+    "test:grammar": "vscode-tmgrammar-test -g syntaxes/freemarker.tmLanguage.json -g syntaxes/test-support/text.html.basic.tmLanguage.json -g syntaxes/test-support/source.sql.tmLanguage.json \"../tests/grammar/*.ftl\"",
     "test:unit": "npm run compile && node out/symbols.test.js && node out/lineMap.test.js && node out/scan.test.js && node out/ftldoc.test.js && node out/catalog.test.js && node out/closeTag.test.js && node out/closeTag.adversarial.test.js && node out/hoverImport.test.js && node out/namedParamHover.test.js && node out/diagnostics.test.js && node out/strictVariables.test.js && node out/dataModelFile.test.js && node out/reference/freemarkerRef.test.js && node out/indentRules.test.js && node out/indentAlign.test.js && node out/outline.test.js && node out/references.test.js && node out/semanticTokens.test.js && node out/comparisonDisplay.test.js && node out/signatureHelp.test.js && node out/comments.test.js && node out/commentMute.test.js && node out/linkedEditing.test.js && node out/rename.test.js && node out/workspaceSymbols.test.js && node out/symbolKindVscode.test.js",
     "test": "npm run test:grammar && npm run test:unit",
     "check:terms": "node ../scripts/check-forbidden-terms.mjs",

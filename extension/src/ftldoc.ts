@@ -5,6 +5,9 @@
  * Attachment rules (product):
  * 1. Only whitespace may sit between comment end and the declaration.
  * 2. After trim, leading `@nodoc` (case-insensitive) → no documentation.
+ *    Leading `@lang` (e.g. `<#-- @lang sql -->`, plan 0041) is an embedded-
+ *    language marker, not a doc, and is transparent: a doc comment directly
+ *    above the marker still attaches to the declaration below it.
  * 3. Block tags (multi-line, Javadoc / JSDoc style): summary, `@param`,
  *    `@return`/`@returns`, `@deprecated`, `@see`, `@since`, `@stop`
  *    (FreeMarker `#stop`, not Java `@throws`); every other tag is kept in
@@ -82,25 +85,45 @@ export function extractLeadingComment(
   declOffset: number,
   commentRanges?: Array<[number, number]>
 ): { body: string; bodyOffset: number } | undefined {
-  let i = declOffset;
-  while (i > 0 && /[ \t\r\n]/.test(text[i - 1]!)) {
-    i--;
-  }
-  if (i === 0) {
-    return undefined;
-  }
   const ranges = commentRanges ?? ftlCommentRanges(text);
-  // Closest range that ends exactly at i (only whitespace between comment and decl).
-  for (let r = ranges.length - 1; r >= 0; r--) {
-    const [start, end] = ranges[r]!;
-    if (end < i) {
-      break;
+  let pos = declOffset;
+  // Each pass finds the comment ending right before `pos`; `@lang` marker
+  // comments are skipped so the doc above them still attaches (plan 0041).
+  for (;;) {
+    let i = pos;
+    while (i > 0 && /[ \t\r\n]/.test(text[i - 1]!)) {
+      i--;
     }
-    if (end === i) {
-      return stripCommentDelimiters(text, start, end);
+    if (i === 0) {
+      return undefined;
     }
+    let found: [number, number] | undefined;
+    // Closest range that ends exactly at i (only whitespace between comment and decl).
+    for (let r = ranges.length - 1; r >= 0; r--) {
+      const [start, end] = ranges[r]!;
+      if (end < i) {
+        break;
+      }
+      if (end === i) {
+        found = [start, end];
+        break;
+      }
+    }
+    if (found === undefined) {
+      return undefined;
+    }
+    const c = stripCommentDelimiters(text, found[0], found[1]);
+    if (c !== undefined && isLangMarker(c.body)) {
+      pos = found[0];
+      continue;
+    }
+    return c;
   }
-  return undefined;
+}
+
+/** `@lang <id>` marker comment (`<#-- @lang sql -->`): not a doc (plan 0041). */
+export function isLangMarker(body: string): boolean {
+  return /^@lang\b/i.test(body.trim());
 }
 
 function stripCommentDelimiters(
@@ -342,6 +365,10 @@ export function parseFtlDoc(body: string, baseOffset = 0): FtlDoc | undefined {
   }
   // First token after trim is @nodoc (case-insensitive word boundary).
   if (/^@nodoc\b/i.test(trimmed)) {
+    return undefined;
+  }
+  // `@lang sql` embedded-language marker (plan 0041) is not documentation.
+  if (isLangMarker(trimmed)) {
     return undefined;
   }
 

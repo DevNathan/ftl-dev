@@ -7,7 +7,7 @@ Canonical language: **English**. Korean siblings: `*.ko.md` (see [index.ko.md](i
 | Product | [product/](product/) | Goals and capabilities — start with [vision.md](product/vision.md); status: [requirements-status.md](product/requirements-status.md); [Vim/Neovim matrix](product/vim-neovim-matrix.md) |
 | Decisions | [decisions/](decisions/) | ADRs — [0001](decisions/0001-codeoss-language-stack.md), [0002](decisions/0002-undeclared-vs-datamodel.md), [0003](decisions/0003-comparison-operator-presentation.md), [0004](decisions/0004-changelog.md), [0005 Vim/Neovim + LSP](decisions/0005-vim-neovim-port.md) |
 | Active plans | [plans/active/](plans/active/) | *(none)* |
-| Completed plans | [plans/completed/](plans/completed/) | Through [0040 list/items/sep/noparse diagnostics](plans/completed/0040-list-items-sep-noparse-diagnostics.md) |
+| Completed plans | [plans/completed/](plans/completed/) | Through [0041 SQL in capture assignments](plans/completed/0041-sql-embedded-highlighting.md) |
 | Extension | [../extension/](../extension/) | CodeOSS package (grammar + navigation providers) |
 | Vim runtime | [ftl-dev.vim](https://github.com/DevNathan/ftl-dev.vim) | **Separate git** — syntax / indent / ftplugin |
 | Language server | [../server/](../server/) | Shared LSP (stdio) for Vim / Neovim / future VS Code |

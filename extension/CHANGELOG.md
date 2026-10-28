@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-28
+
+First stable release. From here on the extension id, language id, file extensions, grammar scope name, settings keys, `.ftl-data-model.json` and icon theme id only change in a major version ([stability contract](../docs/versioning.md#stability-contract-from-100)).
+
+### Added
+
+- SQL highlighting in capture assignments (plan 0041): the body of `<#assign|local|global name>…</#…>` is highlighted as SQL when the name starts with `sql` (case-insensitive, e.g. `sqlInsert`, `SQL_LIST`) or when `<#-- @lang sql -->` sits directly above the opening tag. FTL inside the body (`${…}`, `<#if>`, comments) keeps its FTL highlighting; `@name` bind parameters get their own color; SQL strings/comments cannot run past the closing tag. Uses the editor's built-in SQL grammar (`source.sql`)
+- ftldoc: a `<#-- @lang … -->` marker comment is not documentation and does not detach the doc comment above it
+
 ## [0.8.0] - 2026-10-23
 
 ### Added

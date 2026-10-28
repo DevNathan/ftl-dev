@@ -1,0 +1,18 @@
+{
+  "name": "SQL (test stub)",
+  "scopeName": "source.sql",
+  "patterns": [
+    {
+      "name": "comment.line.double-dash.sql",
+      "match": "--.*$"
+    },
+    {
+      "name": "keyword.other.DML.sql",
+      "match": "(?i)\\b(select|insert|into|values|update|delete|from|where|set|and|or|not|null|merge|with|join|on|order|group|by)\\b"
+    },
+    {
+      "name": "constant.numeric.sql",
+      "match": "\\b\\d+(\\.\\d+)?\\b"
+    }
+  ]
+}
