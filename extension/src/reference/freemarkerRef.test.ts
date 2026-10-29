@@ -2,6 +2,7 @@ import * as assert from "assert";
 import { buildCompletions } from "../catalog";
 import { builtinHover, directiveHover } from "../docs";
 import {
+  NOTE_TITLE,
   BUILTIN_REF,
   SPECIAL_VAR_REF,
   DIRECTIVE_REF,
@@ -80,3 +81,18 @@ test("special variable refs include error and now", () => {
 });
 
 console.log("All reference unit tests passed.");
+
+test("slow comparison built-ins end with the author's note (below the manual link)", () => {
+  for (const name of ["seq_contains", "seq_index_of", "seq_last_index_of", "switch"]) {
+    const doc = getBuiltinRef(name)!.documentation;
+    const manual = doc.indexOf("[FreeMarker Manual]");
+    const note = doc.indexOf(NOTE_TITLE);
+    assert.ok(manual >= 0 && note > manual, `${name}: note after manual link`);
+    assert.ok(doc.includes("incompatible_improvements"), `${name}: states when it is slow`);
+    assert.ok(!/\bm1\./i.test(doc), `${name}: no in-house API`);
+  }
+  assert.ok(getBuiltinRef("seq_contains")!.documentation.includes('" jpg png gif webp "?contains(" " + ext + " ")'));
+  assert.ok(getBuiltinRef("seq_contains")!.documentation.includes("imageExts[ext]??"));
+  assert.ok(!getBuiltinRef("contains")!.documentation.includes(NOTE_TITLE), "other built-ins unchanged");
+});
+

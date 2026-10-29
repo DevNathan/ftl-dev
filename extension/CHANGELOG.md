@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-29
+
+### Added
+
+- Hover and completion docs for `?seq_contains`, `?seq_index_of`, `?seq_last_index_of` and `?switch` now end with an author's note: they're slow in loops when `incompatible_improvements` is below 2.3.33, plus faster ways to do the same thing (hash lookup, delimited `?contains`, `?keep_after` / `?keep_before`)
+
 ## [1.0.1] - 2026-10-28
 
 ### Changed

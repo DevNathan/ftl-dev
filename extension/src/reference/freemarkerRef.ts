@@ -18,28 +18,91 @@ export type RefDoc = {
 
 const MANUAL = "https://freemarker.apache.org/docs";
 
+/**
+ * Heading of the ftl-dev author's notes appended below the manual text.
+ * Notes are the author's own advice (e.g. measured performance), not part of
+ * the Apache FreeMarker Manual.
+ */
+export const NOTE_TITLE = "ftl-dev note (dev opinion)";
+
+/**
+ * Shared by `?seq_contains` / `?seq_index_of` / `?seq_last_index_of` / `?switch`.
+ * They compare strings through `EvalUtil.compare`, which (checked in the
+ * FreeMarker 2.3.34 bytecode) uses the locale `Collator` when
+ * `incompatible_improvements` < 2.3.33 and NFKC + `String.compareTo` otherwise.
+ * Numbers: 100,000 iterations, FreeMarker 2.3.34, OpenJDK 17, old
+ * `incompatible_improvements`. With 2.3.33+ the gap mostly disappears
+ * (`?seq_contains` 12–13 ms vs `?contains` 7–8 ms in the same loop).
+ */
+const SLOW_COMPARE =
+  "Slow in loops when `incompatible_improvements` is below 2.3.33, which is also the default if the application never sets it. In that case every string comparison goes through a locale `Collator`. From 2.3.33 on the difference is small.";
+
+const MEMBERSHIP_ALTERNATIVES = [
+  "```ftl",
+  "<#-- build the hash once, outside the loop -->",
+  '<#assign imageExts = {"jpg": true, "png": true, "gif": true, "webp": true}>',
+  "<#if imageExts[ext]??>…</#if>",
+  "",
+  "<#-- or search a delimited string; keep the spaces so \"pn\" or \"\" can't match -->",
+  '<#if " jpg png gif webp "?contains(" " + ext + " ")>…</#if>',
+  "```",
+].join("\n");
+
+const NOTE_SEQ_CONTAINS = [
+  SLOW_COMPARE,
+  "With the old setting and 4 items, 100,000 runs of `?seq_contains` took about 250 ms; a hash lookup or `?contains` took 16–18 ms. Alternatives:",
+  "",
+  MEMBERSHIP_ALTERNATIVES,
+  "",
+  "`==` chains and `?switch` use the same comparison, so they are just as slow.",
+].join("\n");
+
+const NOTE_SEQ_INDEX_OF = [
+  SLOW_COMPARE,
+  'With the old setting, splitting a list like `"draft,review,published"` and finding the next item with `?seq_index_of` took 258 ms for 3 items and 515 ms for 8 (100,000 runs). Doing it on the string took 110–117 ms:',
+  "",
+  "```ftl",
+  '<#-- step after the current one, or "" -->',
+  '${("," + steps + ",")?keep_after("," + step + ",")?keep_before(",")}',
+  "```",
+  "",
+  "For a simple membership check, see the `?seq_contains` note.",
+].join("\n");
+
+const NOTE_SWITCH = [
+  SLOW_COMPARE,
+  "With the old setting, 4 cases and 100,000 runs: `?switch` took about 243 ms, a hash lookup 16 ms. For a fixed mapping, build the hash once outside the loop:",
+  "",
+  "```ftl",
+  '<#assign labels = {"draft": "Draft", "review": "In review", "published": "Live"}>',
+  '${labels[status]!"Unknown"}',
+  "```",
+].join("\n");
+
 function builtinDoc(
   name: string,
   detail: string,
   body: string,
   page: string,
-  usage?: string
+  usage?: string,
+  note?: string
 ): RefDoc {
   const usageLine = usage ?? `value?${name}`;
-  return {
-    detail,
-    documentation: [
-      `**\`?${name}\`** — ${detail}`,
-      "",
-      "```ftl",
-      usageLine,
-      "```",
-      "",
-      body,
-      "",
-      `[FreeMarker Manual](${MANUAL}/${page})`,
-    ].join("\n"),
-  };
+  const lines = [
+    `**\`?${name}\`** — ${detail}`,
+    "",
+    "```ftl",
+    usageLine,
+    "```",
+    "",
+    body,
+    "",
+    `[FreeMarker Manual](${MANUAL}/${page})`,
+  ];
+  if (note) {
+    lines.push("", "---", "", `**${NOTE_TITLE}**`, "", note);
+  }
+  return { detail, documentation: lines.join("\n") };
 }
 
 function directiveDoc(
@@ -682,21 +745,24 @@ export const BUILTIN_REF: Record<string, RefDoc> = {
     "Whether a sequence contains an element.",
     "Sequence membership test.",
     "ref_builtins_sequence.html",
-    "xs?seq_contains(v)"
+    "xs?seq_contains(v)",
+    NOTE_SEQ_CONTAINS
   ),
   seq_index_of: builtinDoc(
     "seq_index_of",
     "First index of an element in a sequence.",
     "Returns the index or -1.",
     "ref_builtins_sequence.html",
-    "xs?seq_index_of(v)"
+    "xs?seq_index_of(v)",
+    NOTE_SEQ_INDEX_OF
   ),
   seq_last_index_of: builtinDoc(
     "seq_last_index_of",
     "Last index of an element in a sequence.",
     "Returns the last matching index or -1.",
     "ref_builtins_sequence.html",
-    "xs?seq_last_index_of(v)"
+    "xs?seq_last_index_of(v)",
+    [SLOW_COMPARE, "Same cost as `?seq_index_of`; see that note for an alternative."].join("\n")
   ),
   sequence: builtinDoc(
     "sequence",
@@ -766,7 +832,8 @@ export const BUILTIN_REF: Record<string, RefDoc> = {
     "Inline switch expression.",
     "Chooses a result from value/match pairs (see manual for exact parameter list).",
     "ref_builtins_expert.html",
-    'x?switch(1, "a", 2, "b", "other")'
+    'x?switch(1, "a", 2, "b", "other")',
+    NOTE_SWITCH
   ),
   then: builtinDoc(
     "then",
