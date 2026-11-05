@@ -51,11 +51,12 @@ Vim 런타임은 **별도 git** ([ftl-dev.vim](https://github.com/DevNathan/ftl-
 ```bash
 npm ci --prefix extension
 npm ci --prefix server
+npm ci --prefix site
 npm test --prefix extension
-npx tsc -p server --noEmit
+npm exec --prefix server -- tsc -p server --noEmit
 ```
 
-`extension/`의 `npm run check:terms`는 금지어 목록이 없으면 0으로 끝난다. 컴파일 후 `npm start --prefix server`가 stdio 언어 서버다. `tree-sitter-freemarker/`는 선택이며 CI에 없다.
+`extension/`의 `npm run check:terms`는 금지어 목록이 없으면 0으로 끝난다. 루트 `package.json`이 없어서 저장소 루트의 `npx tsc`는 무관한 `tsc` 패키지를 설치한다. 위 `npm exec` 줄(server 로컬 컴파일러)을 쓴다. 컴파일 후 `npm start --prefix server`가 stdio 언어 서버다(`--stdio`). `npm run build --prefix site`는 프로젝트 페이지를 `site/dist/`에 쓴다. `tree-sitter-freemarker/`는 선택이며 CI에 없다.
 
 ## 제약
 
