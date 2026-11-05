@@ -58,11 +58,12 @@ No root `package.json`. Node 18+ (CI uses 20).
 ```bash
 npm ci --prefix extension
 npm ci --prefix server
+npm ci --prefix site
 npm test --prefix extension
-npx tsc -p server --noEmit
+npm exec --prefix server -- tsc -p server --noEmit
 ```
 
-`npm run check:terms` in `extension/` exits 0 when no forbidden-term list is configured. After compile, `npm start --prefix server` is the stdio language server. `tree-sitter-freemarker/` is optional and is not part of CI.
+`npm run check:terms` in `extension/` exits 0 when no forbidden-term list is configured. There is no root `package.json`, so `npx tsc` from the repo root installs the unrelated `tsc` package; use the `npm exec` line above (the server-local compiler). After compile, `npm start --prefix server` is the stdio language server (`--stdio`). `npm run build --prefix site` writes the project page to `site/dist/`. `tree-sitter-freemarker/` is optional and is not part of CI.
 
 ## Constraints
 
