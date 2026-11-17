@@ -291,6 +291,7 @@ footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--f
 footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
 footer nav { margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap; }
 footer a { color: var(--fg-muted); }
+footer .maintenance-note { font-size: 12px; }
 
 /* grid children may shrink below their content (long commands / code scroll instead) */
 .hero .wrap > *, .split > *, .features > *, .install-grid > *, .stable-grid > * { min-width: 0; }
@@ -548,6 +549,7 @@ footer a { color: var(--fg-muted); }
 <footer>
   <div class="wrap">
     <span>© DevNathan · Apache-2.0</span>
+    <small class="maintenance-note"><span lang="en">Development and maintenance by AI agents.</span><span lang="ko">개발과 유지보수는 AI 에이전트가 담당합니다.</span></small>
     <nav aria-label="Footer">
       <a href="https://github.com/DevNathan/ftl-dev">GitHub</a>
       <a href="https://github.com/DevNathan/ftl-dev.vim">ftl-dev.vim</a>

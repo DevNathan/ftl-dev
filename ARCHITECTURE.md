@@ -59,7 +59,7 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 
 | Mode | How | What it covers |
 |------|-----|----------------|
-| Manual UX | `F5` / Reload → fixtures | Colors, indent, Ctrl+click, completions (`<#`, `?`) |
+| Manual UX | [Extension Development Host and fixtures](docs/development.md#try-the-extension-locally) | Colors, indent, Ctrl+click, completions (`<#`, `?`) |
 | Grammar regression | `cd extension && npm run test:grammar` | TextMate scopes (`tests/grammar/`) |
 | Unit tests | `cd extension && npm run test:unit` | Symbol index, completions, reference docs, expression spans |
 

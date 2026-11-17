@@ -32,7 +32,8 @@ CodeOSS FreeMarker tooling for **FTL as a scripting / application-logic language
 | [docs/decisions/](docs/decisions/) | Lasting technical choices (ADRs) |
 | [docs/plans/active/](docs/plans/active/) | Work in progress |
 | [docs/plans/completed/](docs/plans/completed/) | Finished plans |
-| [docs/publishing.md](docs/publishing.md) / [docs/versioning.md](docs/versioning.md) | GitHub Release VSIX on matching `v*` tags; bump version + [CHANGELOG](extension/CHANGELOG.md) before every release |
+| [docs/development.md](docs/development.md) | Local setup and manual checks |
+| [docs/publishing.md](docs/publishing.md) / [docs/versioning.md](docs/versioning.md) | GitHub Releases and Open VSX on matching `v*` tags |
 | [tests/](tests/) | Fixtures (`fixtures/`) + grammar tests (`grammar/`) |
 
 ## Operating principles
@@ -44,25 +45,14 @@ CodeOSS FreeMarker tooling for **FTL as a scripting / application-logic language
 - Do not invent architecture beyond what docs record; propose a decision doc when a choice must stick.
 - **Never** add Vim runtime files here; never sync/subtree into `ftl-dev.vim` from this repo.
 - Never commit in-house/customer identifiers; run `npm --prefix extension run check:terms` before committing (term list lives outside the repo, see plan 0037).
+- Use the existing SSH remote `git@github.com:DevNathan/ftl-dev.git`. If SSH authentication fails, report the error. The maintainer handles pushes.
+- Keep editor and agent-specific settings local. This file and the published `skills/` are shared project files.
 
 ## Language
 
 - Canonical docs: **English**.
 - Korean: optional `*.ko.md` siblings.
 - Chat may be Korean; lasting docs default to English unless asked for KO.
-
-## Develop
-
-No root `package.json`. Node 18+ (CI uses 20).
-
-```bash
-npm ci --prefix extension
-npm ci --prefix server
-npm test --prefix extension
-npx tsc -p server --noEmit
-```
-
-`npm run check:terms` in `extension/` exits 0 when no forbidden-term list is configured. After compile, `npm start --prefix server` is the stdio language server. `tree-sitter-freemarker/` is optional and is not part of CI.
 
 ## Constraints
 

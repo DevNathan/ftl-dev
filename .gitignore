@@ -7,3 +7,20 @@ extension/*.vsix
 test.ftl
 pnpm-lock.yaml
 yarn.lock
+
+# Local editor and agent configuration
+.vscode/
+.idea/
+*.code-workspace
+.cursor/
+.agents/
+.claude/
+.codex/
+.mcp.json
+AGENTS.local.md
+skills-lock.json
+
+# Editor backup files
+*.swp
+*.swo
+*~

@@ -1,8 +1,0 @@
-{
-  "workbench.iconTheme": "ftl-dev-icons",
-  "material-icon-theme.files.associations": {
-    "*.ftl": "freemarker",
-    "*.ftlh": "freemarker",
-    "*.ftlx": "freemarker"
-  }
-}

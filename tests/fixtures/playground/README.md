@@ -1,6 +1,6 @@
 # Playground fixtures
 
-Hand-check files for the Extension Host (Run and Debug → **Run Extension**, which opens `tests/fixtures`). Each file describes what to check near the top. With default settings, only `switch-checks.ftl` and `diagnostic-checks.ftl` should show diagnostics.
+Open these files in the [Extension Development Host](../../../docs/development.md#try-the-extension-locally). Each file describes what to check near the top. With default settings, only `switch-checks.ftl` and `diagnostic-checks.ftl` should show diagnostics.
 
 | File | What to check |
 |------|---------------|

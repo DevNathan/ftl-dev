@@ -74,7 +74,7 @@ npm test
 npm run package          # → ftl-dev-*.vsix
 ```
 
-Do not forget `Reload Window` afterward. Try [tests/fixtures/navigation/main.ftl](https://github.com/DevNathan/ftl-dev/blob/main/tests/fixtures/navigation/main.ftl), or just hit **F5**.
+For manual checks, see the [Extension Development Host setup](https://github.com/DevNathan/ftl-dev/blob/main/docs/development.md#try-the-extension-locally).
 
 ## License
 

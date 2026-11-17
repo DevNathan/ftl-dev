@@ -4,11 +4,9 @@ Manual check for JavaDoc-like FTL comments ([0016-ftldoc](../../../docs/plans/co
 
 ## How
 
-1. Run and Debug → **Run Extension (ftldoc fixture)** (or F5 on **Run Extension (ftl-dev vsix)** then open `ftldoc/demo.ftl`).
+1. Start the [Extension Development Host](../../../docs/development.md#try-the-extension-locally) with the fixtures folder.
 2. In the Extension Host window, open [`demo.ftl`](demo.ftl) from the explorer.
 3. Hover (or **Ctrl+K Ctrl+I**) on the identifiers below.
-
-Note: older launch configs only opened `fixtures/navigation`, so `demo.ftl` did not appear until you browsed elsewhere.
 
 ## Checklist
 

@@ -12,7 +12,7 @@ FreeMarker를 **스크립트 언어**로 다루는 CodeOSS 익스텐션. TextMat
 
 | 모드 | 방법 |
 |------|------|
-| 수동 | F5 / Reload → fixtures (하이라이트, go-to, 완성) |
+| 수동 | [Extension Development Host에서 예제 열기](docs/development.md#try-the-extension-locally) |
 | Grammar | `npm run test:grammar` |
 | Unit | `npm run test:unit` |
 
