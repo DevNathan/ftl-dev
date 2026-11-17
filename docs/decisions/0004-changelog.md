@@ -5,15 +5,15 @@
 
 ## Context
 
-Releases are identified by `extension/package.json` `"version"` ([versioning.md](../versioning.md)). Registries (Open VSX, VS Marketplace) and GitHub Releases need a **human-readable** record of what changed per version. Without a single convention, notes scatter across commit messages, chat, and release drafts, and Marketplace/Open VSX have nothing reliable to show on the extension page.
+Releases are identified by `extension/package.json` `"version"` ([versioning.md](../versioning.md)). GitHub Releases need a **human-readable** record of what changed per version. Without a single convention, notes scatter across commit messages, chat, and release drafts.
 
 ## Options considered
 
 | Approach | Pros | Cons |
 |----------|------|------|
-| A. Git log / GitHub Release body only | No extra file | Not in the VSIX; Marketplace changelog empty; easy to omit when using workflow_dispatch |
+| A. Git log / GitHub Release body only | No extra file | Not in the VSIX; easy to omit when creating a release |
 | B. Root `CHANGELOG.md` only | Visible in repo | Not packaged into the extension unless copied; two places to sync |
-| C. `extension/CHANGELOG.md` (Keep a Changelog) | Shipped in VSIX; shown by Marketplace/Open VSX; one file next to `package.json` | Must edit on every release-prep |
+| C. `extension/CHANGELOG.md` (Keep a Changelog) | Shipped in VSIX; one file next to `package.json` | Must edit on every release-prep |
 
 ## Decision
 

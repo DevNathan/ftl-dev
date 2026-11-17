@@ -394,6 +394,7 @@
             { "include": "#string-double" },
             { "include": "#string-single" },
             { "include": "#directive-named-param" },
+            { "include": "#square-bracket-expression" },
             { "include": "#expression" }
           ]
         },
@@ -414,6 +415,7 @@
             { "include": "#string-raw" },
             { "include": "#string-double" },
             { "include": "#string-single" },
+            { "include": "#square-bracket-expression" },
             { "include": "#expression" }
           ]
         },
@@ -434,9 +436,23 @@
             { "include": "#string-raw" },
             { "include": "#string-double" },
             { "include": "#string-single" },
+            { "include": "#square-bracket-expression" },
             { "include": "#expression" }
           ]
         }
+      ]
+    },
+    "square-bracket-expression": {
+      "comment": "Consume sequence literals and indexes before the enclosing square tag can close.",
+      "begin": "\\[",
+      "end": "\\]",
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#string-raw" },
+        { "include": "#string-double" },
+        { "include": "#string-single" },
+        { "include": "#square-bracket-expression" },
+        { "include": "#expression" }
       ]
     },
     "directive-named-param": {

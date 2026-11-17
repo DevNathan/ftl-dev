@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ftl-dev · FreeMarker for VS Code, Cursor and Vim</title>
-<meta name="description" content="FreeMarker (.ftl) support for VS Code, Cursor, CodeOSS and Vim / Neovim: highlighting, go to definition, diagnostics and ftldoc.">
-<meta property="og:title" content="ftl-dev {{version}}: FreeMarker support for VS Code, Cursor and Vim">
-<meta property="og:description" content="Highlighting, go to definition, diagnostics and ftldoc for .ftl files.">
+<title>ftl-dev · FreeMarker for CodeOSS and Vim</title>
+<meta name="description" content="FreeMarker tools for CodeOSS, Vim and Neovim: FTL navigation, completion, diagnostics and documentation.">
+<meta property="og:title" content="ftl-dev {{version}}: FreeMarker support for CodeOSS and Vim">
+<meta property="og:description" content="Write and maintain FTL code with navigation, completion, diagnostics and documentation in your editor.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -245,24 +245,41 @@ h2 { font-size: clamp(28px, 3.6vw, 38px); letter-spacing: -.025em; line-height: 
 .problem small { display: block; color: var(--fg-faint); font-family: var(--mono); font-size: 12px; margin-top: 2px; }
 
 /* install */
-.install-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.install-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .install {
   padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg);
   display: flex; flex-direction: column; gap: 12px;
 }
 .install h3 { margin: 0; font-size: 17px; }
 .install p { margin: 0; color: var(--fg-muted); font-size: 14.5px; }
+.install .btn { align-self: flex-start; flex: none; margin-top: auto; }
+.install .cmd { margin-top: auto; }
+.install-note { margin: 16px 0 0; color: var(--fg-muted); font-size: 14px; }
 .cmd {
-  display: flex; align-items: center; gap: 8px; margin-top: auto;
+  display: flex; align-items: center; gap: 12px; min-height: 44px;
   font: 13px/1.4 var(--mono); background: var(--code-bg); border: 1px solid var(--line);
   border-radius: 8px; padding: 10px 10px 10px 12px; min-width: 0;
 }
-.cmd code { flex: 1; overflow-x: auto; white-space: nowrap; background: none; border: 0; padding: 0; }
+.cmd code { flex: 1; min-width: 0; background: none; border: 0; padding: 0; }
 .copy {
   border: 1px solid var(--line); background: var(--bg-elev); color: var(--fg-muted); border-radius: 6px;
   font: 600 12px/1 var(--sans); padding: 6px 8px; cursor: pointer; flex: none;
 }
 .copy:hover { color: var(--fg); }
+
+/* agent skills */
+.skills-section { padding-top: 0; }
+.skills-section h2 { font-size: clamp(24px, 3vw, 30px); }
+.skills-section .section-lede { margin-bottom: 24px; }
+.skill-list { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-elev); }
+.skill-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
+  align-items: center; gap: 16px 32px; padding: 20px 22px;
+}
+.skill-row + .skill-row { border-top: 1px solid var(--line); }
+.skill-row h3 { margin: 0 0 4px; font-size: 17px; }
+.skill-row p { margin: 0 0 6px; color: var(--fg-muted); font-size: 14.5px; }
+.skill-row a { font-size: 14px; }
 
 /* celebration */
 .thanks { text-align: center; padding: 84px 0; }
@@ -285,9 +302,12 @@ footer a { color: var(--fg-muted); }
 @media (max-width: 960px) {
   .hero .wrap, .split, .split.rev { grid-template-columns: 1fr; gap: 36px; }
   .split.rev > :first-child { order: 0; }
-  .features, .install-grid { grid-template-columns: 1fr 1fr; }
+  .features { grid-template-columns: 1fr 1fr; }
   .stable-grid { grid-template-columns: 1fr 1fr; }
   .hover-card { margin-left: 0; }
+}
+@media (max-width: 780px) {
+  .skill-row { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .wrap { padding: 0 16px; }
@@ -308,8 +328,9 @@ footer a { color: var(--fg-muted); }
 
 <header class="nav">
   <div class="wrap">
-    <a class="brand" href="#top"><svg class="logo" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M24.023,20.9,25.408,23l4.615-7L25.408,9l-1.385,2.1L27.255,16Z M7.977,11.1,6.592,9,1.977,16l4.615,7,1.385-2.1L4.745,16Z M13.035,9h2.8l-.494,2.8h2.8L18.635,9h2.8l-.494,2.8h2.8l-.495,2.8h-2.8l-.493,2.8h2.8l-.494,2.8h-2.8L18.967,23h-2.8l.493-2.8-2.8,0L13.375,23H10.567l.493-2.8-2.8,0,.494-2.8h2.8l.493-2.793h-2.8L9.741,11.8h2.8Zm1.319,8.4h2.8l.494-2.8h-2.8Z"/></svg>ftl-dev <span class="ver">v{{version}}</span></a>
+    <a class="brand" href="#top"><svg class="logo" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><defs><linearGradient id="ftl-streak" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".7"/></linearGradient></defs><rect x="1" y="10.65" width="6.5" height="1.1" rx="0.55" fill="url(#ftl-streak)"/><rect x="0" y="15.25" width="7.5" height="1.5" rx="0.75" fill="url(#ftl-streak)"/><rect x="1" y="20.25" width="6.5" height="1.1" rx="0.55" fill="url(#ftl-streak)"/><rect x="3" y="13.25" width="3.6" height="0.7" rx="0.35" fill="url(#ftl-streak)"/><rect x="3" y="18.05" width="3.6" height="0.7" rx="0.35" fill="url(#ftl-streak)"/><path fill="currentColor" transform="translate(2.6 0) translate(16 16) skewX(-14) translate(-16 -16) translate(16 16) scale(.72) translate(-16 -16)" d="M7.977,11.1,6.592,9,1.977,16l4.615,7,1.385-2.1L4.745,16Z M13.035,9h2.8l-.494,2.8h2.8L18.635,9h2.8l-.494,2.8h2.8l-.495,2.8h-2.8l-.493,2.8h2.8l-.494,2.8h-2.8L18.967,23h-2.8l.493-2.8-2.8,0L13.375,23H10.567l.493-2.8-2.8,0,.494-2.8h2.8l.493-2.793h-2.8L9.741,11.8h2.8Zm1.319,8.4h2.8l.494-2.8h-2.8Z M24.023,20.9,25.408,23l4.615-7L25.408,9l-1.385,2.1L27.255,16Z"/></svg>ftl-dev <span class="ver">v{{version}}</span></a>
     <nav class="nav-links" aria-label="Sections">
+      <a href="#why"><span lang="en">Why ftl-dev</span><span lang="ko">만드는 이유</span></a>
       <a href="#features"><span lang="en">Features</span><span lang="ko">기능</span></a>
       <a href="#diagnostics"><span lang="en">Diagnostics</span><span lang="ko">진단</span></a>
       <a href="#install"><span lang="en">Install</span><span lang="ko">설치</span></a>
@@ -328,16 +349,15 @@ footer a { color: var(--fg-muted); }
   <section class="hero">
     <div class="wrap">
       <div>
-        <span class="pill"><span class="dot"></span><span lang="en">1.0 is here — first stable release</span><span lang="ko">1.0 출시 — 첫 안정 버전</span></span>
-        <h1><span lang="en">FreeMarker,<br><span class="grad">finally first&#8209;class.</span></span><span lang="ko">FreeMarker도 이제<br><span class="grad">제대로 된 언어처럼.</span></span></h1>
-        <p class="lede" lang="en">Highlighting that reads, Ctrl+click navigation, diagnostics that catch real mistakes and ftldoc in every hover. For VS Code, Cursor, CodeOSS and Vim / Neovim.</p>
-        <p class="lede" lang="ko">읽기 좋은 하이라이팅, Ctrl+클릭 이동, 진짜 실수만 잡는 진단, 호버마다 보이는 ftldoc까지. VS Code, Cursor, CodeOSS, Vim / Neovim에서.</p>
+        <span class="pill"><span class="dot"></span><span lang="en">Version {{version}}</span><span lang="ko">버전 {{version}}</span></span>
+        <h1><span lang="en">Write and maintain<br><span class="grad">FreeMarker in your editor.</span></span><span lang="ko">에디터에서 바로<br><span class="grad">FreeMarker를 개발하세요.</span></span></h1>
+        <p class="lede" lang="en">FreeMarker files can hold application logic as well as page templates. ftl-dev helps you follow that code with go-to-definition, completion, diagnostics and docs for your macros and functions.</p>
+        <p class="lede" lang="ko">FreeMarker 파일에는 화면 템플릿뿐 아니라 애플리케이션 로직도 들어갑니다. ftl-dev는 정의로 이동하고, 코드를 자동완성하고, 오류를 확인하고, 매크로나 함수의 문서를 살펴보도록 돕습니다.</p>
         <div class="ctas">
-          <a class="btn primary" href="https://marketplace.visualstudio.com/items?itemName=nathan-0910.ftl-dev">
+          <a class="btn primary" href="https://open-vsx.org/extension/nathan-0910/ftl-dev">
             <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1a.75.75 0 0 1 .75.75v6.69l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 0 1 1.06-1.06l2.22 2.22V1.75A.75.75 0 0 1 8 1zM2.75 12.5a.75.75 0 0 0 0 1.5h10.5a.75.75 0 0 0 0-1.5H2.75z"/></svg>
-            <span lang="en">VS Code Marketplace</span><span lang="ko">VS Code 마켓플레이스</span>
+            <span lang="en">Get it on Open VSX</span><span lang="ko">Open VSX에서 설치</span>
           </a>
-          <a class="btn" href="https://open-vsx.org/extension/nathan-0910/ftl-dev">Open VSX (Cursor, CodeOSS)</a>
           <a class="btn" href="https://github.com/DevNathan/ftl-dev.vim">Vim / Neovim</a>
         </div>
         <p class="hero-note"><span lang="en">Free and open source · Apache-2.0 · extension id</span><span lang="ko">무료 오픈소스 · Apache-2.0 · 익스텐션 ID</span> <code>nathan-0910.ftl-dev</code></p>
@@ -349,16 +369,16 @@ footer a { color: var(--fg-muted); }
     </div>
   </section>
 
-  <section class="alt" id="stable">
+  <section class="alt" id="why">
     <div class="wrap">
-      <h2><span lang="en">What 1.0 means</span><span lang="ko">1.0이 되면서 달라진 점</span></h2>
-      <p class="section-lede" lang="en">From 1.0 on I won't casually rename the things below. If one of them has to change, it comes with a major version bump and a note in the changelog first.</p>
-      <p class="section-lede" lang="ko">1.0부터는 아래 것들을 함부로 안 바꿉니다. 바꿔야 할 일이 생기면 메이저 버전 올리고, 변경 이력에 먼저 적어 둘게요.</p>
+      <h2><span lang="en">Why ftl-dev exists</span><span lang="ko">ftl-dev를 만든 이유</span></h2>
+      <p class="section-lede" lang="en">FreeMarker is used for more than rendering HTML. FTL code can include functions, macros, imports and branching logic. ftl-dev understands those parts, so you can jump to a definition, see problems as you type and check a function's docs at the call site.</p>
+      <p class="section-lede" lang="ko">FreeMarker는 HTML을 렌더링하는 데만 쓰이지 않습니다. FTL 코드에는 함수, 매크로, import와 분기 로직이 함께 들어갑니다. ftl-dev는 이런 코드를 이해해 정의로 이동하고, 입력 중 문제를 확인하고, 호출한 자리에서 함수 문서를 볼 수 있게 합니다.</p>
       <div class="stable-grid">
-        <div class="stable-item"><b><span lang="en">Extension &amp; language id</span><span lang="ko">익스텐션·언어 ID</span></b><p><code>nathan-0910.ftl-dev</code> · <code>freemarker</code></p></div>
-        <div class="stable-item"><b><span lang="en">File types &amp; grammar scope</span><span lang="ko">파일 확장자·문법 scope</span></b><p><code>.ftl</code> <code>.ftlh</code> <code>.ftlx</code> · <code>text.html.freemarker</code></p></div>
-        <div class="stable-item"><b><span lang="en">Settings keys</span><span lang="ko">설정 키</span></b><p><code>ftl-dev.strictVariables</code>, <code>ftl-dev.dataModel</code>, …</p></div>
-        <div class="stable-item"><b><span lang="en">Project file</span><span lang="ko">프로젝트 파일</span></b><p><code>.ftl-data-model.json</code></p></div>
+        <div class="stable-item"><b><span lang="en">Find declarations</span><span lang="ko">선언 위치 찾기</span></b><p lang="en">Jump to macros, functions, variables and imported files.</p><p lang="ko">매크로, 함수, 변수와 import한 파일로 이동합니다.</p></div>
+        <div class="stable-item"><b><span lang="en">Check your work</span><span lang="ko">코드 검사</span></b><p lang="en">See syntax and block errors while editing.</p><p lang="ko">편집 중 문법과 블록 오류를 확인합니다.</p></div>
+        <div class="stable-item"><b><span lang="en">Get code help</span><span lang="ko">코드 작성 도움</span></b><p lang="en">Use completion, parameter hints and ftldoc.</p><p lang="ko">자동완성, 인자 힌트와 ftldoc을 사용할 수 있습니다.</p></div>
+        <div class="stable-item"><b><span lang="en">Choose your editor</span><span lang="ko">에디터 선택</span></b><p lang="en">Install the CodeOSS extension or the Vim / Neovim plugin.</p><p lang="ko">CodeOSS 확장 또는 Vim / Neovim 플러그인을 설치하세요.</p></div>
       </div>
     </div>
   </section>
@@ -366,8 +386,8 @@ footer a { color: var(--fg-muted); }
   <section id="features">
     <div class="wrap">
       <h2><span lang="en">Features</span><span lang="ko">기능</span></h2>
-      <p class="section-lede" lang="en">What I needed while writing ftl.</p>
-      <p class="section-lede" lang="ko">ftl을 쓰면서 필요했던 기능들입니다.</p>
+      <p class="section-lede" lang="en">The extension covers the parts of FTL you work with every day.</p>
+      <p class="section-lede" lang="ko">자주 쓰는 FTL 편집 기능을 모았습니다.</p>
       <div class="features">
         <article class="feature">
           <div class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M3 5h9M3 10h14M3 15h7"/></svg></div>
@@ -425,8 +445,8 @@ footer a { color: var(--fg-muted); }
     <div class="wrap split rev">
       <div>
         <h2><span lang="en">Diagnostics and hover</span><span lang="ko">진단과 호버</span></h2>
-        <p class="section-lede" lang="en">Some mistakes FreeMarker only reports when it renders the template. ftl-dev shows them while you type.</p>
-        <p class="section-lede" lang="ko">일부 오류는 FreeMarker가 템플릿을 렌더링할 때에야 드러납니다. ftl-dev는 이런 오류를 입력하는 동안 표시합니다.</p>
+        <p class="section-lede" lang="en">Some template errors appear only when FreeMarker renders a file. ftl-dev can catch certain syntax and block errors as you edit.</p>
+        <p class="section-lede" lang="ko">템플릿 오류 중에는 FreeMarker가 파일을 렌더링해야 드러나는 것도 있습니다. ftl-dev는 일부 문법과 블록 오류를 편집 중에 표시합니다.</p>
         <ul class="checks">
           <li lang="en"><span>Mixing <code>#on</code> and <code>#case</code> in one <code>#switch</code> is a ParseException in FreeMarker 2.3.34. ftl-dev marks it as you type.</span></li>
           <li lang="ko"><span><code>#switch</code> 하나에 <code>#on</code>과 <code>#case</code>를 섞으면 FreeMarker 2.3.34에선 ParseException입니다. ftl-dev는 입력하는 동안 표시합니다.</span></li>
@@ -459,21 +479,17 @@ footer a { color: var(--fg-muted); }
 
   <section id="install">
     <div class="wrap">
-      <h2><span lang="en">Install</span><span lang="ko">설치</span></h2>
-      <p class="section-lede" lang="en">Install it in your editor and open a <code>.ftl</code>, <code>.ftlh</code> or <code>.ftlx</code> file.</p>
-      <p class="section-lede" lang="ko">에디터에 설치하고 <code>.ftl</code>, <code>.ftlh</code>, <code>.ftlx</code> 파일을 열면 됩니다.</p>
+      <h2><span lang="en">Install in your editor</span><span lang="ko">에디터 설치</span></h2>
+      <p class="section-lede" lang="en">Add FreeMarker support to CodeOSS, Vim, or Neovim.</p>
+      <p class="section-lede" lang="ko">CodeOSS, Vim, Neovim에서 FreeMarker 파일을 편집할 수 있습니다.</p>
       <div class="install-grid">
         <div class="install">
-          <h3>VS Code</h3>
-          <p lang="en">Get it from the Visual Studio Marketplace, or run this in Quick Open (Ctrl+P):</p>
-          <p lang="ko">Visual Studio 마켓플레이스에서 받거나, Quick Open(Ctrl+P)에서 아래 명령을 실행하세요.</p>
-          <div class="cmd"><code>ext install nathan-0910.ftl-dev</code><button class="copy" type="button">Copy</button></div>
-        </div>
-        <div class="install">
-          <h3>Cursor · CodeOSS</h3>
-          <p lang="en">It's on Open VSX. Search <b>FreeMarker (ftl-dev)</b> in the Extensions view, or:</p>
-          <p lang="ko">Open VSX에 있습니다. 확장 탭에서 <b>FreeMarker (ftl-dev)</b>를 검색하거나:</p>
-          <div class="cmd"><code>code-oss --install-extension nathan-0910.ftl-dev</code><button class="copy" type="button">Copy</button></div>
+          <h3>CodeOSS · Open VSX</h3>
+          <p lang="en">If your editor uses Open VSX, search for <code>nathan-0910.ftl-dev</code> in Extensions.</p>
+          <p lang="ko">Open VSX를 쓰는 에디터에서는 확장 탭에서 <code>nathan-0910.ftl-dev</code>를 검색하세요.</p>
+          <p lang="en">For manual installation, get the VSIX from <a href="https://github.com/DevNathan/ftl-dev/releases">GitHub Releases</a> and choose <b>Install from VSIX…</b>.</p>
+          <p lang="ko">직접 설치하려면 <a href="https://github.com/DevNathan/ftl-dev/releases">GitHub Releases</a>에서 VSIX를 내려받아 <b>Install from VSIX…</b>를 선택하세요.</p>
+          <a class="btn" href="https://open-vsx.org/extension/nathan-0910/ftl-dev">Open VSX</a>
         </div>
         <div class="install">
           <h3>Vim / Neovim</h3>
@@ -482,18 +498,48 @@ footer a { color: var(--fg-muted); }
           <div class="cmd"><code>Plug 'DevNathan/ftl-dev.vim'</code><button class="copy" type="button">Copy</button></div>
         </div>
       </div>
+      <p class="install-note" lang="en">Microsoft VS Code uses the Visual Studio Marketplace, where ftl-dev is unavailable.</p>
+      <p class="install-note" lang="ko">Microsoft VS Code의 Visual Studio Marketplace에서는 ftl-dev를 제공하지 않습니다.</p>
+    </div>
+  </section>
+
+  <section class="skills-section" id="skills">
+    <div class="wrap">
+      <h2><span lang="en">Skills for coding agents</span><span lang="ko">코딩 에이전트용 스킬</span></h2>
+      <p class="section-lede" lang="en">Optional instructions for your coding agent. Run the command for the skill you want in your project folder.</p>
+      <p class="section-lede" lang="ko">코딩 에이전트에 추가하는 선택 항목입니다. 원하는 스킬의 명령을 프로젝트 폴더에서 실행하세요.</p>
+      <div class="skill-list">
+        <article class="skill-row" id="ftl-writing">
+          <div>
+            <h3><span lang="en">FTL writing</span><span lang="ko">FTL 작성</span></h3>
+            <p lang="en">Use FTL slices and hash lookups, and split templates into readable files.</p>
+            <p lang="ko">슬라이스와 해시 조회를 쓰는 법, 템플릿을 파일로 나누는 기준을 안내합니다.</p>
+            <a href="https://github.com/DevNathan/ftl-dev/blob/main/skills/ftl-writing/SKILL.md"><span lang="en">Read the FTL writing skill</span><span lang="ko">FTL 작성 스킬 보기</span></a>
+          </div>
+          <div class="cmd"><code>npx skills add DevNathan/ftl-dev --skill ftl-writing</code><button class="copy" type="button">Copy</button></div>
+        </article>
+        <article class="skill-row" id="ftldoc">
+          <div>
+            <h3>ftldoc</h3>
+            <p lang="en">Document templates, macros, and functions so their descriptions appear on hover.</p>
+            <p lang="ko">파일 경로와 매크로·함수에 마우스를 올렸을 때 보이는 설명을 작성합니다.</p>
+            <a href="https://github.com/DevNathan/ftl-dev/blob/main/skills/ftldoc/SKILL.md"><span lang="en">Read the ftldoc skill</span><span lang="ko">ftldoc 스킬 보기</span></a>
+          </div>
+          <div class="cmd"><code>npx skills add DevNathan/ftl-dev --skill ftldoc</code><button class="copy" type="button">Copy</button></div>
+        </article>
+      </div>
     </div>
   </section>
 
   <section class="alt thanks">
     <div class="wrap">
-      <h2><span lang="en">Thanks for writing FreeMarker with us. 🎉</span><span lang="ko">FreeMarker와 함께해 주셔서 고맙습니다. 🎉</span></h2>
-      <p lang="en">Found a false positive, a missing built-in or an ugly color? Open an issue. Valid FTL getting flagged is always a bug.</p>
-      <p lang="ko">헛경고, 빠진 built-in, 이상한 색을 발견하셨나요? 이슈로 알려 주세요. 올바른 FTL에 경고가 뜨면 언제나 버그입니다.</p>
+      <h2><span lang="en">Found a problem?</span><span lang="ko">문제를 발견하셨나요?</span></h2>
+      <p lang="en">Report incorrect diagnostics, missing built-ins or highlighting problems in the issue tracker.</p>
+      <p lang="ko">잘못된 진단, 빠진 built-in, 하이라이팅 문제를 이슈로 알려 주세요.</p>
       <div class="ctas">
         <a class="btn primary" href="https://github.com/DevNathan/ftl-dev"><span lang="en">Star on GitHub</span><span lang="ko">GitHub에서 Star</span></a>
         <a class="btn" href="https://github.com/DevNathan/ftl-dev/blob/main/extension/CHANGELOG.md"><span lang="en">Read the changelog</span><span lang="ko">변경 이력 보기</span></a>
-        <button class="btn" type="button" id="celebrate"><span lang="en">Celebrate again</span><span lang="ko">한 번 더 축하하기</span></button>
+        <button class="btn" type="button" id="celebrate"><span lang="en">Celebrate the release</span><span lang="ko">출시 축하하기</span></button>
       </div>
     </div>
   </section>

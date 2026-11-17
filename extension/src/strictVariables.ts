@@ -4,7 +4,7 @@
  */
 
 import { SPECIAL_VARS } from "./catalogLists";
-import { findExpressionSpans } from "./comparisonDisplay";
+import { findExpressionSpans } from "./expressionSpans";
 import { skipFtlComment } from "./comments";
 import {
   isFtlCommentStart,

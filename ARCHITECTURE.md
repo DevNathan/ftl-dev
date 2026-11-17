@@ -51,18 +51,17 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 | Completions | `CompletionItemProvider` / LSP completion; user-symbol ftldoc as item documentation (`symbolCompletionEntries`, plan 0038) |
 | Directive auto-close | `autoClosingPairs` + snippets / on-type edits |
 | FTL indent (`if`/`elseif`/`else` aligned) | `indentationRules` / `onEnterRules` in `language-configuration.json` (patterns in `src/indentRules.ts`); auto-close aligns `</` indent with opener |
-| Comparison op presentation (`gte`→`>=`) | Text decorations ([ADR 0003](docs/decisions/0003-comparison-operator-presentation.md)); caret reveals source |
 | Parameter hints (`#function` / `#macro`) | `SignatureHelpProvider` (`signatureHelp.ts`) / LSP; ftldoc summary + per-parameter Markdown (plan 0038) |
 | Vim / Neovim highlight + indent | Separate repo [`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim) |
-| Shared language server | [`server/`](server/) stdio LSP (no comparison decorations) |
+| Shared language server | [`server/`](server/) stdio LSP |
 
 ## Testing
 
 | Mode | How | What it covers |
 |------|-----|----------------|
-| Manual UX | `F5` / Reload → fixtures | Colors, indent, Ctrl+click, completions (`<#`, `?`), comparison op display (`tests/fixtures/comparison/`) |
+| Manual UX | `F5` / Reload → fixtures | Colors, indent, Ctrl+click, completions (`<#`, `?`) |
 | Grammar regression | `cd extension && npm run test:grammar` | TextMate scopes (`tests/grammar/`) |
-| Unit tests | `cd extension && npm run test:unit` | Symbol index, completions, reference docs, comparison op finder |
+| Unit tests | `cd extension && npm run test:unit` | Symbol index, completions, reference docs, expression spans |
 
 Implementation: [`extension/`](extension/) — grammar, language config, Definition / DocumentLink / Completion / Hover providers.
 

@@ -58,7 +58,7 @@ const DECL =
   /[<\[]#\s*(assign|macro|function|local|global)\s+([a-zA-Z_][\w]*)/g;
 
 const PATH_REF =
-  /[<\[]#\s*(include|import)\s+["']([^"']+)["'](?:\s+as\s+([a-zA-Z_][\w]*))?/g;
+  /[<\[]#\s*(include|import)\s+(?:"([^"\r\n]+)"|'([^'\r\n]+)')(?:\s+as\s+([a-zA-Z_][\w]*))?/g;
 
 export function indexFtl(text: string): FtlIndex {
   const symbols: FtlSymbol[] = [];
@@ -143,9 +143,9 @@ export function indexFtl(text: string): FtlIndex {
       continue;
     }
     const kind = m[1] as "include" | "import";
-    const path = m[2];
-    const asName = m[3];
-    const pathOffset = m.index + m[0].indexOf(path);
+    const path = m[2] ?? m[3]!;
+    const asName = m[4];
+    const pathOffset = m.index + m[0].search(/["']/) + 1;
     pathRefs.push({
       path,
       asName,

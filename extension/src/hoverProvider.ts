@@ -1,7 +1,14 @@
 import * as vscode from "vscode";
 import { sharedDocCache } from "./docCache";
 import { paramDocumentation } from "./directiveParams";
-import { builtinHover, directiveHover, symbolHoverAt } from "./docs";
+import {
+  builtinHover,
+  directiveHover,
+  isLiteralTemplatePath,
+  symbolHoverAt,
+  templatePathAt,
+  templatePathHover,
+} from "./docs";
 import {
   builtinAt,
   clauseKeywordAt,
@@ -10,7 +17,8 @@ import {
 } from "./hoverTokens";
 
 import { identifierAt } from "./symbols";
-import { readFsPath } from "./vscodeIo";
+import { readFsPath, readUri, resolveImportUri } from "./vscodeIo";
+import { rangeFromOffsets } from "./vscodeRanges";
 
 export class FtlHoverProvider implements vscode.HoverProvider {
   async provideHover(
@@ -19,6 +27,27 @@ export class FtlHoverProvider implements vscode.HoverProvider {
   ): Promise<vscode.Hover | undefined> {
     const text = document.getText();
     const offset = document.offsetAt(position);
+    const { index } = sharedDocCache.get(
+      document.uri.toString(), document.version, text
+    );
+    const ref = templatePathAt(index, offset);
+    if (ref) {
+      if (document.uri.scheme !== "file" || !isLiteralTemplatePath(text, ref)) {
+        return undefined;
+      }
+      const uri = resolveImportUri(document.uri, ref.path);
+      const open = vscode.workspace.textDocuments.find(
+        (doc) => doc.uri.toString() === uri.toString()
+      );
+      const target = open?.getText() ?? await readUri(uri);
+      const md = templatePathHover(ref.path, target);
+      return md
+        ? new vscode.Hover(
+            new vscode.MarkdownString(md),
+            rangeFromOffsets(text, ref.pathOffset, ref.pathLength)
+          )
+        : undefined;
+    }
 
     // ?builtin — include the '?' in the scan window
     const builtin = builtinAt(text, offset);

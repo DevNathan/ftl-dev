@@ -1,6 +1,6 @@
 /**
  * ftldoc — JavaDoc-like documentation in an FTL comment immediately above a
- * declaration (`<#-- … -->` / `[#-- … --]`).
+ * declaration or at the top of a template (`<#-- … -->` / `[#-- … --]`).
  *
  * Attachment rules (product):
  * 1. Only whitespace may sit between comment end and the declaration.
@@ -17,6 +17,7 @@
  */
 
 import { findFtlCommentEnd, ftlCommentRanges } from "./comments";
+import { matchDirectiveHead, scanDirectiveClose } from "./scan";
 
 export type FtlDocParam = {
   /** Parameter name; may be dotted (`payload.items`) for nested properties. */
@@ -153,6 +154,7 @@ type SrcLine = { text: string; offset: number };
 const TAG_LINE_RE = /^(\s*)@([A-Za-z][\w-]*)(?![\w-])/;
 /** Every non-blank line starts with a `*` gutter (`/** … * … *\/` style). */
 const GUTTER_RE = /^\s*\*(?=\s|$)/;
+const FILE_MARKER_RE = /^\s*@file(?=[ \t]|$)[ \t]*/i;
 
 function isBlank(s: string): boolean {
   return s.trim() === "";
@@ -343,35 +345,7 @@ function parseParamBody(body: BodyText): FtlDocParam | undefined {
   };
 }
 
-/**
- * Parse ftldoc body. Returns `undefined` when `@nodoc` leads the trimmed text,
- * or when the body is empty / whitespace-only with no tags.
- *
- * Block model (Javadoc / JSDoc style, plan 0038 D1): a tag line starts (after
- * optional indent / `*` gutter) with `@name`; its body runs until the next tag
- * line, blank lines included, and is dedented by its common indentation. Text
- * before the first tag line is the summary. Mid-line `@word` is prose.
- *
- * Mid-body `@nodoc` is not the leading-nodoc rule: that tag (and its
- * continuation) is skipped and does not discard the rest of the documentation.
- *
- * `baseOffset` is the absolute offset of `body[0]`; it makes
- * `FtlDocParam.nameOffset` absolute.
- */
-export function parseFtlDoc(body: string, baseOffset = 0): FtlDoc | undefined {
-  const trimmed = body.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-  // First token after trim is @nodoc (case-insensitive word boundary).
-  if (/^@nodoc\b/i.test(trimmed)) {
-    return undefined;
-  }
-  // `@lang sql` embedded-language marker (plan 0041) is not documentation.
-  if (isLangMarker(trimmed)) {
-    return undefined;
-  }
-
+function docLines(body: string, baseOffset: number): SrcLine[] {
   // Split lines (LF / CRLF) keeping absolute offsets.
   let lines: SrcLine[] = [];
   {
@@ -392,7 +366,63 @@ export function parseFtlDoc(body: string, baseOffset = 0): FtlDoc | undefined {
         : l;
     });
   }
+  return lines;
+}
 
+/**
+ * Parse a declaration comment. A leading `@nodoc`, `@lang` or `@file` marker
+ * prevents the comment from attaching to a declaration. Tag bodies run until
+ * the next tag line. The base offset is used for parameter name ranges.
+ */
+export function parseFtlDoc(body: string, baseOffset = 0): FtlDoc | undefined {
+  const lines = docLines(body, baseOffset);
+  const first = lines.find((line) => !isBlank(line.text))?.text.trimStart() ?? "";
+  if (/^@nodoc\b/i.test(first) || isLangMarker(first) || FILE_MARKER_RE.test(first)) {
+    return undefined;
+  }
+  return parseDocLines(lines);
+}
+
+/** A closed @file comment at the start of a template or after its #ftl header. */
+export function extractFileFtlDoc(text: string): FtlDoc | undefined {
+  let start = text.search(/\S/);
+  if (start === -1) {
+    return undefined;
+  }
+  const head = matchDirectiveHead(text, start);
+  if (head?.sigil === "#" && !head.isClose && head.name === "ftl") {
+    const close = head.bracket === "<" ? ">" : "]";
+    const end = scanDirectiveClose(text, start + head.length, close, {
+      nestSquareInAngle: true,
+    });
+    if (end === -1) {
+      return undefined;
+    }
+    start = end + 1;
+    while (start < text.length && /\s/.test(text[start]!)) {
+      start++;
+    }
+  }
+  const end = findFtlCommentEnd(text, start);
+  if (end === -1) {
+    return undefined;
+  }
+  const bodyOffset = start + 4;
+  const lines = trimBlankEdges(docLines(text.slice(bodyOffset, end - 3), bodyOffset));
+  const first = lines[0];
+  const marker = FILE_MARKER_RE.exec(first?.text ?? "");
+  if (!first || !marker) {
+    return undefined;
+  }
+  const length = marker[0].length;
+  lines[0] = {
+    text: first.text.slice(length),
+    offset: first.offset + length,
+  };
+  return parseDocLines(lines);
+}
+
+function parseDocLines(lines: SrcLine[]): FtlDoc | undefined {
   type Block = { tag: string; head: SrcLine; cont: SrcLine[] };
   const summaryLines: SrcLine[] = [];
   const blocks: Block[] = [];

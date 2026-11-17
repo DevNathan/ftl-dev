@@ -22,7 +22,6 @@ ${greet(user.name)}
   square-bracket syntax
 [/#if]
 
-
 <#assign boo = user["name"]??>
 ${boo?c}
 
@@ -37,4 +36,8 @@ ${boo?c}
 
 <h1></h1>
 
+<#function name>
 
+</#function>
+
+<#assign r = "안녕 ${cfg.env["test"]} 입니다." />

@@ -1,11 +1,10 @@
 <p align="center">
-  <a href="https://devnathan.github.io/ftl-dev/"><img src="site/assets/banner.svg" alt="ftl-dev 1.0: FreeMarker language support" width="100%"></a>
+  <a href="https://devnathan.github.io/ftl-dev/"><img src="site/assets/banner.svg" alt="ftl-dev 2.0: FreeMarker language support" width="100%"></a>
 </p>
 
 <p align="center">
 
-[![Open VSX](https://img.shields.io/open-vsx/v/nathan-0910/ftl-dev?label=Open%20VSX&color=0050b2)](https://open-vsx.org/extension/nathan-0910/ftl-dev)
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/nathan-0910.ftl-dev?label=VS%20Code%20Marketplace&color=0050b2)](https://marketplace.visualstudio.com/items?itemName=nathan-0910.ftl-dev)
+[![Latest GitHub Release](https://img.shields.io/github/v/release/DevNathan/ftl-dev?label=GitHub%20Release&color=0050b2)](https://github.com/DevNathan/ftl-dev/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-0a8f6c)](LICENSE)
 
 </p>
@@ -13,8 +12,7 @@
 # FTL-dev
 
 > [!TIP]
-> **1.0 나왔습니다.** 한동안 별 탈 없이 잘 굴러가서 이제 1.0 달아도 되겠다 싶었어요.
-> 앞으로 익스텐션 ID, 언어 ID, 설정 키, `.ftl-data-model.json`은 메이저 버전 올릴 때만 바꿉니다([자세히](docs/versioning.ko.md)).
+> **2.0 변경 사항:** import와 include 경로에서 대상 파일의 ftldoc을 볼 수 있습니다. 비교 연산자 표시 설정은 제거했습니다.
 > [프로젝트 페이지](https://devnathan.github.io/ftl-dev/) · [변경 이력](extension/CHANGELOG.md)
 
 > Canonical: [README.md](README.md) (English).
@@ -49,17 +47,37 @@ FreeMarker(이하 ftl)가 개발 언어로 쓰일 수 있다는 사실, 알고 �
 - 자동완성
 - 디렉티브 닫기 · FTL식 들여쓰기
 - 진단 · 시맨틱 토큰 · 아웃라인 · 참조 찾기
-- (선택) 비교 연산자 표시 (`lt` / `gt` 등 → 기호처럼 보이게)
 
 ## 설치
 
-할게 뭐 있겠습니까. VS Code나 CodeOSS 계열 마켓플레이스에서 익스텐션만 받으면 됩니다!
+- [Open VSX](https://open-vsx.org/extension/nathan-0910/ftl-dev)를 쓰는 CodeOSS 계열 편집기에서는 확장 탭에서 `nathan-0910.ftl-dev`를 검색하세요.
+- 직접 설치하려면 [GitHub Releases](https://github.com/DevNathan/ftl-dev/releases)에서 VSIX를 내려받아 **Install from VSIX…**를 선택하세요.
+- Microsoft VS Code의 Visual Studio Marketplace에서는 ftl-dev를 제공하지 않습니다.
 
-- Cursor / Open VSX · VS Code Marketplace: **FreeMarker (ftl-dev)** (`nathan-0910.ftl-dev`)
-- 로컬이면 `cd extension && npm run package` 후 **Install from VSIX…**
+로컬 빌드는 `cd extension && npm run package`를 실행한 뒤 **Install from VSIX…**를 사용하세요.
 
 [변경 이력은 여기서](extension/CHANGELOG.md).
 영문은 제가 관리합니다만, 영어 다들 잘하시잖아요 그죠? :)
+
+## 코딩 에이전트용 스킬
+
+### FTL 작성
+
+작업할 프로젝트의 터미널에서 [FTL 작성 스킬](skills/ftl-writing/SKILL.md)을 설치하세요.
+
+```sh
+npx skills add https://github.com/DevNathan/ftl-dev --skill ftl-writing
+```
+
+대괄호 슬라이스와 해시 조회를 언제 쓸지, 코드를 언제 매크로·함수·파일로 나눌지 영어로 안내합니다. 에디터 확장과 별도로 설치할 수 있습니다.
+
+### ftldoc
+
+[ftldoc 스킬](skills/ftldoc/SKILL.md)은 ftl-dev가 에디터에서 보여 주는 파일 설명과 매크로·함수 주석 작성법을 영어로 안내합니다.
+
+```sh
+npx skills add https://github.com/DevNathan/ftl-dev --skill ftldoc
+```
 
 ## 개발 (로컬)
 

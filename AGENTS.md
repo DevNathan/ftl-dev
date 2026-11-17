@@ -10,7 +10,7 @@ CodeOSS FreeMarker tooling for **FTL as a scripting / application-logic language
 
 | Repo | Role |
 |------|------|
-| **This repo** (`ftl-dev`) | VS Code / Open VSX extension + optional LSP server |
+| **This repo** (`ftl-dev`) | CodeOSS-compatible VSIX + optional LSP server |
 | [`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim) | **Separate git** — Vim / Neovim runtime only (do not edit it from this tree) |
 
 ## Read order
@@ -32,7 +32,7 @@ CodeOSS FreeMarker tooling for **FTL as a scripting / application-logic language
 | [docs/decisions/](docs/decisions/) | Lasting technical choices (ADRs) |
 | [docs/plans/active/](docs/plans/active/) | Work in progress |
 | [docs/plans/completed/](docs/plans/completed/) | Finished plans |
-| [docs/publishing.md](docs/publishing.md) / [docs/versioning.md](docs/versioning.md) | Registry publish on `v*` tags only; bump version + [CHANGELOG](extension/CHANGELOG.md) before every deploy |
+| [docs/publishing.md](docs/publishing.md) / [docs/versioning.md](docs/versioning.md) | GitHub Release VSIX on matching `v*` tags; bump version + [CHANGELOG](extension/CHANGELOG.md) before every release |
 | [tests/](tests/) | Fixtures (`fixtures/`) + grammar tests (`grammar/`) |
 
 ## Operating principles

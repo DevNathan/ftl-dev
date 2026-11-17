@@ -1,52 +1,30 @@
 # 확장 버저닝
 
-> Canonical: [versioning.md](versioning.md) (English).
+정식 버전은 `extension/package.json`의 `version`이다. 태그는 버전과 일치해야 한다. 예를 들어 `1.0.3` 버전은 `v1.0.3` 태그를 쓴다.
 
-ftl-dev의 정식 버전은 **`extension/package.json` → `"version"`** 이다.
+관련 문서: [릴리스 절차](publishing.md), [정식 버저닝 안내](versioning.md).
 
-Open VSX / VS Marketplace는 같은 `publisher.name` + `version` 재배포를 거절하거나 무시한다. **배포할 때마다 새 버전**이 필요하다.
+## 버전 규칙
 
-관련: [publishing.md](publishing.md).
-
-## 규칙 (semver)
-
-`MAJOR.MINOR.PATCH` (`1.0.0`부터 안정 — 아래 안정성 약속 참고):
-
-| 올림 | 때 |
-|------|-----|
-| **PATCH** | 버그·소규모 UX·배포용 패키징 수정 |
-| **MINOR** | 사용자에게 보이는 기능 추가 (호환 유지) |
-| **MAJOR** | 깨지는 변경 |
-
-README·태그 버전은 `package.json` 과 같게. 태그 예: `v0.0.12`.
+| 올림 | 기준 |
+|------|------|
+| PATCH | 버그 수정, 패키징 문서 수정, 작은 UX 변경 |
+| MINOR | 기존 FTL 편집 동작을 깨지 않는 사용자 기능 추가 |
+| MAJOR | 사용자가 알아야 하는 호환성 파괴 변경 |
 
 ## 안정성 약속 (1.0.0부터)
 
-`0.x` 동안은 이름 변경·삭제가 있을 수 있다. **`1.0.0`부터** 아래는 공개 API이며 **MAJOR**에서만 바꾼다(가능하면 MINOR에서 먼저 deprecate).
+다음 공개 API는 MAJOR 버전에서만 변경한다.
 
-- 확장 id `nathan-0910.ftl-dev`, 언어 id `freemarker` / `.ftl` `.ftlh` `.ftlx`, 문법 scope `text.html.freemarker`
-- 설정 키 `ftl-dev.comparisonOperatorPresentation`, `ftl-dev.strictVariables`, `ftl-dev.dataModel`, `ftl-dev.ftldoc.validateParams` (이름·타입·기본 의미)
-- 프로젝트 파일 `.ftl-data-model.json` (`roots`, `templates`), 아이콘 테마 id `ftl-dev-icons`
+- 확장 ID `nathan-0910.ftl-dev`, 언어 ID `freemarker` / `.ftl` `.ftlh` `.ftlx`, 문법 scope `text.html.freemarker`
+- 설정 키 `ftl-dev.strictVariables`, `ftl-dev.dataModel`, `ftl-dev.ftldoc.validateParams`
+- 프로젝트 파일 `.ftl-data-model.json` (`roots`, `templates`), 아이콘 테마 ID `ftl-dev-icons`
 
-보장하지 않음: TextMate 세부 scope·색, 진단 문구, 자동완성 순서. 기본 켜진 진단이 **올바른** FTL에 오류를 내면 버그다.
+## 릴리스 준비
 
-**1.0.0 조건** (충족, 2026-10-28 출시): 정상 FreeMarker 2.3 문법에 대한 기본 진단 오탐 0, CI가 grammar·전체 unit·서버 타입 검사를 돌림, 현재 기능 세트로 `0.x`를 한 번 이상 실제 배포.
+1. `extension/package.json` 버전을 올린다.
+2. `extension/CHANGELOG.md`를 해당 버전과 날짜로 갱신한다.
+3. `main`에 커밋하고 push한다.
+4. 버전과 일치하는 `vX.Y.Z` 태그를 push한다. GitHub Actions가 검사하고 VSIX를 빌드해 GitHub Release에 첨부한 뒤 Open VSX에도 게시한다.
 
-## 언제 올리는가
-
-배포할 트리에 실릴 변경이 있을 때. WIP만 커밋할 때는 올리지 말고, **배포 준비 커밋**에서 올린다.
-
-## 필수: 배포 직전 커밋
-
-**배포 직전(마지막) 커밋은 반드시 이전에 올린 적 없는 신버전이어야 한다.**
-
-1. 레지스트리에 이미 있는 최신 버전 확인  
-2. `extension/package.json` 을 **그보다 높은** 값으로 수정  
-3. 그 버전 범프를 배포용 코드와 함께(또는 그 위 마지막 커밋으로) 커밋  
-4. `main` push만으로는 마켓에 안 올라감. **반드시** `vX.Y.Z` 태그를 만들어 push (`git tag -a v0.0.12 && git push origin v0.0.12`)
-
-이미 `0.0.11` 이 올라가 있으면 같은 `0.0.11` 로 다시 올리지 않는다. 새 마켓 버전 = 새 태그.
-
-## 올리지 않아도 되는 경우
-
-로컬 테스트·F5, **VSIX로 안 나가는** 문서만 수정. 나중에 VSIX에 실리면 그때 올린 버전에 포함된다.
+브랜치 push는 CI만 실행하며 VSIX 릴리스를 만들지 않는다. WIP 커밋에서는 버전을 올리지 않고, 배포 준비 때 올린다.

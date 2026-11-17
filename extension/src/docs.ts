@@ -1,7 +1,36 @@
 import { BUILTINS, DIRECTIVES } from "./catalog";
-import { FtlDoc, formatFtlDocMarkdown } from "./ftldoc";
+import { extractFileFtlDoc, FtlDoc, formatFtlDocMarkdown } from "./ftldoc";
 import { getBuiltinRef, getDirectiveRef } from "./reference/freemarkerRef";
-import { findDefinitions, FtlIndex, FtlSymbol, identifierAt } from "./symbols";
+import {
+  findDefinitions,
+  FtlIndex,
+  FtlPathRef,
+  FtlSymbol,
+  identifierAt,
+} from "./symbols";
+
+export function templatePathAt(
+  index: FtlIndex,
+  offset: number
+): FtlPathRef | undefined {
+  return index.pathRefs.find(
+    (ref) => ref.pathOffset <= offset && offset < ref.pathOffset + ref.pathLength
+  );
+}
+
+/** File documentation is only available for a literal template path. */
+export function isLiteralTemplatePath(text: string, ref: FtlPathRef): boolean {
+  const afterPath = ref.pathOffset + ref.pathLength + 1;
+  return !/[$#]\{/.test(ref.path) && !/^\s*[+?]/.test(text.slice(afterPath));
+}
+
+export function templatePathHover(
+  path: string,
+  target: string | undefined
+): string | undefined {
+  const doc = target === undefined ? undefined : extractFileFtlDoc(target);
+  return doc ? formatFtlDocMarkdown(path, "FreeMarker file", doc) : undefined;
+}
 
 /** Markdown hover / completion docs for a directive (`#name`). */
 export function directiveHover(name: string): string | undefined {

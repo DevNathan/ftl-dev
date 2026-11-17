@@ -1,11 +1,10 @@
 <p align="center">
-  <a href="https://devnathan.github.io/ftl-dev/"><img src="site/assets/banner.svg" alt="ftl-dev 1.0: FreeMarker language support" width="100%"></a>
+  <a href="https://devnathan.github.io/ftl-dev/"><img src="site/assets/banner.svg" alt="ftl-dev 2.0: FreeMarker language support" width="100%"></a>
 </p>
 
 <p align="center">
 
-[![Open VSX](https://img.shields.io/open-vsx/v/nathan-0910/ftl-dev?label=Open%20VSX&color=0050b2)](https://open-vsx.org/extension/nathan-0910/ftl-dev)
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/nathan-0910.ftl-dev?label=VS%20Code%20Marketplace&color=0050b2)](https://marketplace.visualstudio.com/items?itemName=nathan-0910.ftl-dev)
+[![Latest GitHub Release](https://img.shields.io/github/v/release/DevNathan/ftl-dev?label=GitHub%20Release&color=0050b2)](https://github.com/DevNathan/ftl-dev/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-0a8f6c)](LICENSE)
 
 </p>
@@ -13,8 +12,7 @@
 # FTL-dev
 
 > [!TIP]
-> **1.0 is out.** It's been stable for a while now, so I'm calling it.
-> From here on I won't rename the extension id, language id, settings keys or `.ftl-data-model.json` without a major version bump ([details](docs/versioning.md#stability-contract-from-100)).
+> **In 2.0:** hover import and include paths to read a template's ftldoc. The comparison operator display setting has been removed.
 > [Project page](https://devnathan.github.io/ftl-dev/) · [Changelog](extension/CHANGELOG.md)
 
 Did you know FreeMarker (ftl for short) can be used as a real programming language? ftl is faster than light (okay, heavily exaggerated), and while it is less extensible than mainstream languages, it is not exactly *insufficient*. Anyway, people barely use ftl, so of course there was no decent all-in-one extension.
@@ -46,14 +44,14 @@ If the well is dry, dig your own. This extension aims for:
 - Parameter hints for `#function` / `#macro` calls (Signature Help)
 - Directive closing · FTL-aware indent
 - Diagnostics · semantic tokens · outline · find references
-- (Optional) comparison-operator presentation (`lt` / `gt` etc. shown as symbols)
 
 ## Install
 
-What else is there to do? Grab the extension from the VS Code or CodeOSS-family marketplace.
+- In a CodeOSS-family editor that uses [Open VSX](https://open-vsx.org/extension/nathan-0910/ftl-dev), search Extensions for `nathan-0910.ftl-dev`.
+- For a manual install, download the VSIX from [GitHub Releases](https://github.com/DevNathan/ftl-dev/releases) and choose **Install from VSIX…**.
+- ftl-dev is unavailable in Microsoft VS Code's Visual Studio Marketplace.
 
-- Cursor / Open VSX · VS Code Marketplace: **FreeMarker (ftl-dev)** (`nathan-0910.ftl-dev`)
-- Locally: `cd extension && npm run package`, then **Install from VSIX…**
+For a local build: `cd extension && npm run package`, then **Install from VSIX…**.
 
 ### Vim / Neovim
 
@@ -61,6 +59,26 @@ Separate repository: **[DevNathan/ftl-dev.vim](https://github.com/DevNathan/ftl-
 
 [Changelog lives here](extension/CHANGELOG.md).
 I keep it in English only—but you all read English fine, right? :)
+
+## Skills for coding agents
+
+### FTL writing
+
+Add the [FTL writing skill](skills/ftl-writing/SKILL.md) from your project's terminal:
+
+```sh
+npx skills add https://github.com/DevNathan/ftl-dev --skill ftl-writing
+```
+
+It shows the agent when to use bracket slices and hash lookups, and when to keep code together or split it into macros, functions, and files. The skill can be installed independently of the editor extension.
+
+### ftldoc
+
+Add the [ftldoc skill](skills/ftldoc/SKILL.md) to document template files, macros, and functions with the comments ftl-dev shows in the editor.
+
+```sh
+npx skills add https://github.com/DevNathan/ftl-dev --skill ftldoc
+```
 
 ## Develop (local)
 

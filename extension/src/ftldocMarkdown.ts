@@ -426,6 +426,9 @@ const TAG_HEADINGS: Record<string, string> = {
   todo: "**TODO**",
   author: "**Author**",
   version: "**Version**",
+  requires: "**Requires**",
+  exports: "**Exports**",
+  usage: "**Usage**",
 };
 
 const METADATA_TAGS = new Set(["author", "version"]);
@@ -479,7 +482,7 @@ export function formatFtlDocMarkdown(
   fromImport?: string
 ): string {
   const where = fromImport ? ` (from \`${fromImport}\`)` : "";
-  const parts: string[] = [`\`${name}\` — ${kind}${where}`];
+  const parts: string[] = [`${codeSpan(name)} — ${kind}${where}`];
   if (!doc) {
     return parts.join("\n\n");
   }

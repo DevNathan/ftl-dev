@@ -276,6 +276,33 @@ test("navigation fixture shapes have no layer-A errors", () => {
   assert.strictEqual(diags.length, 0, diags.map((d) => d.message).join("; "));
 });
 
+const playground = path.join(__dirname, "..", "..", "tests", "fixtures", "playground");
+for (const file of [
+  "scope-and-iteration.ftl",
+  "output-formats.ftlh",
+  "sql-captures.ftl",
+  "square-syntax.ftl",
+]) {
+  test(`playground ${file} has no diagnostics with default settings`, () => {
+    const text = fs.readFileSync(path.join(playground, file), "utf8");
+    assert.deepStrictEqual(validateFtl(text), []);
+  });
+}
+
+test("playground diagnostic-checks.ftl flags each intentional error", () => {
+  const text = fs.readFileSync(path.join(playground, "diagnostic-checks.ftl"), "utf8");
+  const markers = ["<#ftl output_formatt", "<#list [1, 2]>", "${}"];
+  const expectedLines = markers.map((marker) => text.slice(0, text.indexOf(marker)).split("\n").length);
+  const diagnostics = validateFtl(text).sort((a, b) => a.offset - b.offset);
+  assert.deepStrictEqual(
+    diagnostics.map((d) => text.slice(0, d.offset).split("\n").length),
+    expectedLines
+  );
+  assert.match(diagnostics[0]!.message, /Unknown parameter 'output_formatt'/);
+  assert.match(diagnostics[1]!.message, /needs an '#items'/);
+  assert.match(diagnostics[2]!.message, /Empty interpolation/);
+});
+
 test("allows well-formed hash literals", () => {
   const diags = validateFtl(
     '<#assign h = {"name": "Ada", "age": 36}>\n${{"x": 1, "y": 2}}'

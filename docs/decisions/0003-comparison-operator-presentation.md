@@ -1,6 +1,6 @@
 # ADR 0003: Comparison operator presentation via decorations
 
-- Status: Accepted
+- Status: Retired. The display provider and its setting were removed because the layout workaround could interfere with the editor and minimap.
 - Date: 2026-09-23
 - Updated: 2026-09-28 (default off; dispose decorations when off)
 

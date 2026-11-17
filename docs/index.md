@@ -11,7 +11,7 @@ Canonical language: **English**. Korean siblings: `*.ko.md` (see [index.ko.md](i
 | Extension | [../extension/](../extension/) | CodeOSS package (grammar + navigation providers) |
 | Vim runtime | [ftl-dev.vim](https://github.com/DevNathan/ftl-dev.vim) | **Separate git** — syntax / indent / ftplugin |
 | Language server | [../server/](../server/) | Shared LSP (stdio) for Vim / Neovim / future VS Code |
-| Publishing | [publishing.md](publishing.md) | Open VSX + VS Marketplace via GitHub Actions |
+| Publishing | [publishing.md](publishing.md) | CodeOSS VSIX attached to GitHub Releases |
 | Publishing (LS) | [publishing-language-server.md](publishing-language-server.md) | This repo only; not npm |
 | Versioning | [versioning.md](versioning.md) | Extension `package.json` bumps |
 | Changelog | [../extension/CHANGELOG.md](../extension/CHANGELOG.md) | Per-version user-facing notes (Keep a Changelog; [ADR 0004](decisions/0004-changelog.md)) |

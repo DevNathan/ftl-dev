@@ -1,6 +1,13 @@
 import * as assert from "assert";
-import { symbolHover, symbolHoverAt } from "./docs";
 import {
+  isLiteralTemplatePath,
+  symbolHover,
+  symbolHoverAt,
+  templatePathAt,
+  templatePathHover,
+} from "./docs";
+import {
+  extractFileFtlDoc,
   formatFtlDocMarkdown,
   leadingFtlDoc,
   parseFtlDoc,
@@ -16,6 +23,77 @@ function test(name: string, fn: () => void): void {
     throw e;
   }
 }
+
+test("leading @file documents the template and does not attach to its first symbol", () => {
+  const text = [
+    "<#--",
+    "  @file Shared card templates.",
+    "  Keep title formatting here.",
+    "  @requires {string} siteName",
+    "  @exports card",
+    "  @usage Import this file and call the card macro.",
+    '  @example <#import "cards.ftl" as cards>',
+    "-->",
+    "<#macro card title></#macro>",
+  ].join("\n");
+  const doc = extractFileFtlDoc(text);
+  assert.strictEqual(doc?.summary, "Shared card templates.\nKeep title formatting here.");
+  assert.strictEqual(indexFtl(text).symbols[0]?.doc, undefined);
+
+  const hover = templatePathHover("cards.ftl", text);
+  assert.ok(hover?.startsWith("`cards.ftl` — FreeMarker file\n\n"));
+  assert.match(hover!, /\*\*Requires\*\*[\s\S]+siteName/);
+  assert.match(hover!, /\*\*Exports\*\*\n\ncard/);
+  assert.match(hover!, /\*\*Usage\*\*\n\nImport this file/);
+  assert.match(hover!, /```ftl\n<#import "cards.ftl" as cards>/);
+});
+
+test("@file works after #ftl in either tag syntax and supports a star gutter", () => {
+  const text = '\uFEFF\r\n[#ftl output_format="HTML"]\r\n[#--\r\n * @FILE\r\n * Shared panel.\r\n * @since 1.0\r\n--]';
+  assert.strictEqual(extractFileFtlDoc(text)?.summary, "Shared panel.");
+  assert.strictEqual(extractFileFtlDoc(text)?.since, "1.0");
+  assert.strictEqual(
+    extractFileFtlDoc('<#ftl output_format="HTML">\n<#-- @file Shared panel. -->')?.summary,
+    "Shared panel."
+  );
+});
+
+test("file hover requires a closed leading @file comment", () => {
+  for (const text of [
+    "<#-- Summary only. -->",
+    "<#-- @nodoc\n@file Hidden. -->",
+    "<#-- Summary first.\n@file Too late. -->",
+    "<#-- @file-details Not a marker. -->",
+    "<#-- @file -->",
+    "<#-- @file Missing close.",
+    "<#assign x = 1>\n<#-- @file Too late. -->",
+    "<#-- Banner. -->\n<#-- @file Too late. -->",
+  ]) {
+    assert.strictEqual(templatePathHover("file.ftl", text), undefined, text);
+  }
+  assert.strictEqual(templatePathHover("missing.ftl", undefined), undefined);
+  assert.strictEqual(parseFtlDoc("Summary.\n@file-details Custom tag.")?.tags?.[0]?.tag, "file-details");
+});
+
+test("file path hover matches both directives and excludes their quotes and alias", () => {
+  const text = '<#import "import" as parts>\n[#include "owner\'s header.ftlh"]';
+  const index = indexFtl(text);
+  for (const [kind, path] of [["import", "import"], ["include", "owner's header.ftlh"]]) {
+    const offset = text.indexOf('"' + path + '"') + 1;
+    const ref = templatePathAt(index, offset);
+    assert.strictEqual(ref?.kind, kind);
+    assert.strictEqual(ref?.path, path);
+    assert.ok(isLiteralTemplatePath(text, ref!));
+    assert.strictEqual(templatePathAt(index, offset - 1), undefined);
+    assert.strictEqual(templatePathAt(index, offset + path!.length), undefined);
+  }
+  assert.strictEqual(templatePathAt(index, text.indexOf("parts")), undefined);
+  for (const dynamic of ['<#include "${name}.ftl">', '<#include "base" + suffix>']) {
+    const ref = templatePathAt(indexFtl(dynamic), dynamic.indexOf('"') + 1);
+    assert.ok(ref);
+    assert.ok(!isLiteralTemplatePath(dynamic, ref));
+  }
+});
 
 // --- AC4 ---
 test("parseFtlDoc summary and tags (AC4)", () => {

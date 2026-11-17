@@ -1,4 +1,4 @@
-<#-- Comparison operator presentation fixture (F5): lt/lte/gt/gte should display as </<=/>/>= -->
+<#-- FreeMarker comparison operators in directives and interpolations -->
 <#assign n = 5>
 
 <#if n gte 3>
@@ -15,7 +15,7 @@
 
 <p>Result: ${n gte 3?then("yes", "no")}</p>
 
-<#-- Must NOT restyle whitespace trim directive -->
+<#-- Whitespace trim directive -->
 <#lt>
 
 [#if n gte 1]

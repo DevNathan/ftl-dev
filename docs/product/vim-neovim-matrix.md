@@ -40,7 +40,6 @@ Without LSP, the rows above are **not** provided by the Vim runtime alone.
 
 | Feature | Verdict | Reason |
 |---------|---------|--------|
-| Comparison operator presentation (`gte`→`>=`) | **Deferred** | VS Code decorations ([ADR 0003](../decisions/0003-comparison-operator-presentation.md)); not in LSP |
 | In-process VS Code providers | **N/A** | Use LSP instead |
 | TextMate grammar file unchanged | **Impossible** | Different engine |
 | Java / data-model enrichment | **Deferred (all editors)** | ADR 0002 |

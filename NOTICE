@@ -12,9 +12,7 @@ this NOTICE and include a visible link to the project homepage:
 
   https://github.com/DevNathan/ftl-dev
 
-(Update the URL above if the canonical repository moves. After Open VSX
-publication, the listing page may also be used as a secondary link:
-  https://open-vsx.org/extension/nathan/ftl-dev )
+(Update the URL above if the canonical repository moves.)
 
 ---------------------------------------------------------------------------
 Third-party notices
@@ -24,6 +22,6 @@ Third-party notices
   extension/src/reference/freemarkerRef.ts is paraphrased from the Apache
   FreeMarker Manual (https://freemarker.apache.org/docs/) under Apache-2.0.
 
-- Marketplace / Open VSX listing icon: `icons/freemarker-icon.png` (128×128 PNG
+- Extension icon: `icons/freemarker-icon.png` (128×128 PNG
   rendered from freemarker.svg; VSCE rejects SVG for the package `icon` field).
   Language file icons in the editor continue to use freemarker.svg.

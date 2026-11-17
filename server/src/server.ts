@@ -6,6 +6,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { pathToFileURL } from "url";
 import {
   CompletionItem,
   CompletionItemKind,
@@ -35,7 +36,10 @@ import { symbolCompletionEntries } from "../../extension/src/completion/helpers"
 import {
   builtinHover,
   directiveHover,
+  isLiteralTemplatePath,
   symbolHoverAt,
+  templatePathAt,
+  templatePathHover,
 } from "../../extension/src/docs";
 import {
   builtinAt,
@@ -216,6 +220,23 @@ export function startFtlLanguageServer(connection: Connection): void {
     }
     const text = doc.getText();
     const offset = posToOffset(doc, params.position);
+    const index = indexFtl(text);
+    const ref = templatePathAt(index, offset);
+    if (ref) {
+      if (!doc.uri.startsWith("file:") || !isLiteralTemplatePath(text, ref)) {
+        return undefined;
+      }
+      const targetPath = resolveImportPath(doc.uri, ref.path);
+      const open = documents.get(pathToFileURL(targetPath).href);
+      const target = open?.getText() ?? readFileSyncSafe(targetPath);
+      const md = templatePathHover(ref.path, target);
+      return md
+        ? {
+            contents: { kind: MarkupKind.Markdown, value: md },
+            range: rangeFromOffset(text, ref.pathOffset, ref.pathLength),
+          }
+        : undefined;
+    }
 
     // Match VS Code FtlHoverProvider order: builtin → directive → named-param → symbol
     const builtin = builtinAt(text, offset);
@@ -246,7 +267,6 @@ export function startFtlLanguageServer(connection: Connection): void {
       return undefined;
     }
     // Same Markdown as VS Code (ftldoc, #local scope, #import ns) — plan 0038 AC11.
-    const index = indexFtl(text);
     const { byNs } = await collectImportSymbols(
       fileUrlToPath(doc.uri),
       index,

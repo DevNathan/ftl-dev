@@ -1,12 +1,6 @@
-# Publish the VSIX to Open VSX and/or Visual Studio Marketplace.
-#
-# Secrets (Settings → Secrets and variables → Actions):
-#   OVSX_PAT   — Open VSX access token (https://open-vsx.org/user-settings/tokens)
-#   VSCE_PAT   — Azure DevOps PAT with Marketplace (Publish) scope
-#                https://code.visualstudio.com/api/working-with-extensions/publishing-extension
-#
-# Trigger: push of a version tag only (vX.Y.Z). Never on branch push.
-# Bump extension/package.json "version" + CHANGELOG before tagging; tag must match.
+# Release the CodeOSS-compatible VSIX to GitHub Releases and Open VSX.
+# Set the OVSX_PAT Actions secret to enable Open VSX publishing.
+# Tag vX.Y.Z must match extension/package.json version X.Y.Z.
 
 name: Publish Extension
 
@@ -16,14 +10,15 @@ on:
       - "v*"
 
 concurrency:
-  group: publish-extension
+  group: release-vsix-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     defaults:
       run:
         working-directory: extension
@@ -32,7 +27,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: extension/package-lock.json
 
@@ -53,34 +48,38 @@ jobs:
           npm test
 
       - name: Package VSIX
-        run: npm run package
+        id: package
+        run: |
+          VSIX="ftl-dev-${GITHUB_REF_NAME#v}.vsix"
+          npm run package -- --out "$VSIX"
+          test -f "$VSIX"
+          echo "file=$VSIX" >> "$GITHUB_OUTPUT"
+
+      - name: Attach VSIX to GitHub Release
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VSIX_FILE: ${{ steps.package.outputs.file }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          fi
+          gh release upload "$TAG" "extension/$VSIX_FILE" --clobber
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftl-dev-vsix-${{ github.ref_name }}-run-${{ github.run_attempt }}
+          path: extension/${{ steps.package.outputs.file }}
 
       - name: Publish to Open VSX
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
+          VSIX_FILE: ${{ steps.package.outputs.file }}
         run: |
-          if [ -z "${OVSX_PAT}" ]; then
-            echo "Secret OVSX_PAT is not set — skipping Open VSX publish."
+          if [ -z "${OVSX_PAT:-}" ]; then
+            echo "::warning::OVSX_PAT is not configured. Open VSX publishing was skipped."
             exit 0
           fi
-          VSIX=$(ls -1 ftl-dev-*.vsix | head -1)
-          echo "Publishing $VSIX to Open VSX…"
-          npx --yes ovsx publish "$VSIX" -p "$OVSX_PAT"
-
-      - name: Publish to VS Code Marketplace
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: |
-          if [ -z "${VSCE_PAT}" ]; then
-            echo "Secret VSCE_PAT is not set — skipping Marketplace publish."
-            exit 0
-          fi
-          VSIX=$(ls -1 ftl-dev-*.vsix | head -1)
-          echo "Publishing $VSIX to Visual Studio Marketplace…"
-          npx --yes @vscode/vsce publish --packagePath "$VSIX" -p "$VSCE_PAT"
-
-      - name: Upload VSIX artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ftl-dev-vsix
-          path: extension/ftl-dev-*.vsix
+          npx --yes ovsx@1.4.0 publish "$VSIX_FILE" --skip-duplicate

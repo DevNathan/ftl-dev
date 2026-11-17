@@ -1,10 +1,31 @@
 # Changelog
 
-All notable changes to the **ftl-dev** VS Code / Open VSX extension are documented in this file.
+All notable changes to the **ftl-dev** CodeOSS extension are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/) as described in [docs/versioning.md](../docs/versioning.md). Policy: [docs/decisions/0004-changelog.md](../docs/decisions/0004-changelog.md).
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-11-17
+
+### Added
+
+- Show file-level ftldoc on `#import` and `#include` paths. Use a leading `@file` comment with optional `@requires`, `@exports`, and `@usage` tags.
+- Add the installable `ftl-writing` and `ftldoc` coding agent skills, plus playground examples for output formats, SQL captures, variable scope, and diagnostics.
+
+### Changed
+
+- Use the editor's `fit` minimap mode in FreeMarker files to keep an overview of the whole file visible.
+- Attach the CodeOSS-compatible VSIX to GitHub Releases and continue publishing it to Open VSX. Retire Visual Studio Marketplace publishing.
+
+### Fixed
+
+- Stop the minimap from displaying FreeMarker directive arguments as section headings.
+- Color square tag delimiters like angle tag delimiters while keeping bracket pair colors in expressions.
+
+### Removed
+
+- Remove the optional comparison operator decorations and the `ftl-dev.comparisonOperatorPresentation` setting. Remove that setting from your editor configuration if you previously set it. FreeMarker operators remain visible as written.
 
 ## [1.0.2] - 2026-10-29
 

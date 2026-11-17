@@ -1,28 +1,5 @@
 import { skipFtlComment } from "./comments";
 
-/**
- * Find FreeMarker alphabetic comparison operators (`lt`/`lte`/`gt`/`gte`)
- * that should be presented as `<`/`<=`/`>`/`>=` in the editor.
- */
-
-export type ComparisonOp = {
-  offset: number;
-  length: number;
-  /** Token in source: lt | lte | gt | gte */
-  token: string;
-  /** Display form: < | <= | > | >= */
-  display: string;
-};
-
-const DISPLAY: Record<string, string> = {
-  lt: "<",
-  lte: "<=",
-  gt: ">",
-  gte: ">=",
-};
-
-const OP_RE = /\b(lte|gte|lt|gt)\b/g;
-
 type Span = { start: number; end: number };
 
 /**
@@ -205,67 +182,4 @@ function findOpenTagClose(
     i++;
   }
   return -1;
-}
-
-/**
- * Scan document for alphabetic comparison ops in FTL expression contexts.
- * Skips `<#lt>` / `[#lt]` (token immediately after `#`).
- */
-export function findComparisonOps(text: string): ComparisonOp[] {
-  const spans = findExpressionSpans(text);
-  const out: ComparisonOp[] = [];
-
-  for (const span of spans) {
-    const slice = text.slice(span.start, span.end);
-    OP_RE.lastIndex = 0;
-    let m: RegExpExecArray | null;
-    while ((m = OP_RE.exec(slice)) !== null) {
-      const token = m[1]!;
-      const abs = span.start + m.index;
-      // Whitespace / lt directive: token right after #
-      if (abs > 0 && text[abs - 1] === "#") {
-        continue;
-      }
-      // Skip if match is inside a string within this span
-      if (isInsideString(slice, m.index)) {
-        continue;
-      }
-      const display = DISPLAY[token];
-      if (!display) {
-        continue;
-      }
-      out.push({
-        offset: abs,
-        length: token.length,
-        token,
-        display,
-      });
-    }
-  }
-
-  return out;
-}
-
-function isInsideString(slice: string, offset: number): boolean {
-  let inString: '"' | "'" | null = null;
-  let i = 0;
-  while (i < offset) {
-    const ch = slice[i]!;
-    if (inString) {
-      if (ch === "\\" && i + 1 < slice.length) {
-        i += 2;
-        continue;
-      }
-      if (ch === inString) {
-        inString = null;
-      }
-      i++;
-      continue;
-    }
-    if (ch === '"' || ch === "'") {
-      inString = ch;
-    }
-    i++;
-  }
-  return inString !== null;
 }
