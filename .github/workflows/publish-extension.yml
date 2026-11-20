@@ -42,6 +42,10 @@ jobs:
           fi
           echo "Tag $TAG matches package.json."
 
+      - name: Generate release notes
+        working-directory: .
+        run: node scripts/release-notes.mjs "$GITHUB_REF_NAME" > "$RUNNER_TEMP/release-notes.md"
+
       - name: Install & test
         run: |
           npm ci
@@ -62,10 +66,12 @@ jobs:
           VSIX_FILE: ${{ steps.package.outputs.file }}
         run: |
           TAG="${GITHUB_REF_NAME}"
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --title "$TAG" --generate-notes
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "extension/$VSIX_FILE" --clobber
+          else
+            gh release create "$TAG" "extension/$VSIX_FILE" \
+              --verify-tag --title "$TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
           fi
-          gh release upload "$TAG" "extension/$VSIX_FILE" --clobber
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4

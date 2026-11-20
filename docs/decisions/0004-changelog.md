@@ -25,7 +25,7 @@ Adopt **option C**.
 4. **`## [Unreleased]`** at the top: accumulate user-facing notes while developing; on release-prep, rename that block to the new version + date and leave a fresh empty `Unreleased`.
 5. **Same commit as the version bump:** updating `package.json` `"version"` without a matching changelog entry for that version is incomplete release-prep ([versioning.md](../versioning.md)).
 6. **Audience:** end users and extension hosts — short, concrete bullets. No internal plan numbers, agent notes, or raw commit dumps. Link to docs/ADRs only when users need deeper context.
-7. **GitHub Release:** body may summarize or paste the matching section; the file remains source of truth.
+7. **GitHub Release:** the workflow uses the matching section and appends installation links. The changelog remains the source of truth.
 8. **Do not** maintain a parallel Korean changelog.
 
 ## Consequences

@@ -4,16 +4,20 @@ The tag workflow publishes the CodeOSS extension to [Open VSX](https://open-vsx.
 
 ## Release flow
 
-1. Set `extension/package.json` to the release version and update `extension/CHANGELOG.md`.
-2. Commit and push the release preparation to `main`.
-3. Create and push the matching version tag:
+1. Set `extension/package.json` to the release version. Move the release notes out of `[Unreleased]` into a dated version section in `extension/CHANGELOG.md`. Use headings such as `Added`, `Changed`, `Fixed`, and `Removed` for the changes that apply.
+2. Preview the GitHub Release body with `node scripts/release-notes.mjs vX.Y.Z`, using the actual version tag. Commit and push the release preparation to `main`.
+3. Create and push the matching version tag. The annotation can use the same Markdown:
 
    ```bash
-   git tag -a "v1.0.3" -m "v1.0.3"
-   git push origin "v1.0.3"
+   tag=vX.Y.Z
+   notes_file="$(mktemp)"
+   node scripts/release-notes.mjs "$tag" > "$notes_file" &&
+     git tag -a "$tag" --cleanup=verbatim -F "$notes_file" &&
+     git push origin "refs/tags/$tag"
+   rm -f "$notes_file"
    ```
 
-4. GitHub Actions checks the extension, packages the VSIX, attaches it to the GitHub Release, and saves a downloadable Actions artifact. It then publishes that package to Open VSX. A version already on Open VSX is skipped when the workflow runs again.
+4. GitHub Actions uses the tagged version's changelog section as the Release body and adds installation links. A missing or empty entry stops the run before packaging. The workflow checks the extension, attaches the VSIX, saves an Actions artifact, and publishes the package to Open VSX. A rerun preserves the existing Release body and skips an Open VSX version that has already been published.
 
 The tag must be `v` followed by the exact `extension/package.json` version. Set the `OVSX_PAT` GitHub Actions secret to an Open VSX access token with publishing access to `nathan-0910`. Without it, the workflow warns and skips Open VSX after creating the GitHub Release. See [versioning.md](versioning.md) for version policy.
 
