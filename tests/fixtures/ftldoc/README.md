@@ -12,6 +12,9 @@ Manual check for JavaDoc-like FTL comments ([0016-ftldoc](../../../docs/plans/co
 
 | Target | Expected Hover |
 |--------|----------------|
+| `@param`, `@return`, `@nodoc`, `@example`, `{@code …}` inside a comment | tag purpose, syntax and an FTL example |
+| `@lang` in [the SQL playground](../playground/sql-captures.ftl) | explains SQL highlighting, capture placement and marker consumption |
+| `@file` in [the playground library](../playground/lib.ftl) | explains file documentation and import/include path Hover |
 | `say` | summary + **Parameters** / **Returns** / **Since** / **See** |
 | `banner` | summary + lists + **Parameters** / **See** / **Since** / **Deprecated** |
 | `require` | **Stop** (for `#stop`) + **See** |

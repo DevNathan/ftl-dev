@@ -13,6 +13,7 @@ import {
   parseFtlDoc,
 } from "./ftldoc";
 import { findDefinitions, indexFtl } from "./symbols";
+import { ftldocTagHoverAt } from "./ftldocHover";
 
 function test(name: string, fn: () => void): void {
   try {
@@ -23,6 +24,73 @@ function test(name: string, fn: () => void): void {
     throw e;
   }
 }
+
+test("ftldoc tag hover covers block tags, both delimiters, gutters and CRLF", () => {
+  const tags = [
+    "lang", "file", "nodoc", "param", "return", "returns", "deprecated",
+    "see", "since", "stop", "example", "note", "remarks", "todo",
+    "author", "version", "requires", "exports", "usage",
+  ];
+  for (const tag of tags) {
+    for (const [open, close] of [["<#--", "-->"], ["[#--", "--]"]]) {
+      for (const body of [` @${tag} detail `, `\r\n * @${tag} detail\r\n `]) {
+        const text = open + body + close;
+        const start = text.indexOf("@" + tag);
+        for (let offset = start; offset < start + tag.length + 1; offset++) {
+          const hover = ftldocTagHoverAt(text, offset);
+          assert.strictEqual(hover?.start, start, text);
+          assert.strictEqual(hover?.end, start + tag.length + 1, text);
+          assert.ok(hover?.markdown.includes("**Example**"), tag);
+        }
+        assert.strictEqual(ftldocTagHoverAt(text, start + tag.length + 1), undefined);
+      }
+    }
+  }
+});
+
+test("ftldoc tag hover explains marker semantics and custom tags", () => {
+  function help(tag: string): string {
+    const text = `<#-- @${tag} -->`;
+    return ftldocTagHoverAt(text, text.indexOf("@"))!.markdown;
+  }
+  assert.match(help("LANG"), /Currently only SQL/);
+  assert.match(help("lang"), /immediately above an angle-syntax/);
+  assert.match(help("lang"), /normal assignment consumes/);
+  assert.match(help("file"), /first comment/);
+  assert.match(help("nodoc"), /first token/);
+  assert.match(help("param"), /Information diagnostics/);
+  assert.match(help("processing"), /custom ftldoc tag/);
+  assert.match(help("constructor"), /custom ftldoc tag/);
+  assert.doesNotMatch(help("constructor"), /undefined/);
+});
+
+test("inline ftldoc syntax has distinct help and precise ranges", () => {
+  for (const tag of ["code", "literal", "link", "linkplain", "linkcode"]) {
+    const text = `<#-- Use {@${tag} target} here. -->`;
+    const start = text.indexOf("@");
+    const hover = ftldocTagHoverAt(text, start + 1);
+    assert.strictEqual(hover?.start, start);
+    assert.strictEqual(hover?.end, start + tag.length + 1);
+    assert.match(hover!.markdown, /Example/);
+    assert.strictEqual(ftldocTagHoverAt(text, text.indexOf("target")), undefined);
+  }
+  assert.strictEqual(ftldocTagHoverAt("<#-- {@unknown thing} -->", 9), undefined);
+});
+
+test("ftldoc help stays inside comment tags and supports incomplete comments", () => {
+  for (const text of [
+    "@lang sql",
+    "<!-- @lang sql -->",
+    '<#assign s = "@lang sql">',
+    "<#-- Write to user@example.com. -->",
+    "<#-- Mention @param in prose. -->",
+  ]) {
+    assert.strictEqual(ftldocTagHoverAt(text, text.indexOf("@")), undefined, text);
+  }
+  const text = "<#-- @lang sql -->\n@lang sql";
+  assert.strictEqual(ftldocTagHoverAt(text, text.lastIndexOf("@")), undefined);
+  assert.match(ftldocTagHoverAt("<#-- @param", 8)!.markdown, /parameter/);
+});
 
 test("leading @file documents the template and does not attach to its first symbol", () => {
   const text = [

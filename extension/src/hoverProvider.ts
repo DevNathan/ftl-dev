@@ -19,6 +19,8 @@ import {
 import { identifierAt } from "./symbols";
 import { readFsPath, readUri, resolveImportUri } from "./vscodeIo";
 import { rangeFromOffsets } from "./vscodeRanges";
+import { offsetInFtlComment } from "./comments";
+import { ftldocTagHoverAt } from "./ftldocHover";
 
 export class FtlHoverProvider implements vscode.HoverProvider {
   async provideHover(
@@ -27,9 +29,19 @@ export class FtlHoverProvider implements vscode.HoverProvider {
   ): Promise<vscode.Hover | undefined> {
     const text = document.getText();
     const offset = document.offsetAt(position);
-    const { index } = sharedDocCache.get(
+    const { index, comments } = sharedDocCache.get(
       document.uri.toString(), document.version, text
     );
+    const tagHelp = ftldocTagHoverAt(text, offset, comments);
+    if (tagHelp) {
+      return new vscode.Hover(
+        new vscode.MarkdownString(tagHelp.markdown),
+        rangeFromOffsets(text, tagHelp.start, tagHelp.end - tagHelp.start)
+      );
+    }
+    if (offsetInFtlComment(offset, comments)) {
+      return undefined;
+    }
     const ref = templatePathAt(index, offset);
     if (ref) {
       if (document.uri.scheme !== "file" || !isLiteralTemplatePath(text, ref)) {

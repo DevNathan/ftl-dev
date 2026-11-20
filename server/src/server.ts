@@ -31,6 +31,8 @@ import {
   completionContext,
 } from "../../extension/src/catalog";
 import { validateFtl } from "../../extension/src/diagnostics";
+import { ftlCommentRanges, offsetInFtlComment } from "../../extension/src/comments";
+import { ftldocTagHoverAt } from "../../extension/src/ftldocHover";
 import { paramDocumentation } from "../../extension/src/directiveParams";
 import { symbolCompletionEntries } from "../../extension/src/completion/helpers";
 import {
@@ -220,6 +222,17 @@ export function startFtlLanguageServer(connection: Connection): void {
     }
     const text = doc.getText();
     const offset = posToOffset(doc, params.position);
+    const comments = ftlCommentRanges(text);
+    const tagHelp = ftldocTagHoverAt(text, offset, comments);
+    if (tagHelp) {
+      return {
+        contents: { kind: MarkupKind.Markdown, value: tagHelp.markdown },
+        range: rangeFromOffset(text, tagHelp.start, tagHelp.end - tagHelp.start),
+      };
+    }
+    if (offsetInFtlComment(offset, comments)) {
+      return undefined;
+    }
     const index = indexFtl(text);
     const ref = templatePathAt(index, offset);
     if (ref) {

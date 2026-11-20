@@ -37,6 +37,7 @@ If the well is dry, dig your own. This extension aims for:
 - Diagnostics · semantic tokens · outline · find references
 - ftldoc doc comments (Javadoc / JSDoc style: `@param {type} [name=default]`, multi-line `@return`, `@example`, `@note`, custom `@tag`, `{@link}` / `{@code}`) in Hover, Signature Help and completion
 - File ftldoc (`@file`) when hovering a literal path in `#import` or `#include`
+- Hover ftldoc tags inside comments for their purpose, syntax, and examples, including the `@lang sql` highlighting marker.
 
 ### File documentation
 
