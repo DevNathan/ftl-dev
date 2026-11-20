@@ -6,10 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-20
+
 ### Added
 
 - Hover ftldoc tags such as `@lang`, `@file`, `@param`, and inline tags for syntax help and examples in the editor and language server.
 - Try the project site's examples in a browser playground with syntax highlighting, diagnostics, completion, ftldoc hover, and navigation between example files.
+- Open playground documentation with F1, edit any of the 18 example files, and reset or download your changes.
+
+### Changed
+
+- Use the version's changelog entry and installation links for GitHub Release notes.
+- Refresh GitHub Pages on every main-branch update, with reorganized project guides and install instructions.
+
+### Fixed
+
+- Match playground cursors and selection colors to the active theme, and keep active-line highlighting from hiding selected text.
+- Keep completion documentation visible outside the suggestion list and readable on narrow screens.
+- Add a direct issue-report button, accurate command-copy feedback, keyboard skip links, and larger touch targets on the project site.
 
 ## [2.0.0] - 2026-11-17
 
