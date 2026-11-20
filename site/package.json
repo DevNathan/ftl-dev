@@ -1,12 +1,22 @@
 {
   "name": "ftl-dev-site",
   "private": true,
-  "description": "GitHub Pages site for ftl-dev. Code samples are highlighted at build time with the extension's own TextMate grammar.",
+  "description": "GitHub Pages site and browser playground for ftl-dev.",
   "type": "module",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "devDependencies": {
+    "@codemirror/autocomplete": "6.20.4",
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/language": "6.13.1",
+    "@codemirror/lint": "6.9.8",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.15",
+    "codemirror": "6.0.2",
+    "esbuild": "0.28.2",
+    "markdown-it": "15.0.3",
     "shiki": "1.29.2"
   }
 }

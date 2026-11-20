@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <script>{{preferences}}</script>
+  <title>ftl-dev · Playground</title>
+  <meta name="description" content="Edit FreeMarker examples and try ftl-dev highlighting, diagnostics, completion, and documentation in your browser.">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/playground.css">
+</head>
+<body>
+  <a class="skip-link" href="#content"><span data-ui-lang="en" lang="en">Skip to content</span><span data-ui-lang="ko" lang="ko">본문으로 이동</span></a>
+  <header>
+    <a class="brand" href="./"><img src="assets/logo.svg" alt="" width="26" height="26">ftl-dev <span class="version">v{{version}}</span></a>
+    <a class="back" href="./"><span data-ui-lang="en" lang="en">Project site</span><span data-ui-lang="ko" lang="ko">프로젝트 소개</span></a>
+    <button id="lang-toggle" type="button"><span data-ui-lang="en" lang="ko">한국어</span><span data-ui-lang="ko" lang="en">English</span></button>
+    <button id="theme-toggle" type="button"><span data-ui-lang="en" lang="en">Switch theme</span><span data-ui-lang="ko" lang="ko">테마 전환</span></button>
+  </header>
+  <main>
+    <div class="intro">
+      <h1 id="content" tabindex="-1"><span data-ui-lang="en" lang="en">ftl-dev playground</span><span data-ui-lang="ko" lang="ko">ftl-dev 플레이그라운드</span></h1>
+      <p data-ui-lang="en" lang="en">Edit an example, inspect a warning, or hover a function and its ftldoc tags.</p>
+      <p data-ui-lang="ko" lang="ko">예제를 고쳐 보고, 경고를 확인하고, 함수와 ftldoc 태그에 마우스를 올려 보세요.</p>
+    </div>
+    <section class="workspace" aria-label="FreeMarker editor">
+      <div class="toolbar">
+        <label for="sample"><span data-ui-lang="en" lang="en">File</span><span data-ui-lang="ko" lang="ko">파일</span></label>
+        <select id="sample" disabled><option>Loading…</option></select>
+        <div class="actions">
+          <button id="reset" type="button" disabled><span data-ui-lang="en" lang="en">Reset file</span><span data-ui-lang="ko" lang="ko">파일 초기화</span></button>
+          <button id="download" type="button" disabled><span data-ui-lang="en" lang="en">Download</span><span data-ui-lang="ko" lang="ko">다운로드</span></button>
+        </div>
+      </div>
+      <div class="editor-grid">
+        <div id="editor"><p class="loading" id="load-status" role="status">Loading editor…</p></div>
+        <aside class="problems" aria-labelledby="problems-heading">
+          <div class="problems-heading">
+            <h2 id="problems-heading"><span data-ui-lang="en" lang="en">Problems</span><span data-ui-lang="ko" lang="ko">진단</span></h2>
+            <span id="problem-count"></span>
+          </div>
+          <label class="strict-option" for="strict"><input type="checkbox" id="strict"><span data-ui-lang="en" lang="en">Warn on undeclared variables</span><span data-ui-lang="ko" lang="ko">선언하지 않은 변수 경고</span></label>
+          <p id="analysis-status" role="status" aria-atomic="true"></p>
+          <ul id="problem-list" role="list"></ul>
+        </aside>
+      </div>
+      <div class="statusbar"><span id="file-status"></span><span id="highlight-status"></span><span id="cursor-status"></span></div>
+    </section>
+    <div class="help">
+      <p id="editor-help-en" data-ui-lang="en" lang="en"><kbd>F1</kbd> documentation · <kbd>Ctrl</kbd> + <kbd>Space</kbd> completion · <kbd>F12</kbd> or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + click to follow definitions and example file paths · <kbd>Esc</kbd> closes hints. Press <kbd>Esc</kbd> then <kbd>Tab</kbd> to move focus out of the editor.</p>
+      <p id="editor-help-ko" data-ui-lang="ko" lang="ko"><kbd>F1</kbd> 설명창 · <kbd>Ctrl</kbd> + <kbd>Space</kbd> 자동완성 · <kbd>F12</kbd> 또는 <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + 클릭으로 정의와 예제 파일 경로 이동 · <kbd>Esc</kbd>로 힌트 닫기. 편집기 밖으로 이동하려면 <kbd>Esc</kbd> 다음 <kbd>Tab</kbd>을 누르세요.</p>
+    </div>
+    <noscript>Enable JavaScript to use the playground.</noscript>
+  </main>
+  <script type="module">
+    import("./assets/playground.js").catch(() => {
+      const status = document.getElementById("load-status");
+      if (status) status.textContent = "Could not load the editor. Reload this page to try again.";
+    });
+  </script>
+</body>
+</html>

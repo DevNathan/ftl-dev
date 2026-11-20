@@ -55,6 +55,12 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 | Vim / Neovim highlight + indent | Separate repo [`ftl-dev.vim`](https://github.com/DevNathan/ftl-dev.vim) |
 | Shared language server | [`server/`](server/) stdio LSP |
 
+## Browser playground
+
+The [project site](site/README.md) builds a separate CodeMirror editor at `playground.html`. Shiki uses the extension's TextMate grammar for highlighting. The browser adapters in `site/src/playground-language.ts` import the same pure analysis functions used by the extension and server for diagnostics, completion, hover and definitions.
+
+Example files form an in-memory workspace, so imports, includes and ftldoc use the current edits. The browser does not connect to an LSP server or execute FreeMarker templates. The static build bundles the editor and fixture files for GitHub Pages; edits are discarded when the tab is reloaded unless downloaded.
+
 ## Testing
 
 | Mode | How | What it covers |
@@ -62,6 +68,7 @@ Optional later: Java/bean metadata enrichment (best-effort; not required for cor
 | Manual UX | [Extension Development Host and fixtures](docs/development.md#try-the-extension-locally) | Colors, indent, Ctrl+click, completions (`<#`, `?`) |
 | Grammar regression | `cd extension && npm run test:grammar` | TextMate scopes (`tests/grammar/`) |
 | Unit tests | `cd extension && npm run test:unit` | Symbol index, completions, reference docs, expression spans |
+| Browser core | `cd site && npm test` | Editable examples, cross-file navigation and docs, completion, grammar colors for both themes |
 
 Implementation: [`extension/`](extension/) — grammar, language config, Definition / DocumentLink / Completion / Hover providers.
 

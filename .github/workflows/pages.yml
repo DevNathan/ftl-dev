@@ -1,19 +1,14 @@
 # Build and deploy the project site (site/) to GitHub Pages.
 #
 # One-time setup: Settings → Pages → Build and deployment → Source: "GitHub Actions".
-# Code samples are highlighted at build time with extension/syntaxes/freemarker.tmLanguage.json,
-# so grammar changes on main refresh the site too.
+# Run on every push to main so deploys don't depend on GitHub computing
+# a path diff after a history rewrite. The build reads the extension grammar and version.
 
 name: Pages
 
 on:
   push:
     branches: [main]
-    paths:
-      - "site/**"
-      - "extension/syntaxes/**"
-      - "extension/package.json"
-      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -39,6 +34,7 @@ jobs:
           cache: npm
           cache-dependency-path: site/package-lock.json
       - run: npm ci
+      - run: npm test
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

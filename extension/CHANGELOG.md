@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Added
+
+- Hover ftldoc tags such as `@lang`, `@file`, `@param`, and inline tags for syntax help and examples in the editor and language server.
+- Try the project site's examples in a browser playground with syntax highlighting, diagnostics, completion, ftldoc hover, and navigation between example files.
+
 ## [2.0.0] - 2026-11-17
 
 ### Added
